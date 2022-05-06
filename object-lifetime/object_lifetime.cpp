@@ -787,6 +787,8 @@ static void* get_parent(cl_kernel kernel) {
   return NULL;
 }
 
+extern "C" {
+
   /* OpenCL 1.0 */
 static CL_API_ENTRY cl_int CL_API_CALL clGetPlatformIDs_wrap(
     cl_uint num_entries,
@@ -3683,6 +3685,8 @@ static CL_API_ENTRY cl_int CL_API_CALL clSetContextDestructorCallback_wrap(
     pfn_notify,
     user_data);
 }
+
+} // extern "C"
 
 static void _init_dispatch(void) {
   dispatch.clGetPlatformIDs = &clGetPlatformIDs_wrap;
