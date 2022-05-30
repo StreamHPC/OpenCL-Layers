@@ -146,7 +146,7 @@ function parse_expression(string, tmp, list, temp_str, end) {
         string[0] = substr(string[0], end)
         sub(/^[^<]+/, "", string[0])
         
-        return "literal_list(" tmp ")"
+        return "literal_list(\042" params[tmp] "\042, " tmp ")"
     }
     if (index(string[0], "<sizeof>") == 1) {
         tmp = full_tag(string[0], "sizeof")
@@ -565,12 +565,12 @@ END {
 #    print "  if (param == 0) return true;"
 #    print "  return false;"
 #    print "}\n\n"
-# dummy
-    print "template<typename T>"
-    print "size_t literal_list(T param)"
-    print "{"
-    print "  return 0;"
-    print "}\n\n"
+# literal_list is in lists.awk
+#    print "template<typename T>"
+#    print "size_t literal_list(T param)"
+#    print "{"
+#    print "  return 0;"
+#    print "}\n\n"
 # dummy
     print "bool from(char * version)"
     print "{"

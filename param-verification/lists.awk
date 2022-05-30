@@ -15,14 +15,14 @@
             definitions = definitions "\n" $0
         }
 
-        literal_list = "cl_platform_info cl_device_info cl_context_info cl_command_queue_info cl_image_info cl_mem_info cl_addressing_mode cl_filter_mode cl_sampler_info cl_program_info cl_program_build_info cl_kernel_exec_info cl_kernel_info cl_kernel_work_group_info cl_kernel_sub_group_info cl_kernel_arg_info cl_event_info cl_profiling_info"
+        literal_list = "cl_platform_info cl_device_info cl_context_info cl_command_queue_info cl_image_info cl_pipe_info cl_mem_info cl_sampler_info cl_program_info cl_program_build_info cl_kernel_exec_info cl_kernel_info cl_kernel_work_group_info cl_kernel_sub_group_info cl_kernel_arg_info cl_event_info cl_profiling_info"
         split(literal_list, literal)
 
         # parse enum
         for (i in literal) {
             rest = definitions
             while (match(rest, "<require comment=\"[^\042]*" literal[i] "[^\042]*\"[^>]*>") != 0) {
-                print "    if (name == \"" literal[i] "\")"
+                print "    if (strcmp(name, \"" literal[i] "\") == 0)"
                 print "      switch (param) {"
 
                 # cut enum values list - begin
@@ -35,12 +35,12 @@
                 sub(/[ \n]*<\/require>.*/, "", values)
 
                 # parse enum values
-                while (match(values, /<enum name="([^\042]*)"[^>]*>/, list)) {
+                while (match(values, /<enum name="([^\042]*)" return_type="([^\042]*)"[^>]*>/, list)) {
                     values = substr(values, RSTART + RLENGTH)
                     print "        case " list[1] ":"
+                    sub(/\[\]$/, "", list[2])
+                    print "          return sizeof(" list[2] ");"
                 }
-                #print values
-                print "          return false;"
                 print "      }"
             }
         }
@@ -53,11 +53,11 @@
 
 BEGIN {
     print "template<typename T>"
-    print "bool enum_violation(const char * name, T param)"
+    print "size_t literal_list(const char * name, T param)"
     print "{"
 }
 
 END {
-    print "  return true;"
+    print "  return -1;"
     print "}\n\n"
 }

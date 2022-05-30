@@ -22,7 +22,7 @@
         for (i in enums) {
             rest = definitions
             while (match(rest, "<require comment=\"[^\042]*" enums[i] "[^\042]*\"[^>]*>") != 0) {
-                print "    if (name == \"" enums[i] "\")"
+                print "    if (strcmp(name, \"" enums[i] "\") == 0) {"
                 print "      switch (param) {"
 
                 # cut enum values list - begin

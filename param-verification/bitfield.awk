@@ -22,8 +22,8 @@
         for (i in bitfields) {
             rest = definitions
             while (match(rest, "<require comment=\"[^\042]*" bitfields[i] "[^\042]*\"[^>]*>") != 0) {
-                print "    if (name == \"" bitfields[i] "\") {"
-                
+                print "    if (strcmp(name, \"" bitfields[i] "\") == 0) {"
+
                 # cut bitfield values list - begin
                 values = substr(rest, RSTART + RLENGTH)
                 sub(/^[ \n]*/, "", values)
