@@ -58,6 +58,6 @@ BEGIN {
 }
 
 END {
-    print "  return -1;"
+    print "  return 0;"
     print "}\n\n"
 }

@@ -15,7 +15,7 @@
             definitions = definitions "\n" $0
         }
 
-        bitfields_list = "cl_device_type cl_mem_flags cl_map_flags cl_mem_migration_flags cl_svm_mem_flags"
+        bitfields_list = "cl_device_type cl_mem_flags cl_map_flags cl_mem_migration_flags cl_svm_mem_flags cl_device_affinity_domain"
         split(bitfields_list, bitfields)
 
         # parse bitfield

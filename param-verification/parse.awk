@@ -546,12 +546,12 @@ END {
 #    print "{"
 #    print "  return false;"
 #    print "}\n\n"
-# dummy
-    print "template<typename T>"
-    print "bool list_violation(T param)"
-    print "{"
-    print "  return false;"
-    print "}\n\n"
+# list_violation is in list_violation.cpp
+#    print "template<typename T>"
+#    print "bool list_violation(T param)"
+#    print "{"
+#    print "  return false;"
+#    print "}\n\n"
 # dummy
     print "template<typename T>"
     print "bool struct_violation(T param)"
