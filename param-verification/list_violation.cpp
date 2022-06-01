@@ -1,3 +1,4 @@
+// longer version that checks also device limits
 template<typename T>
 bool list_violation(const char * name, T param, cl_device_id device)
 {
@@ -43,6 +44,48 @@ bool list_violation(const char * name, T param, cl_device_id device)
           curr_sd++;
           if ((curr_cu > cu) || (curr_sd > sd))
             return true;
+          ++pos;
+        }
+
+        ++pos;
+        if (param[pos] != 0)
+          return true;
+        return false;
+
+      case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
+        if (bitfield_violation("cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+          return true;
+        return false;
+
+      default:
+        return true;
+    }
+  }
+
+  printf("Unknown list: %s\n", name);
+  return true;
+}
+
+// base version
+template<typename T>
+bool list_violation(const char * name, T param)
+{
+  if (strcmp(name, "cl_device_partition_property") == 0)
+  { // clCreateSubDevices
+
+    // only single partition scheme is allowed
+    size_t pos = 0;
+
+    switch (param[0]) {
+      case CL_DEVICE_PARTITION_EQUALLY:
+        if ((param[1] == 0) || (param[2] != 0))
+          return true;
+        return false;
+
+      case CL_DEVICE_PARTITION_BY_COUNTS:
+        ++pos;
+        while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
+        {
           ++pos;
         }
 

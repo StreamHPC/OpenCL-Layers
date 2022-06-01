@@ -366,7 +366,10 @@ function parse_violation(string, violation, deeper, a, n, end, list, tmp, tmp_li
             tmp = short_tag(string[0], "list_violation", tmp_list)
             end = after(string[0], "/>")
 
-            violation = violation "(list_violation(" tmp_list["name"] "))"
+            if ("param" in tmp_list)
+                violation = violation "(list_violation(\042" params[tmp_list["name"]] "\042, " tmp_list["name"] ", " tmp_list["param"] "))"
+            else
+                violation = violation "(list_violation(\042" params[tmp_list["name"]] "\042, " tmp_list["name"] "))"
         }
         else if (index(string[0], "<bitfield_violation") == 1) {
             delete tmp_list
@@ -380,7 +383,10 @@ function parse_violation(string, violation, deeper, a, n, end, list, tmp, tmp_li
             tmp = short_tag(string[0], "struct_violation", tmp_list)
             end = after(string[0], "/>")
 
-            violation = violation "(struct_violation(" tmp_list["name"] "))"
+            if ("param" in tmp_list)
+                violation = violation "(struct_violation(" tmp_list["name"] ", " tmp_list["param"] "))"
+            else
+                violation = violation "(struct_violation(" tmp_list["name"] "))"
         }
         else if (index(string[0], "<any_nullptr") == 1) {
             delete tmp_list
@@ -529,7 +535,8 @@ function parse_violation(string, violation, deeper, a, n, end, list, tmp, tmp_li
 #/\n/ {next}
 #/<command/,/<\/command>/ {++n}
 BEGIN {
-    print "#include <cl.h>\n\n"
+    print "#include <cl.h>"
+    print"#include <cstdio>\n\n"
     #include <bool.h>
 }
 

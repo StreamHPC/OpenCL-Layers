@@ -15,7 +15,7 @@
             definitions = definitions "\n" $0
         }
 
-        enums_list = "cl_platform_info cl_device_info cl_context_info cl_command_queue_info cl_image_info cl_mem_info cl_addressing_mode cl_filter_mode cl_sampler_info cl_program_info cl_program_build_info cl_kernel_exec_info cl_kernel_info cl_kernel_work_group_info cl_kernel_sub_group_info cl_kernel_arg_info cl_event_info cl_profiling_info"
+        enums_list = "cl_platform_info cl_device_info cl_context_info cl_command_queue_info cl_image_info cl_mem_info cl_addressing_mode cl_filter_mode cl_sampler_info cl_program_info cl_program_build_info cl_kernel_exec_info cl_kernel_info cl_kernel_work_group_info cl_kernel_sub_group_info cl_kernel_arg_info cl_event_info cl_profiling_info cl_channel_order cl_channel_type"
         split(enums_list, enums)
 
         # parse enum
