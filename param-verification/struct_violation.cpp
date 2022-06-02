@@ -1,5 +1,3 @@
-#include <cl.h>
-
 // 5.3.1.1. Image Format Descriptor
 
 // check image_format violation and correctness of 2D image creation from buffer or 2D image
@@ -717,7 +715,7 @@ size_t pixel_size(const cl_image_format * image_format)
             break;
 
         default:
-            printf("Wrong image channel order!\n")
+            printf("Wrong image channel order!\n");
             return -1;
     }
 
@@ -749,7 +747,7 @@ size_t pixel_size(const cl_image_format * image_format)
             break;
 
         default:
-            printf("Wrong image channel data type!\n")
+            printf("Wrong image channel data type!\n");
             return -1;
     }
 

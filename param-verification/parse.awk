@@ -536,8 +536,17 @@ function parse_violation(string, violation, deeper, a, n, end, list, tmp, tmp_li
 #/<command/,/<\/command>/ {++n}
 BEGIN {
     print "#include <cl.h>"
-    print"#include <cstdio>\n\n"
+    print "#include <stdio.h>"
+    print "#include <string.h>"
+    print "#include <algorithm>\n\n"
+    #print "#include <cstdio>\n\n"
     #include <bool.h>
+    system("awk -f enums.awk " ARGV[1])
+    system("awk -f bitfield.awk " ARGV[1])
+    system("awk -f lists.awk " ARGV[1])
+    system("cat list_violation.cpp")
+    system("cat struct_violation.cpp")
+    print "\n///////////////////////////\n"
 }
 
 END {
