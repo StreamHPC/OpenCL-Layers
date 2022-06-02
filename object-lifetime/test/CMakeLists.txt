@@ -48,6 +48,10 @@ function (add_layer_test TEST_EXE OPENCL_VERSION)
       string (APPEND TEST_NAME "-AllowReleased")
     endif ()
 
+    if (OPENCL_LAYERS_TEST_PLATFORM)
+      list (APPEND TEST_INVOCATION --platform "${OPENCL_LAYERS_TEST_PLATFORM}")
+    endif ()
+
     set (TEST_LOG "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.log")
     list (APPEND TEST_ENVIRONMENT OPENCL_OBJECT_LIFETIME_LOG_FILENAME=${TEST_LOG})
 

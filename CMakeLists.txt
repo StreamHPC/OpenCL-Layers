@@ -13,6 +13,7 @@ project (OpenCL-Layers
 
 set (OPENCL_ICD_LOADER_HEADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc CACHE PATH "Path to OpenCL Headers")
 option (OPENCL_LAYERS_BUILD_TESTING "Enable support for OpenCL layers testing." OFF)
+set (OPENCL_LAYERS_TEST_PLATFORM "" CACHE STRING "The name of the paltform to test")
 
 # Search for dependencies
 if (EXISTS ${OPENCL_ICD_LOADER_HEADERS_DIR}/CL/cl.h)
