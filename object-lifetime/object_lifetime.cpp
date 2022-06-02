@@ -238,6 +238,25 @@ static cl_int error_implicitly_retained(const trimmed__func__& func, void *handl
   return settings.transparent ? CL_SUCCESS : object_errors[t];
 }
 
+template<object_type T>
+cl_int check_error(const trimmed__func__& func, void *handle, cl_int layer_err, cl_int icd_err) {
+  *log_stream << "In " << func << " " <<
+               object_type_names[T] <<
+               ": " << handle <<
+               " was used and layer " <<
+               (settings.transparent ? "would've" : "") <<
+               " had to correct ICD error code from " << 
+               icd_err << " to " << layer_err << "\n";
+  log_stream->flush();
+  return settings.transparent ?
+    icd_err :
+    (
+      layer_err != CL_SUCCESS ?
+        layer_err :
+        icd_err
+    );
+}
+
 static cl_version get_platform_version(cl_platform_id platform) {
   size_t version_len;
   cl_int res;
@@ -894,12 +913,15 @@ static void report() {
   deleted_objects.clear();
 }
 
-#define CHECK_RETAIN(type, handle)                                             \
-  do {                                                                         \
-    const auto _err = check_retain<type>(RTRIM_FUNC, handle);                  \
-    if (_err != CL_SUCCESS) {                                                  \
-      return _err;                                                             \
-    }                                                                          \
+#define CHECK_RETAIN(type, handle, func)                           \
+  do {                                                             \
+    const auto layer_err = check_retain<type>(RTRIM_FUNC, handle); \
+    const auto icd_err = func;                                     \
+    return check_error<type>(                                      \
+      RTRIM_FUNC,                                                  \
+      handle,                                                      \
+      layer_err,                                                   \
+      icd_err);                                                    \
   } while (false)
 
   /* Layer API entry points */
@@ -1229,9 +1251,7 @@ static CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainContext_wrap(
     cl_context context)
 {
-  CHECK_RETAIN(OCL_CONTEXT, context);
-  return tdispatch->clRetainContext(
-    context);
+  CHECK_RETAIN(OCL_CONTEXT, context, tdispatch->clRetainContext(context) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseContext_wrap(
@@ -1296,8 +1316,7 @@ static CL_API_ENTRY cl_command_queue CL_API_CALL clCreateCommandQueue_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainCommandQueue_wrap(
     cl_command_queue command_queue)
 {
-  CHECK_RETAIN(OCL_COMMAND_QUEUE, command_queue);
-  return tdispatch->clRetainCommandQueue(command_queue);
+  CHECK_RETAIN(OCL_COMMAND_QUEUE, command_queue, tdispatch->clRetainCommandQueue(command_queue) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseCommandQueue_wrap(
@@ -1429,8 +1448,7 @@ static CL_API_ENTRY cl_mem CL_API_CALL clCreateImage3D_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainMemObject_wrap(
     cl_mem memobj)
 {
-  CHECK_RETAIN(OCL_MEM, memobj);
-  return tdispatch->clRetainMemObject(memobj);
+  CHECK_RETAIN(OCL_MEM, memobj, tdispatch->clRetainMemObject(memobj) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseMemObject_wrap(
@@ -1550,8 +1568,7 @@ static CL_API_ENTRY cl_sampler CL_API_CALL clCreateSampler_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainSampler_wrap(
     cl_sampler sampler)
 {
-  CHECK_RETAIN(OCL_SAMPLER, sampler);
-  return tdispatch->clRetainSampler(sampler);
+  CHECK_RETAIN(OCL_SAMPLER, sampler, tdispatch->clRetainSampler(sampler) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseSampler_wrap(
@@ -1630,8 +1647,7 @@ static CL_API_ENTRY cl_program CL_API_CALL clCreateProgramWithBinary_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainProgram_wrap(
     cl_program program)
 {
-  CHECK_RETAIN(OCL_PROGRAM, program);
-  return tdispatch->clRetainProgram(program);
+  CHECK_RETAIN(OCL_PROGRAM, program, tdispatch->clRetainProgram(program) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseProgram_wrap(
@@ -1757,8 +1773,7 @@ static CL_API_ENTRY cl_int CL_API_CALL clCreateKernelsInProgram_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainKernel_wrap(
     cl_kernel kernel)
 {
-  CHECK_RETAIN(OCL_KERNEL, kernel);
-  return tdispatch->clRetainKernel(kernel);
+  CHECK_RETAIN(OCL_KERNEL, kernel, tdispatch->clRetainKernel(kernel) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseKernel_wrap(
@@ -1869,8 +1884,7 @@ static CL_API_ENTRY cl_int CL_API_CALL clGetEventInfo_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainEvent_wrap(
     cl_event event)
 {
-  CHECK_RETAIN(OCL_EVENT, event);
-  return tdispatch->clRetainEvent(event);
+  CHECK_RETAIN(OCL_EVENT, event, tdispatch->clRetainEvent(event) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseEvent_wrap(
@@ -2887,8 +2901,7 @@ clCreateSubDevicesEXT_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainDeviceEXT_wrap(
     cl_device_id device)
 {
-  CHECK_RETAIN(OCL_DEVICE, device);
-  return tdispatch->clRetainDeviceEXT(device);
+  CHECK_RETAIN(OCL_DEVICE, device, tdispatch->clRetainDeviceEXT(device) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseDeviceEXT_wrap(
@@ -2943,8 +2956,7 @@ clCreateSubDevices_wrap(
 static CL_API_ENTRY cl_int CL_API_CALL clRetainDevice_wrap(
     cl_device_id device)
 {
-  CHECK_RETAIN(OCL_DEVICE, device);
-  return tdispatch->clRetainDevice(device);
+  CHECK_RETAIN(OCL_DEVICE, device, tdispatch->clRetainDevice(device) );
 }
 
 static CL_API_ENTRY cl_int CL_API_CALL clReleaseDevice_wrap(
