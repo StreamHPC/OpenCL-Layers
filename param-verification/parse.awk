@@ -21,7 +21,7 @@ function short_tag(string, tag, prop_list, start, end, tmp, n) {
         }
     }
     else {
-        print "bad shor tag: " string
+        print "bad short tag: " string
         exit 1
     }
 

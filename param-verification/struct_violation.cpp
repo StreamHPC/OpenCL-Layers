@@ -1,5 +1,26 @@
 // 5.3.1.1. Image Format Descriptor
 
+// check image_format violation
+bool struct_violation(
+    const cl_image_format * const image_format)
+{
+    if (enum_violation("cl_channel_order", image_format->image_channel_order))
+        return true;
+    if (enum_violation("cl_channel_type", image_format->image_channel_data_type))
+        return true;
+
+    if (((image_format->image_channel_data_type == CL_UNORM_SHORT_555) ||
+         (image_format->image_channel_data_type == CL_UNORM_SHORT_565) ||
+         (image_format->image_channel_data_type == CL_UNORM_INT_101010)) &&
+        !((image_format->image_channel_order == CL_RGB) || (image_format->image_channel_order == CL_RGBx)))
+        return true;
+    if ((image_format->image_channel_data_type == CL_UNORM_INT_101010_2) &&
+        !(image_format->image_channel_order == CL_RGBA))
+        return true;
+
+    return false;
+}
+
 // check image_format violation and correctness of 2D image creation from buffer or 2D image
 bool struct_violation(
     const cl_image_format * const image_format,

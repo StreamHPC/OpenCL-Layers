@@ -3267,7 +3267,6 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
-            <!-- CL_INVALID_IMAGE_FORMAT_DESCRIPTOR if a 2D image is created from a 2D image object and the rules described above are not followed-->
             <if>
                 <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
             </if>
@@ -3430,6 +3429,15 @@
                             <name>flags</name>                          <literal>CL_MEM_HOST_NO_ACCESS</literal>
                         </bit_and>
                     </mutex_violation>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_USE_HOST_PTR</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_ALLOC_HOST_PTR</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_COPY_HOST_PTR</literal>
+                    </bit_and>
                 </or>
             </if>
             <then>
@@ -3455,15 +3463,6 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
             <if>
-                <struct_violation name="image_format"/>
-            </if>
-            <then>
-                <name>clCreateImageWithProperties</name>                <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
-            </then>
-            <!-- CL_INVALID_IMAGE_FORMAT_DESCRIPTOR if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer.-->
-            <!-- CL_INVALID_IMAGE_FORMAT_DESCRIPTOR if a 2D image is created from a 2D image object and the rules described above are not followed-->
-            <if>
                 <eq>
                     <name>image_desc</name>                             <literal>NULL</literal>
                 </eq>
@@ -3482,15 +3481,66 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
             <if>
-                <struct_violation name="image_desc"/>
+                <struct_violation name="image_format" param="context, image_desc"/>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
+            </then>
+            <if>
+                <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
             </if>
             <then>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions specified in image_desc exceed the maximum image dimensions described in the Device Queries table for all devices in context.-->
+            <if>
+                <struct_violation name="image_desc" param="context"/>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
             <!-- and many potential others-->
             <if>
+                <or>
+                    <and>
+                        <eq>
+                            <name>host_ptr</name>                       <literal>NULL</literal>
+                        </eq>
+                        <or>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
+                            </bit_and>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
+                            </bit_and>
+                        </or>
+                    </and>
+                    <and>
+                        <neq>
+                            <name>host_ptr</name>                       <literal>NULL</literal>
+                        </neq>
+                        <and>
+                            <not>
+                                <bit_and>
+                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
+                                </bit_and>
+                            </not>
+                            <not>
+                                <bit_and>
+                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
+                                </bit_and>
+                        </not>
+                        </and>
+                    </and>
+                </or>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if> <!-- not covered by standard-->
                 <or>
                     <and>
                         <eq>
