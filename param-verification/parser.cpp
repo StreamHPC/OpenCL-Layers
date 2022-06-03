@@ -43,6 +43,11 @@ std::string parse_expression(xml_node<> const * const node)
 
         res = "(" + list[0] + " * " + list[1] + ")";
     }
+    else if (strcmp(name, "max") == 0) {
+        auto list = parse_2expressions(node);
+
+        res = "std::max(" + list[0] + ", " + list[1] + ")";
+    }
 
     return res;
 }
@@ -198,6 +203,16 @@ std::string parse_violation(xml_node<> const * const violation)
             else
                 test = "(struct_violation(" + tmp + "))";
         }
+        else if (strcmp(name, "object_is_invalid") == 0)
+        {
+            std::string tmp = node->first_attribute("name")->value();
+
+            if (node->first_attribute("type"))
+                test = "(!object_is_valid(" + tmp + ", " 
+                    + node->first_attribute("type")->value() + "))";
+            else
+                test = "(!object_is_valid(" + tmp + "))";
+        }
         else if (strcmp(name, "any_zero") == 0)
         {
             test = "(any_zero("
@@ -212,6 +227,40 @@ std::string parse_violation(xml_node<> const * const violation)
                 + std::string(node->first_attribute("array")->value())
                 + ", "
                 + std::string(node->first_attribute("elements")->value())
+                + "))";
+        }
+        else if (strcmp(name, "any_invalid") == 0)
+        {
+            test = "(any_invalid("
+                + std::string(node->first_attribute("array")->value())
+                + ", "
+                + std::string(node->first_attribute("elements")->value())
+                + "))";
+        }
+        else if (strcmp(name, "any_not_available") == 0)
+        {
+            test = "(any_not_available("
+                + std::string(node->first_attribute("array")->value())
+                + ", "
+                + std::string(node->first_attribute("elements")->value())
+                + "))";
+        }
+        else if (strcmp(name, "object_not_in") == 0)
+        {
+            test = "(object_not_in("
+                + std::string(node->first_attribute("object")->value())
+                + ", "
+                + std::string(node->first_attribute("in")->value())
+                + "))";
+        }
+        else if (strcmp(name, "any_object_not_in") == 0)
+        {
+            test = "(any_object_not_in("
+                + std::string(node->first_attribute("array")->value())
+                + ", "
+                + std::string(node->first_attribute("elements")->value())
+                + ", "
+                + std::string(node->first_attribute("in")->value())
                 + "))";
         }
         else if (strcmp(name, "from") == 0)
@@ -231,29 +280,8 @@ std::string parse_violation(xml_node<> const * const violation)
     return test;
 }
 
-int main()
+void parse_enums(std::stringstream& code, xml_node<> *& root_node)
 {
-    // stream for generated code
-    std::stringstream code;
-    code << "#include <CL/cl.h>\n"
-         << "#include <string.h>\n"
-         << "#include <stdio.h>\n"
-         << "#include \"list_violation.cpp\"\n"
-         << "#include \"struct_violation.cpp\"\n"
-         << "\n\n";
-
-    xml_document<> doc;
-    xml_node<> * root_node;
-    // Read the xml file into a vector
-    std::ifstream theFile ("cl-avl.xml");
-    std::vector<char> buffer((std::istreambuf_iterator<char>(theFile)), std::istreambuf_iterator<char>());\
-    buffer.push_back('\0');
-    // Parse the buffer using the xml file parsing library into doc 
-    doc.parse<0>(&buffer[0]);
-
-    // Find our root node
-    root_node = doc.first_node("registry");
-
     ///////////////////////////////////////////////////////////////////////
     // enums
     ///////////////////////////////////////////////////////////////////////
@@ -291,15 +319,15 @@ int main()
             "cl_channel_order",
             "cl_channel_type"};
         
-        for (auto i : enums_list) {
+        for (auto a : enums_list) {
             for (xml_node<> * enum_node = version_node->first_node("require");
                 enum_node != nullptr;
                 enum_node = enum_node->next_sibling("require")) {
                     if (enum_node->first_attribute("comment") != nullptr) {
                         //printf("I have visited %s.\n", 
                         //    enum_node->first_attribute("comment")->value());
-                        if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
-                            code << "    if (strcmp(name, \"" << i << "\") == 0)\n"
+                        if (strstr(enum_node->first_attribute("comment")->value(), a.c_str()) != nullptr) {
+                            code << "    if (strcmp(name, \"" << a << "\") == 0)\n"
                                  << "      switch (param) {\n";
 
                             for (xml_node<> * enum_val = enum_node->first_node("enum");
@@ -324,7 +352,71 @@ int main()
     code << "  return true;\n"
          << "}\n\n";
     //printf("\n");
+}
 
+void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
+{
+    ///////////////////////////////////////////////////////////////////////
+    // bitfields
+    ///////////////////////////////////////////////////////////////////////
+
+    code << "// function checks if there are set bits in the bitfield outside of defined\n"
+         << "// 0 is then always valid param\n"
+         << "template<typename T>\n"
+         << "bool bitfield_violation(const char * name, T param)\n"
+         << "{\n"
+         << "  T mask = 0;\n\n";
+
+    // Iterate over the versions
+    for (xml_node<> * version_node = root_node->first_node("feature");
+        version_node != nullptr;
+        version_node = version_node->next_sibling("feature"))
+    {
+        code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
+
+        std::vector<std::string> bitfields_list = 
+            {"cl_device_type",
+            "cl_mem_flags",
+            "cl_map_flags",
+            "cl_mem_migration_flags",
+            "cl_svm_mem_flags",
+            "cl_device_affinity_domain"};
+
+        for (auto i : bitfields_list) {
+            for (xml_node<> * bitfield_node = version_node->first_node("require");
+                bitfield_node != nullptr;
+                bitfield_node = bitfield_node->next_sibling("require")) {
+                    if (bitfield_node->first_attribute("comment") != nullptr) {
+                        //printf("I have visited %s.\n", 
+                        //    bitfield_node->first_attribute("comment")->value());
+                        if (strstr(bitfield_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
+                            code << "    if (strcmp(name, \"" << i << "\") == 0) {\n";
+
+                            for (xml_node<> * bitfield_val = bitfield_node->first_node("enum");
+                                bitfield_val != nullptr;
+                                bitfield_val = bitfield_val->next_sibling("enum")) {
+                                code << "        mask |= " << bitfield_val->first_attribute("name")->value() << ";\n";
+                            }
+
+                            code << "      }\n\n";
+                        }
+                    }
+                }
+        }
+
+        code << "  }\n\n";
+        //printf("I have visited %s.\n", 
+        //    version_node->first_attribute("number")->value());
+        //    version_node->value());
+    }
+
+    code << "  return (param & ~mask);\n"
+         << "}\n\n";
+    //printf("\n");
+}
+
+void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
+{
     ///////////////////////////////////////////////////////////////////////
     // literal lists
     ///////////////////////////////////////////////////////////////////////
@@ -398,65 +490,10 @@ int main()
          << "  return 0;\n"
          << "}\n\n";
     //printf("\n");
+}
 
-    ///////////////////////////////////////////////////////////////////////
-    // bitfields
-    ///////////////////////////////////////////////////////////////////////
-
-    code << "// function checks if there are set bits in the bitfield outside of defined\n"
-         << "// 0 is then always valid param\n"
-         << "template<typename T>\n"
-         << "bool bitfield_violation(const char * name, T param)\n"
-         << "{\n"
-         << "  T mask = 0;\n\n";
-
-    // Iterate over the versions
-    for (xml_node<> * version_node = root_node->first_node("feature");
-        version_node != nullptr;
-        version_node = version_node->next_sibling("feature"))
-    {
-        code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
-
-        std::vector<std::string> bitfields_list = 
-            {"cl_device_type",
-            "cl_mem_flags",
-            "cl_map_flags",
-            "cl_mem_migration_flags",
-            "cl_svm_mem_flags",
-            "cl_device_affinity_domain"};
-
-        for (auto i : bitfields_list) {
-            for (xml_node<> * bitfield_node = version_node->first_node("require");
-                bitfield_node != nullptr;
-                bitfield_node = bitfield_node->next_sibling("require")) {
-                    if (bitfield_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n", 
-                        //    bitfield_node->first_attribute("comment")->value());
-                        if (strstr(bitfield_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
-                            code << "    if (strcmp(name, \"" << i << "\") == 0) {\n";
-
-                            for (xml_node<> * bitfield_val = bitfield_node->first_node("enum");
-                                bitfield_val != nullptr;
-                                bitfield_val = bitfield_val->next_sibling("enum")) {
-                                code << "        mask |= " << bitfield_val->first_attribute("name")->value() << ";\n";
-                            }
-
-                            code << "      }\n\n";
-                        }
-                    }
-                }
-        }
-
-        code << "  }\n\n";
-        //printf("I have visited %s.\n", 
-        //    version_node->first_attribute("number")->value());
-        //    version_node->value());
-    }
-
-    code << "  return (param & ~mask);\n"
-         << "}\n\n";
-    //printf("\n");
-
+void parse_commands(std::stringstream& code, xml_node<> *& root_node)
+{
     ///////////////////////////////////////////////////////////////////////
     // commands
     ///////////////////////////////////////////////////////////////////////
@@ -481,7 +518,7 @@ int main()
             proto = std::regex_replace(proto, std::regex("[ ]+"), " ");
 
 //            if (param_node->value())
-                printf("I have visited %s\n", proto.c_str());
+            //    printf("I have visited %s\n", proto.c_str());
 //            code << proto;
 
             int n = 0;
@@ -554,8 +591,42 @@ int main()
 
             code << "  return " << invoke << "}\n\n";
         }
-    
+
     }
+}
+
+int main()
+{
+    // stream for generated code
+    std::stringstream code;
+    code << "#include <CL/cl.h>\n"
+         << "#include <string.h>\n"
+         << "#include <stdio.h>\n"
+         << "#include <algorithm>\n"
+         << "#include \"object_is_valid.cpp\"\n"
+         << "#include \"list_violation.cpp\"\n"
+         << "#include \"struct_violation.cpp\"\n"
+         << "\n\n";
+
+    xml_document<> doc;
+    xml_node<> * root_node;
+    // Read the xml file into a vector
+    std::ifstream theFile ("cl-avl.xml");
+    std::vector<char> buffer((std::istreambuf_iterator<char>(theFile)), std::istreambuf_iterator<char>());\
+    buffer.push_back('\0');
+    // Parse the buffer using the xml file parsing library into doc 
+    doc.parse<0>(&buffer[0]);
+
+    // Find our root node
+    root_node = doc.first_node("registry");
+
+    parse_enums(code, root_node);
+
+    parse_bitfields(code, root_node);
+
+    parse_literal_lists(code, root_node);
+
+    parse_commands(code, root_node);
 
     // dummy funcs
     code << "bool from(char * version)\n"
@@ -577,6 +648,25 @@ int main()
          << "{\n"
          << "  for (size_t i = 0; i < size; ++i)\n"
          << "    if (ptr[i] == NULL) return true;\n"
+         << "  return false;\n"
+         << "}\n\n";
+
+    code << "template<typename T>\n"
+         << "bool any_invalid(T * ptr, size_t size)\n"
+         << "{\n"
+         << "  for (size_t i = 0; i < size; ++i)\n"
+         << "    if (!object_is_valid(ptr[i])) return true;\n"
+         << "  return false;\n"
+         << "}\n\n";
+
+    code << "bool any_not_available(const cl_device_id * devices, size_t size)\n"
+         << "{\n"
+         << "  cl_bool avail = false;\n"
+         << "  for (size_t i = 0; i < size; ++i) {\n"
+         << "    clGetDeviceInfo(devices[i], CL_DEVICE_AVAILABLE, sizeof(cl_bool), &avail, NULL);\n"
+         << "    if (!avail) return true;\n"
+         << "    avail = false;\n"
+         << "  }\n"
          << "  return false;\n"
          << "}\n\n";
 

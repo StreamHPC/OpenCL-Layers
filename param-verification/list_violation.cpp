@@ -1,6 +1,10 @@
-// longer version that checks also device limits
+// version that checks number of subdevices for clCreateSubDevices
 template<typename T>
-bool list_violation(const char * name, T param, cl_device_id device)
+bool list_violation(
+  const char * name, 
+  T param, 
+  cl_device_id device, 
+  cl_uint num_devices)
 {
   if (strcmp(name, "cl_device_partition_property") == 0)
   { // clCreateSubDevices
@@ -18,7 +22,9 @@ bool list_violation(const char * name, T param, cl_device_id device)
           &cu,
           NULL);
 
-        if ((param[1] == 0) || (param[1] > cu) || (param[2] != 0))
+        if ((param[1] <= 0) || (param[1] > cu) || (param[2] != 0))
+          return true;
+        if (cu / param[1] > num_devices)
           return true;
         return false;
 
@@ -42,7 +48,77 @@ bool list_violation(const char * name, T param, cl_device_id device)
         {
           curr_cu += param[pos];
           curr_sd++;
-          if ((curr_cu > cu) || (curr_sd > sd))
+          if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd))
+            return true;
+          ++pos;
+        }
+
+        ++pos;
+        if (param[pos] != 0)
+          return true;
+        if (curr_sd > num_devices)
+          return true;
+        return false;
+
+      case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
+        if (bitfield_violation("cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+          return true;
+        return false;
+
+      default:
+        return true;
+    }
+  }
+
+  printf("Wrong list: %s, expected cl_device_partition_property\n", name);
+  return true;
+}
+
+// version that checks device limits for clCreateSubDevices
+template<typename T>
+bool list_violation(const char * name, T param, cl_device_id device)
+{
+  if (strcmp(name, "cl_device_partition_property") == 0)
+  { // clCreateSubDevices
+    cl_uint cu;
+    cl_uint sd;
+
+    // only single partition scheme is allowed
+    size_t pos = 0;
+
+    switch (param[0]) {
+      case CL_DEVICE_PARTITION_EQUALLY:
+        clGetDeviceInfo(device,
+          CL_DEVICE_MAX_COMPUTE_UNITS,
+          sizeof(cl_uint),
+          &cu,
+          NULL);
+
+        if ((param[1] <= 0) || (param[1] > cu) || (param[2] != 0))
+          return true;
+        return false;
+
+      case CL_DEVICE_PARTITION_BY_COUNTS:
+        clGetDeviceInfo(device,
+          CL_DEVICE_MAX_COMPUTE_UNITS,
+          sizeof(cl_uint),
+          &cu,
+          NULL);
+        cl_uint curr_cu = 0;
+
+        clGetDeviceInfo(device,
+          CL_DEVICE_PARTITION_MAX_SUB_DEVICES,
+          sizeof(cl_uint),
+          &sd,
+          NULL);
+        cl_uint curr_sd = 0;
+
+        ++pos;
+        while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
+        {
+          curr_cu += param[pos];
+          curr_sd++;
+          if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd))
             return true;
           ++pos;
         }
@@ -62,7 +138,59 @@ bool list_violation(const char * name, T param, cl_device_id device)
     }
   }
 
-  printf("Unknown list: %s\n", name);
+  printf("Wrong list: %s, expected cl_device_partition_property\n", name);
+  return true;
+}
+
+// version that checks platform for clCreateContext and clCreateContextFromType(
+template<typename T>
+bool list_violation(
+  const char * name, 
+  T param, 
+  void * user_data)
+{
+  // dummy param to separate the case
+  (void)user_data;
+
+  if (strcmp(name, "cl_context_properties") == 0)
+  { // clCreateContext
+    if (param == NULL)
+      return false;
+
+    // any order of properties is allowed
+    size_t pos = 0;
+    // but only once
+    cl_uint cp_num = 0;
+    cl_uint cius_num = 0;
+
+    while (param[pos] != 0)
+    {
+      switch (param[pos]) {
+        case CL_CONTEXT_PLATFORM:
+          if (!object_is_valid((cl_platform_id)param[pos+1]))
+            return true;
+          pos += 2;
+          ++cp_num;
+          if (cp_num > 1)
+            return true;
+          break;
+
+        case CL_QUEUE_SIZE:
+          pos += 2;
+          ++cius_num;
+          if (cius_num > 1)
+            return true;
+          break;
+
+        default:
+          return true;
+      }
+    }
+
+    return false;
+  }
+
+  printf("Wrong list: %s, expected cl_context_properties\n", name);
   return true;
 }
 
@@ -259,4 +387,73 @@ bool list_violation(const char * name, T param)
 
   printf("Unknown list: %s\n", name);
   return true;
+}
+
+
+template<typename T1, typename T2>
+bool object_not_in(T1 object, T2 in);
+
+template<>
+bool object_not_in(cl_device_id device, cl_context context)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(context, &nd);
+
+  for (cl_uint i = 0; i < nd; ++i)
+    if (device == devices[i]) {
+      free(devices);
+      return false;
+    }
+  free(devices);
+  return true;
+}
+
+template<>
+bool object_not_in(cl_command_queue command_queue, cl_device_id device)
+{
+  cl_device_id q_device;
+  clGetCommandQueueInfo(
+    command_queue, 
+    CL_QUEUE_DEVICE, 
+    sizeof(cl_device_id), 
+    &q_device, 
+    NULL);
+
+  if (device == q_device)
+    return false;
+  return true;
+}
+
+// command queue and buffer should belong to the same context
+template<>
+bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
+{
+  cl_context c_context;
+  clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_CONTEXT,
+    sizeof(cl_context),
+    &c_context,
+    NULL);
+  cl_context b_context;
+  clGetMemObjectInfo(
+    buffer,
+    CL_MEM_CONTEXT,
+    sizeof(cl_context),
+    &b_context,
+    NULL);
+
+  if (b_context == c_context)
+      return false;
+  return true;
+}
+
+template<typename T1, typename T2>
+bool any_object_not_in(T1 * objects, size_t n, T2 in)
+{
+  for (size_t i = 0; i < n; +i)
+    if (object_not_in(objects[i], in))
+      return true;
+  return false;
 }

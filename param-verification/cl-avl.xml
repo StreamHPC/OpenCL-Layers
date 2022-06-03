@@ -1047,7 +1047,7 @@
 
     <!-- SECTION: CL command definitions. (TBD) -->
     <commands>
-        <!-- 4.1-->
+    <!-- 4.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetPlatformIDs</name></proto>
@@ -1102,6 +1102,12 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
+                <object_is_invalid name="platform"/>
+            </if>
+            <then>
+                <name>clGetPlatformInfo</name>                          <value>CL_INVALID_PLATFORM</value>
+            </then>
+            <if>
                 <enum_violation name="param_name"/>
             </if>
             <then>
@@ -1135,7 +1141,7 @@
             </then>
         </command>
 
-        <!-- 4.2-->
+    <!-- 4.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetDeviceIDs</name></proto>
@@ -1145,6 +1151,12 @@
             <param><type>cl_device_id</type>*                           <name>devices</name></param>
             <param><type>cl_uint</type>*                                <name>num_devices</name></param>
 
+            <if>
+                <object_is_invalid name="platform"/>
+            </if>
+            <then>
+                <name>clGetDeviceIDs</name>                             <value>CL_INVALID_PLATFORM</value>
+            </then>
             <if>
                 <or>
                     <bitfield_violation name="device_type"/>
@@ -1227,6 +1239,12 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clGetDeviceInfo</name>                            <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
                 <enum_violation name="param_name"/> <!-- see the spec-->
             </if>
             <then>
@@ -1267,6 +1285,12 @@
             <param><type>cl_ulong</type>*                               <name>host_timestamp</name></param>
 
             <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clGetDeviceAndHostTimer</name>                    <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>host_timestamp</name>                     <literal>NULL</literal>
@@ -1287,6 +1311,12 @@
             <param><type>cl_ulong</type>*                               <name>host_timestamp</name></param>
 
             <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clGetHostTimer</name>                             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
                 <eq>
                     <name>host_timestamp</name>                         <literal>NULL</literal>
                 </eq>
@@ -1296,7 +1326,7 @@
             </then>
         </command>
 
-        <!-- 4.3-->
+    <!-- 4.3 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clCreateSubDevices</name></proto>
@@ -1307,13 +1337,37 @@
             <param><type>cl_uint</type>*                                <name>num_devices_ret</name></param>
 
             <if>
-                <list_violation name="properties" param="in_device"/> <!-- TODO-->
+                <object_is_invalid name="in_device"/>
+            </if>
+            <then>
+                <name>clCreateSubDevices</name>                         <value>CL_INVALID_DEVICE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if values specified in properties are not valid or if values specified in properties are valid but not supported by the device. -->
+            <if>
+                <list_violation name="properties"/>
             </if>
             <then>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if out_devices is not NULL and num_devices is less than the number of sub-devices created by the partition scheme-->
-            <!-- CL_INVALID_DEVICE_PARTITION_COUNT if the partition name specified in properties is CL_DEVICE_PARTITION_BY_COUNTS and the number of sub-devices requested exceeds CL_DEVICE_PARTITION_MAX_SUB_DEVICES or the total number of compute units requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device, or the number of compute units requested for one or more sub-devices is less than zero or the number of sub-devices requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device-->
+            <!-- CL_INVALID_DEVICE_PARTITION_COUNT if the partition name specified in properties is CL_DEVICE_PARTITION_BY_COUNTS and the number of sub-devices requested exceeds CL_DEVICE_PARTITION_MAX_SUB_DEVICES or the total number of compute units requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device, or the number of compute units requested for one or more sub-devices is less than zero or the number of sub-devices requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device. -->
+            <if>
+                <list_violation name="properties" param="in_device"/>
+            </if>
+            <then>
+                <name>clCreateSubDevices</name>                         <value>CL_INVALID_DEVICE_PARTITION_COUNT</value>
+            </then>
+            <!-- CL_INVALID_VALUE if out_devices is not NULL and num_devices is less than the number of sub-devices created by the partition scheme. -->
+            <if>
+                <and>
+                    <neq>
+                        <name>out_devices</name>                        <literal>NULL</literal>
+                    </neq>
+                    <list_violation name="properties" param="in_device, num_devices"/>
+                </and>
+            </if>
+            <then>
+                <name>clCreateSubDevices</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
             <if> <!-- not covered by standard-->
                 <and>
                     <neq>
@@ -1332,14 +1386,28 @@
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clRetainDevice</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
+
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clRetainDevice</name>                             <value>CL_INVALID_DEVICE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clReleaseDevice</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
+
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clReleaseDevice</name>                            <value>CL_INVALID_DEVICE</value>
+            </then>
         </command>
 
-        <!-- 4.4-->
+    <!-- 4.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_context</type>                              <name>clCreateContext</name></proto>
@@ -1350,15 +1418,24 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <!-- CL_INVALID_PROPERTY if context property name in properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once. This error code is missing before version 1.1. -->
             <if>
                 <and>
                     <from version="1.1"/>
-                    <list_violation name="properties"/> <!-- TODO - see the spec-->
+                    <list_violation name="properties"/>
                 </and>
             </if>
             <then>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+            </then>
+            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected or if platform value specified in properties is not a valid platform. -->
+            <if>
+                <list_violation name="properties" param="user_data"/>
+            </if>
+            <then>
+                <name>clCreateContext</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_PLATFORM</value>
             </then>
             <if>
                 <eq>
@@ -1367,7 +1444,7 @@
             </if>
             <then>
                 <name>clCreateContext</name>                            <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <eq>
@@ -1376,7 +1453,7 @@
             </if>
             <then>
                 <name>clCreateContext</name>                            <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
                 <and>
@@ -1390,7 +1467,21 @@
             </if>
             <then>
                 <name>clCreateContext</name>                            <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_invalid array="devices" elements="num_devices"/>
+            </if>
+            <then>
+                <name>clCreateContext</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <any_not_available array="devices" elements="num_devices"/>
+            </if>
+            <then>
+                <name>clCreateContext</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_DEVICE_NOT_AVAILABLE</value>
             </then>
             <if>
                 <and>
@@ -1404,7 +1495,7 @@
             </if>
             <then>
                 <name>clCreateContext</name>                            <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
@@ -1416,15 +1507,24 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <!-- CL_INVALID_PROPERTY if context property name in properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once. This error code is missing before version 1.1. -->
             <if>
                 <and>
                     <from version="1.1"/>
-                    <list_violation name="properties"/> <!-- TODO - see the spec-->
+                    <list_violation name="properties"/>
                 </and>
             </if>
             <then>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
+            </then>
+            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected or if platform value specified in properties is not a valid platform. -->
+            <if>
+                <list_violation name="properties" param="user_data"/>
+            </if>
+            <then>
+                <name>clCreateContextFromType</name>                    <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_PLATFORM</value>
             </then>
             <if>
                 <and>
@@ -1477,16 +1577,34 @@
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE_TYPE</value>
             </then>
+            <!--  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            CL_DEVICE_NOT_AVAILABLE if no devices that match device_type and property values specified in properties are currently available.
+            CL_DEVICE_NOT_FOUND if no devices that match device_type and property values specified in properties were found. 
+            -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clRetainContext</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clRetainContext</name>                            <value>CL_INVALID_CONTEXT</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clReleaseContext</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clReleaseContext</name>                           <value>CL_INVALID_CONTEXT</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
@@ -1497,6 +1615,12 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clGetContextInfo</name>                           <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/> <!-- see the spec-->
             </if>
@@ -1536,7 +1660,13 @@
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>void (CL_CALLBACK*                                   <name>pfn_notify</name>)(cl_context context, void* user_data)</param>
             <param><type>void</type>*                                   <name>user_data</name></param>
-            
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clSetContextDestructorCallback</name>             <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <eq>
                     <name>pfn_notify</name>                             <literal>NULL</literal>
@@ -1547,7 +1677,7 @@
             </then>
         </command>
 
-        <!-- 5.1-->
+    <!-- 5.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>cl_command_queue</type>                        <name>clCreateCommandQueueWithProperties</name></proto>
@@ -1557,13 +1687,34 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <list_violation name="properties"/> <!-- TODO-->
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <object_not_in object="device" in="context"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <list_violation name="properties"/>
             </if>
             <then>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device-->
+            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
         </command>
 
         <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED">
@@ -1573,6 +1724,27 @@
             <param><type>cl_command_queue_properties</type>             <name>properties</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueue</name>                       <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueue</name>                       <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <object_not_in object="device" in="context"/>
+            </if>
+            <then>
+                <name>clCreateCommandQueue</name>                       <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
             <if>
                 <not>
                     <or>
@@ -1592,6 +1764,7 @@
                 <name>clCreateCommandQueue</name>                       <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_1">
@@ -1599,16 +1772,61 @@
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <object_not_in object="device" in="context"/>
+            </if>
+            <then>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="device"/>
+            </if>
+            <then>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clRetainCommandQueue</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clRetainCommandQueue</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clReleaseCommandQueue</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clReleaseCommandQueue</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
@@ -1620,7 +1838,13 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
             </if>
             <then>
                 <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_VALUE</value>
@@ -1661,6 +1885,12 @@
             <param><type>cl_command_queue_properties</type>*            <name>old_properties</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clSetCommandQueueProperty</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
                 <not>
                     <or>
                         <bit_and>
@@ -1675,9 +1905,10 @@
             <then>
                 <name>clSetCommandQueueProperty</name>                  <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
         </command>
 
-        <!-- 5.2.1-->
+    <!-- 5.2.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_mem</type>                                  <name>clCreateBuffer</name></proto>
@@ -1688,6 +1919,13 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateBuffer</name>                             <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if> <!-- spec is not clear whether 0 is a valid value-->
                 <or>
                     <bitfield_violation name="flags"/>
@@ -1748,7 +1986,8 @@
             </then>
             <if>
                 <eq>
-                    <name>size</name>                                   <literal>0</literal><!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
+                    <name>size</name>                                   <literal>0</literal>
+                    <!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
                 </eq>
             </if>
             <then>
@@ -1817,7 +2056,14 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <list_violation name="properties"/> <!-- TODO-->
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateBufferWithProperties</name>               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <list_violation name="properties"/>
             </if>
             <then>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
@@ -1883,7 +2129,8 @@
             </then>
             <if>
                 <eq>
-                    <name>size</name>                                   <literal>0</literal><!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
+                    <name>size</name>                                   <literal>0</literal>
+                    <!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
                 </eq>
             </if>
             <then>
@@ -1950,6 +2197,13 @@
             <param>const <type>void</type>*                             <name>buffer_create_info</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
             <!-- CL_INVALID_VALUE if buffer was created with CL_MEM_WRITE_ONLY and flags specifies CL_MEM_READ_WRITE or CL_MEM_READ_ONLY, or if buffer was created with CL_MEM_READ_ONLY and flags specifies CL_MEM_READ_WRITE or CL_MEM_WRITE_ONLY, or if flags specifies CL_MEM_USE_HOST_PTR or CL_MEM_ALLOC_HOST_PTR or CL_MEM_COPY_HOST_PTR.-->
             <!-- CL_INVALID_VALUE if buffer was created with CL_MEM_HOST_WRITE_ONLY and flags specify CL_MEM_HOST_READ_ONLY, or if buffer was created with CL_MEM_HOST_READ_ONLY and flags specify CL_MEM_HOST_WRITE_ONLY, or if buffer was created with CL_MEM_HOST_NO_ACCESS and flags specify CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_WRITE_ONLY-->
             <if>
@@ -2002,7 +2256,7 @@
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if there are no devices in context associated with buffer for which the origin field of the cl_buffer_region structure passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value-->
         </command>
 
-        <!-- 5.2.2-->
+    <!-- 5.2.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clEnqueueReadBuffer</name></proto>
@@ -2017,9 +2271,28 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <eq>
                     <name>ptr</name>                                    <literal>NULL</literal>
                 </eq>
+                <!-- if the region being read or written specified by (offset, size) is out of bounds -->
             </if>
             <then>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_VALUE</value>
@@ -2055,7 +2328,7 @@
             <then>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2064,6 +2337,18 @@
                         <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
                     </array_len_ls>
                 </and>
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if> <!-- event objects in event_wait_list are not valid events-->
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
             </if>
             <then>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -2084,6 +2369,24 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <eq>
                     <name>ptr</name>                                    <literal>NULL</literal>
@@ -2123,7 +2426,7 @@
             <then>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2132,6 +2435,18 @@
                         <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
                     </array_len_ls>
                 </and>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
             </if>
             <then>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -2158,6 +2473,24 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>buffer_origin</name>                      <literal>NULL</literal>
@@ -2173,6 +2506,7 @@
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- CL_INVALID_VALUE if the region being read or written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds. -->
             <if>
                 <or>
                     <array_len_ls>
@@ -2370,7 +2704,7 @@
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2383,6 +2717,19 @@
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if> <!-- event objects in event_wait_list are not valid events-->
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
             <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
             <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
         </command>
@@ -2405,6 +2752,24 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>buffer_origin</name>                      <literal>NULL</literal>
@@ -2420,6 +2785,7 @@
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- CL_INVALID_VALUE if the region being read or written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds. -->
             <if>
                 <or>
                     <array_len_ls>
@@ -2617,7 +2983,7 @@
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2630,6 +2996,19 @@
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
             <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
             <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
         </command>
@@ -2646,6 +3025,36 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="dst_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="dst_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <or>
                     <and>
@@ -2669,7 +3078,7 @@
             <then>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2682,7 +3091,22 @@
             <then>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <!--CL_MEM_COPY_OVERLAP if src_buffer and dst_buffer are the same buffer or sub-buffer object and the source and destination regions overlap or if src_buffer and dst_buffer are different sub-buffers of the same associated buffer object and they overlap. The regions overlap if src_offset ≤ dst_offset ≤ src_offset + size - 1 or if dst_offset ≤ src_offset ≤ dst_offset + size - 1-->
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_INVALID_VALUE if src_offset, dst_offset, size, src_offset + size or dst_offset + size require accessing elements outside the src_buffer and dst_buffer buffer objects respectively. -->
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
+            <!--CL_MEM_COPY_OVERLAP if src_buffer and dst_buffer are the same buffer or sub-buffer object and the source and destination regions overlap or if src_buffer and dst_buffer are different sub-buffers of the same associated buffer object and they overlap. The regions overlap if src_offset ≤ dst_offset ≤ src_offset + size - 1 or if dst_offset ≤ src_offset ≤ dst_offset + size - 1. -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_1">
@@ -2701,6 +3125,36 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="dst_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="dst_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -2890,10 +3344,34 @@
                     </eq>
                     <or>
                         <neq>
-                            <name>dst_slice_pitch</name>                <name>src_slice_pitch</name>
+                            <max>
+                                <name>dst_row_pitch</name>
+                                <name>region[0]</name>
+                            </max>                                      <max>
+                                                                            <name>src_row_pitch</name>
+                                                                            <name>region[0]</name>
+                                                                        </max>
                         </neq>
                         <neq>
-                            <name>dst_row_pitch</name>                  <name>src_row_pitch</name>
+                            <max>
+                                <name>dst_slice_pitch</name>
+                                <mult>
+                                    <max>
+                                        <name>dst_row_pitch</name>
+                                        <name>region[0]</name>
+                                    </max>
+                                    <name>region[1]</name>
+                                </mult>
+                            </max>                                      <max>
+                                                                            <name>src_slice_pitch</name>
+                                                                            <mult>
+                                                                                <max>
+                                                                                    <name>src_row_pitch</name>
+                                                                                    <name>region[0]</name>
+                                                                                </max>
+                                                                                <name>region[1]</name>
+                                                                            </mult>
+                                                                        </max>
                         </neq>
                     </or>
                 </and>
@@ -2901,6 +3379,7 @@
             <then>
                 <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- CL_INVALID_VALUE if (src_origin, region, src_row_pitch, src_slice_pitch) or (dst_origin, region, dst_row_pitch, dst_slice_pitch) require accessing elements outside the src_buffer and dst_buffer buffer objects respectively. -->
             <if>
                 <or>
                     <and>
@@ -2924,7 +3403,7 @@
             <then>
                 <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -2937,9 +3416,24 @@
             <then>
                 <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="src_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
+            <!--CL_MEM_COPY_OVERLAP if src_buffer and dst_buffer are the same buffer or sub-buffer object and the source and destination regions overlap or if src_buffer and dst_buffer are different sub-buffers of the same associated buffer object and they overlap. The regions overlap if src_offset ≤ dst_offset ≤ src_offset + size - 1 or if dst_offset ≤ src_offset ≤ dst_offset + size - 1. -->
         </command>
 
-        <!-- 5.2.3-->
+    <!-- 5.2.3 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clEnqueueFillBuffer</name></proto>
@@ -2953,6 +3447,25 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- CL_INVALID_VALUE if offset or offset + size require accessing elements outside the buffer buffer object respectively. -->
             <if>
                 <or>
                     <eq>
@@ -3041,7 +3554,7 @@
             <then>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -3054,9 +3567,22 @@
             <then>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
         </command>
 
-        <!-- 5.2.4-->
+    <!-- 5.2.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>void</type>*                                   <name>clEnqueueMapBuffer</name></proto>
@@ -3071,6 +3597,28 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- CL_INVALID_VALUE if region being mapped given by (offset, size) is out of bounds. -->
             <if>
                 <or>
                     <eq>
@@ -3129,7 +3677,7 @@
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -3143,10 +3691,24 @@
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
             <!-- CL_INVALID_OPERATION if buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags or if buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags-->
         </command>
 
-        <!-- 5.3.1-->
+    <!-- 5.3.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_mem</type>                                  <name>clCreateImage</name></proto>
@@ -3157,6 +3719,13 @@
             <param><type>void</type>*                                   <name>host_ptr</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if> <!-- spec is not clear whether 0 is a valid value-->
                 <or>
                     <bitfield_violation name="flags"/>
@@ -3260,6 +3829,9 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- if values specified in image_format are not valid OR 
+            if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
+            if a 2D image is created from a 2D image object and the rules described above are not followed -->
             <if>
                 <struct_violation name="image_format" param="context, image_desc"/>
             </if>
@@ -3267,6 +3839,7 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- if values specified in image_desc are not valid -->
             <if>
                 <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
             </if>
@@ -3274,6 +3847,7 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- if image dimensions specified in image_desc exceed the maximum image dimensions described in the Device Queries table for all devices in context.-->
             <if>
                 <struct_violation name="image_desc" param="context"/>
             </if>
@@ -3281,7 +3855,22 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- and many potential others-->
+            <!-- if an image is being created from another memory object and flags are not compatible -->
+            <if>
+                <struct_violation name="image_desc" param="flags"/>
+            </if>
+            <then>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- if an image is being created from host_ptr and it is too short -->
+            <if>
+                <struct_violation name="image_desc" param="host_ptr, image_format"/>
+            </if>
+            <then>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
             <if>
                 <or>
                     <and>
@@ -3311,44 +3900,6 @@
                                 <bit_and>
                                     <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
                                 </bit_and>
-                        </not>
-                        </and>
-                    </and>
-                </or>
-            </if>
-            <then>
-                <name>clCreateImage</name>                              <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
-            </then>
-            <if> <!-- not covered by standard-->
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
                             </not>
                         </and>
                     </and>
@@ -3358,6 +3909,8 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
+            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_3_0">
@@ -3370,6 +3923,13 @@
             <param><type>void</type>*                                   <name>host_ptr</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <list_violation name="properties"/>
             </if>
@@ -3480,6 +4040,9 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- if values specified in image_format are not valid OR 
+            if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
+            if a 2D image is created from a 2D image object and the rules described above are not followed -->
             <if>
                 <struct_violation name="image_format" param="context, image_desc"/>
             </if>
@@ -3487,6 +4050,7 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- if values specified in image_desc are not valid -->
             <if>
                 <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
             </if>
@@ -3494,6 +4058,7 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- if image dimensions specified in image_desc exceed the maximum image dimensions described in the Device Queries table for all devices in context.-->
             <if>
                 <struct_violation name="image_desc" param="context"/>
             </if>
@@ -3501,7 +4066,22 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- and many potential others-->
+            <!-- if an image is being created from another memory object and flags are not compatible -->
+            <if>
+                <struct_violation name="image_desc" param="flags"/>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- if an image is being created from host_ptr and it is too short -->
+            <if>
+                <struct_violation name="image_desc" param="host_ptr, image_format"/>
+            </if>
+            <then>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
             <if>
                 <or>
                     <and>
@@ -3531,44 +4111,6 @@
                                 <bit_and>
                                     <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
                                 </bit_and>
-                        </not>
-                        </and>
-                    </and>
-                </or>
-            </if>
-            <then>
-                <name>clCreateImageWithProperties</name>                <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
-            </then>
-            <if> <!-- not covered by standard-->
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
                             </not>
                         </and>
                     </and>
@@ -3578,6 +4120,8 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
+            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
         </command>
 
         <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
@@ -4024,7 +4568,7 @@
             </then>
         </command>
 
-        <!-- 5.3.2-->
+    <!-- 5.3.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetSupportedImageFormats</name></proto>
@@ -4103,7 +4647,7 @@
             </then>
         </command>
 
-        <!-- 5.3.3-->
+    <!-- 5.3.3 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clEnqueueReadImage</name></proto>
@@ -4408,7 +4952,7 @@
             <!-- CL_MEM_COPY_OVERLAP if src_image and dst_image are the same image object and the source and destination regions overlap-->
         </command>
 
-        <!-- 5.3.4-->
+    <!-- 5.3.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clEnqueueFillImage</name></proto>
@@ -4507,7 +5051,7 @@
             </then>
         </command>
 
-        <!-- 5.3.5-->
+    <!-- 5.3.5 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clEnqueueCopyImageToBuffer</name></proto>
@@ -4699,7 +5243,7 @@
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
         </command>
 
-        <!-- 5.3.6-->
+    <!-- 5.3.6 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>void</type>*                                   <name>clEnqueueMapImage</name></proto>
@@ -4886,7 +5430,7 @@
             </then>
         </command>
 
-        <!-- 5.4.1-->
+    <!-- 5.4.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>cl_mem</type>                                  <name>clCreatePipe</name></proto>
@@ -4942,7 +5486,7 @@
             </then>
         </command>
 
-        <!-- 5.4.2-->
+    <!-- 5.4.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>cl_int</type>                                  <name>clGetPipeInfo</name></proto>
@@ -4986,7 +5530,7 @@
             </then>
         </command>
 
-        <!-- 5.5.1-->
+    <!-- 5.5.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clRetainMemObject</name></proto>
@@ -5014,7 +5558,7 @@
             </then>
         </command>
 
-        <!-- 5.5.2-->
+    <!-- 5.5.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clEnqueueUnmapMemObject</name></proto>
@@ -5064,7 +5608,7 @@
             <!-- CL_INVALID_CONTEXT if context associated with command_queue and memobj are not the same or if the context associated with command_queue and events in event_wait_list are not the same-->
         </command>
 
-        <!-- 5.5.4-->
+    <!-- 5.5.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clEnqueueMigrateMemObjects</name></proto>
@@ -5129,7 +5673,7 @@
             </then>
         </command>
 
-        <!-- 5.5.5-->
+    <!-- 5.5.5 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetMemObjectInfo</name></proto>
@@ -5173,7 +5717,7 @@
             </then>
         </command>
 
-        <!-- 5.6.1-->
+    <!-- 5.6.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>void</type>*                                   <name>clSVMAlloc</name></proto>
@@ -5683,7 +6227,7 @@
             </then>
         </command>
 
-        <!-- 5.7.1-->
+    <!-- 5.7.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>cl_sampler</type>                              <name>clCreateSamplerWithProperties</name></proto>
@@ -5774,7 +6318,7 @@
             </then>
         </command>
 
-        <!-- 5.8.1-->
+    <!-- 5.8.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_program</type>                              <name>clCreateProgramWithSource</name></proto>
@@ -5972,7 +6516,7 @@
             <!-- CL_INVALID_DEVICE if any device in device_list is not in the list of devices associated with context-->
         </command>
 
-        <!-- 5.8.2-->
+    <!-- 5.8.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clRetainProgram</name></proto>
@@ -6000,7 +6544,7 @@
             </then>
         </command>
 
-        <!-- 5.8.3-->
+    <!-- 5.8.3 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_2">
             <proto><type>cl_int</type>                                  <name>clSetProgramSpecializationConstant</name></proto>
@@ -6010,7 +6554,7 @@
             <param>const <type>void</type>*                             <name>spec_value</name></param>
         </command>
 
-        <!-- 5.8.4-->
+    <!-- 5.8.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clBuildProgram</name></proto>
@@ -6054,7 +6598,7 @@
             </then>
         </command>
 
-        <!-- 5.8.5-->
+    <!-- 5.8.5 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clCompileProgram</name></proto>
@@ -6233,7 +6777,7 @@
             </then>
         </command>
 
-        <!-- 5.8.8-->
+    <!-- 5.8.8 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clUnloadPlatformCompiler</name></proto>
@@ -6244,7 +6788,7 @@
             <proto><type>cl_int</type>                                  <name>clUnloadCompiler</name></proto>
         </command>
 
-        <!-- 5.8.9-->
+    <!-- 5.8.9 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetProgramInfo</name></proto>
@@ -6331,7 +6875,7 @@
             </then>
         </command>
 
-        <!-- 5.9.1-->
+    <!-- 5.9.1 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_kernel</type>                               <name>clCreateKernel</name></proto>
@@ -6368,7 +6912,7 @@
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
         </command>
 
-        <!-- 5.9.2-->
+    <!-- 5.9.2 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clSetKernelArg</name></proto>
@@ -6438,7 +6982,7 @@
             </then>
         </command>
 
-        <!-- 5.9.3-->
+    <!-- 5.9.3 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_1">
             <proto><type>cl_kernel</type>                               <name>clCloneKernel</name></proto>
@@ -6446,7 +6990,7 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
         </command>
 
-        <!-- 5.9.4-->
+    <!-- 5.9.4 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetKernelInfo</name></proto>
@@ -6688,7 +7232,7 @@
             </then>
         </command>
 
-        <!-- 5.10-->
+    <!-- 5.10 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clEnqueueNDRangeKernel</name></proto>
@@ -7026,7 +7570,7 @@
             </then>
         </command>
 
-        <!-- 5.11-->
+    <!-- 5.11 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_1">
             <proto><type>cl_event</type>                                <name>clCreateUserEvent</name></proto>
@@ -7165,7 +7709,7 @@
             <param><type>cl_event</type>                                <name>event</name></param>
         </command>
 
-        <!-- 5.12-->
+    <!-- 5.12 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_2">
             <proto><type>cl_int</type>                                  <name>clEnqueueMarkerWithWaitList</name></proto>
@@ -7306,7 +7850,7 @@
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
         </command>
 
-        <!-- 5.14-->
+    <!-- 5.14 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clGetEventProfilingInfo</name></proto>
@@ -7350,7 +7894,7 @@
             </then>
         </command>
 
-        <!-- 5.15-->
+    <!-- 5.15 -->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
             <proto><type>cl_int</type>                                  <name>clFlush</name></proto>
