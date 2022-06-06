@@ -13,6 +13,8 @@ bool list_violation(
 
     // only single partition scheme is allowed
     size_t pos = 0;
+    cl_uint curr_cu = 0;
+    cl_uint curr_sd = 0;
 
     switch (param[0]) {
       case CL_DEVICE_PARTITION_EQUALLY:
@@ -34,14 +36,12 @@ bool list_violation(
           sizeof(cl_uint),
           &cu,
           NULL);
-        cl_uint curr_cu = 0;
 
         clGetDeviceInfo(device,
           CL_DEVICE_PARTITION_MAX_SUB_DEVICES,
           sizeof(cl_uint),
           &sd,
           NULL);
-        cl_uint curr_sd = 0;
 
         ++pos;
         while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
@@ -74,9 +74,13 @@ bool list_violation(
   return true;
 }
 
-// version that checks device limits for clCreateSubDevices
+// version that checks device limits for clCreateSubDevices 
+// and max size of device queue for clCreateCommandQueueWithProperties
 template<typename T>
-bool list_violation(const char * name, T param, cl_device_id device)
+bool list_violation(
+  const char * name, 
+  T param, 
+  cl_device_id device)
 {
   if (strcmp(name, "cl_device_partition_property") == 0)
   { // clCreateSubDevices
@@ -85,6 +89,8 @@ bool list_violation(const char * name, T param, cl_device_id device)
 
     // only single partition scheme is allowed
     size_t pos = 0;
+    cl_uint curr_cu = 0;
+    cl_uint curr_sd = 0;
 
     switch (param[0]) {
       case CL_DEVICE_PARTITION_EQUALLY:
@@ -104,14 +110,12 @@ bool list_violation(const char * name, T param, cl_device_id device)
           sizeof(cl_uint),
           &cu,
           NULL);
-        cl_uint curr_cu = 0;
 
         clGetDeviceInfo(device,
           CL_DEVICE_PARTITION_MAX_SUB_DEVICES,
           sizeof(cl_uint),
           &sd,
           NULL);
-        cl_uint curr_sd = 0;
 
         ++pos;
         while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
@@ -138,7 +142,60 @@ bool list_violation(const char * name, T param, cl_device_id device)
     }
   }
 
-  printf("Wrong list: %s, expected cl_device_partition_property\n", name);
+  if (strcmp(name, "cl_queue_properties") == 0)
+  { // clCreateCommandQueueWithProperties
+    if (param == NULL)
+      return false;
+
+    // any order of properties is allowed
+    size_t pos = 0;
+    // and not once ???
+    cl_uint qs = 0;
+    if (from("2.0"))
+      clGetDeviceInfo(device,
+        CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
+        sizeof(cl_uint),
+        &qs,
+        NULL);
+    cl_uint curr_qs = 0;
+    cl_command_queue_properties qp = 0;
+
+    while (param[pos] != 0)
+    {
+      switch (param[pos]) {
+        case CL_QUEUE_PROPERTIES:
+          ++pos;
+          qp = param[pos];
+          ++pos;
+          if (bitfield_violation("cl_command_queue_properties", qp))
+            return true;
+          // from("2.0") is not needed as if any of the flags are set 
+          // for earlier implementation it is a bitfield violation above
+          if ((qp | CL_QUEUE_ON_DEVICE) && !(qp | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
+            return true;
+          if ((qp | CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp | CL_QUEUE_ON_DEVICE))
+            return true;
+          break;
+
+        case CL_QUEUE_SIZE:
+          ++pos;
+          curr_qs = param[pos];
+          ++pos;
+          if (curr_qs > qs)
+            return true;
+          break;
+
+        default:
+          return true;
+      }
+    }
+
+    if ((curr_qs > 0) && !(qp | CL_QUEUE_ON_DEVICE))
+      return true;
+    return false;
+  }
+ 
+  printf("Wrong list: %s, expected cl_device_partition_property or cl_queue_properties\n", name);
   return true;
 }
 
@@ -268,59 +325,6 @@ bool list_violation(const char * name, T param)
     return false;
   }
 
-  if (strcmp(name, "cl_queue_properties") == 0)
-  { // clCreateCommandQueueWithProperties
-    if (param == NULL)
-      return false;
-
-    // any order of properties is allowed
-    size_t pos = 0;
-    // and not once ???
-    cl_uint qs = 0;
-    if (from("2.0"))
-      clGetDeviceInfo(device,
-        CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
-        sizeof(cl_uint),
-        &qs,
-        NULL);
-    cl_uint curr_qs = 0;
-    cl_command_queue_properties qp = 0;
-
-    while (param[pos] != 0)
-    {
-      switch (param[pos]) {
-        case CL_QUEUE_PROPERTIES:
-          ++pos;
-          qp = param[pos];
-          ++pos;
-          if (bitfield_violation("cl_command_queue_properties", qp))
-            return true;
-          // from("2.0") is not needed as if any of the flags are set 
-          // for earlier implementation it is a bitfield violation above
-          if ((qp | CL_QUEUE_ON_DEVICE) && !(qp | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
-            return true;
-          if ((qp | CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp | CL_QUEUE_ON_DEVICE))
-            return true;
-          break;
-
-        case CL_QUEUE_SIZE:
-          ++pos;
-          curr_qs = param[pos];
-          ++pos;
-          if (curr_qs > qs)
-            return true;
-          break;
-
-        default:
-          return true;
-      }
-    }
-
-    if ((curr_qs > 0) && !(qp | CL_QUEUE_ON_DEVICE))
-      return true;
-    return false;
-  }
-
   if (strcmp(name, "cl_mem_properties") == 0)
   { // clCreateBufferWithProperties
     if (param == NULL)
@@ -390,10 +394,10 @@ bool list_violation(const char * name, T param)
 }
 
 
-template<typename T1, typename T2>
-bool object_not_in(T1 object, T2 in);
+//template<typename T1, typename T2>
+//bool object_not_in(T1 object, T2 in);
 
-template<>
+//template<>
 bool object_not_in(cl_device_id device, cl_context context)
 {
   cl_uint nd;
@@ -409,7 +413,7 @@ bool object_not_in(cl_device_id device, cl_context context)
   return true;
 }
 
-template<>
+//template<>
 bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 {
   cl_device_id q_device;
@@ -426,7 +430,7 @@ bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 }
 
 // command queue and buffer should belong to the same context
-template<>
+//template<>
 bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
 {
   cl_context c_context;
@@ -445,6 +449,30 @@ bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
     NULL);
 
   if (b_context == c_context)
+      return false;
+  return true;
+}
+
+// events and command queue should belong to the same context
+//template<>
+bool object_not_in(cl_event event, cl_command_queue command_queue)
+{
+  cl_context e_context;
+  clGetEventInfo(
+    event,
+    CL_EVENT_CONTEXT,
+    sizeof(cl_context),
+    &e_context,
+    NULL);
+  cl_context c_context;
+  clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_CONTEXT,
+    sizeof(cl_context),
+    &c_context,
+    NULL);
+
+  if (e_context == c_context)
       return false;
   return true;
 }

@@ -1687,7 +1687,7 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <object_is_invalid name="context"/>
+                <object_is_invalid name="context" param="device"/>
             </if>
             <then>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
@@ -2277,6 +2277,14 @@
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
                 <object_is_invalid name="buffer"/>
             </if>
             <then>
@@ -2348,7 +2356,7 @@
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -2371,6 +2379,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -2446,7 +2462,7 @@
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -2474,6 +2490,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -2724,7 +2748,7 @@
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -2753,6 +2777,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3003,7 +3035,7 @@
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -3027,6 +3059,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3098,7 +3138,7 @@
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="src_buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -3127,6 +3167,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3423,7 +3471,7 @@
                 <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="src_buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -3449,6 +3497,14 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3574,7 +3630,7 @@
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
@@ -3599,6 +3655,15 @@
 
             <if>
                 <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
             <then>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
@@ -3699,7 +3764,7 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
-                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="buffer"/>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
@@ -4135,6 +4200,13 @@
             <param><type>void</type>*                                   <name>host_ptr</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if> <!-- 0 is valid here-->
                 <bitfield_violation name="flags"/>
             </if>
@@ -4263,6 +4335,23 @@
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image_width or image_height are 0 or if they exceed the maximum values specified in CL_DEVICE_IMAGE2D_MAX_WIDTH or CL_DEVICE_IMAGE2D_MAX_HEIGHT respectively for all devices in context or if values specified by image_row_pitch do not follow rules described in the argument description above.
+            <if>
+                <each_of array="context" elements="cl_device">
+                    <or>
+                        <gt>
+                            <name>image_width</name>                    <query object="cl_device" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <name>image_height</name>                   <query object="cl_device" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </each_of>
+            </if>
+            <then>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>-->
             <if>
                 <or>
                     <and>
@@ -4301,6 +4390,8 @@
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
+            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
         </command>
 
         <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
@@ -4316,6 +4407,13 @@
             <param><type>void</type>*                                   <name>host_ptr</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if> <!-- 0 is valid here-->
                 <bitfield_violation name="flags"/>
             </if>
@@ -4528,6 +4626,7 @@
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image_width or image_height are 0 or if image_depth ≤ 1, or if they exceed the maximum values specified in CL_DEVICE_IMAGE3D_MAX_WIDTH, CL_DEVICE_IMAGE3D_MAX_HEIGHT or CL_DEVICE_IMAGE3D_MAX_DEPTH respectively for all devices in context, or if values specified by image_row_pitch and image_slice_pitch do not follow rules described in the argument description above. -->
             <if>
                 <or>
                     <and>
@@ -4566,6 +4665,8 @@
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
+            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
         </command>
 
     <!-- 5.3.2 -->
@@ -4579,6 +4680,12 @@
             <param><type>cl_image_format</type>*                        <name>image_formats</name></param>
             <param><type>cl_uint</type>*                                <name>num_image_formats</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>
+                <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <or>
                     <not>
@@ -4664,6 +4771,32 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="image"/>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>origin</name>                             <literal>NULL</literal>
@@ -4679,7 +4812,6 @@
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds-->
             <if>
                 <or>
                     <array_len_ls>
@@ -4709,8 +4841,77 @@
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in origin and region do not follow rules described in the argument description for origin and region-->
-            <!-- CL_INVALID_VALUE if image is a 1D or 2D image and slice_pitch or input_slice_pitch is not 0-->
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. 
+                If image is a 2D image object, region[2] must be 1. 
+                If image is a 1D image array object, region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
+                If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[1]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds -->
+            <if>
+                <and>
+                    <or>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <neq>
+                        <name>slice_pitch</name>                        <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
             <if>
                 <or>
                     <and>
@@ -4734,7 +4935,7 @@
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -4746,6 +4947,35 @@
             </if>
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_WRITE_ONLY</literal>       <query object="image" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="image" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
 
@@ -4764,6 +4994,32 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="image"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>origin</name>                             <literal>NULL</literal>
@@ -4779,7 +5035,6 @@
             <then>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds-->
             <if>
                 <or>
                     <array_len_ls>
@@ -4809,8 +5064,77 @@
             <then>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in origin and region do not follow rules described in the argument description for origin and region-->
-            <!-- CL_INVALID_VALUE if image is a 1D or 2D image and slice_pitch or input_slice_pitch is not 0-->
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. 
+                If image is a 2D image object, region[2] must be 1. 
+                If image is a 1D image array object, region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
+                If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[1]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds-->
+            <if>
+                <and>
+                    <or>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <neq>
+                        <name>input_slice_pitch</name>                  <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
             <if>
                 <or>
                     <and>
@@ -4834,7 +5158,7 @@
             <then>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -4846,6 +5170,35 @@
             </if>
             <then>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_READ_ONLY</literal>        <query object="image" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="image" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
 
@@ -4861,7 +5214,44 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_MEM_OBJECT if src_image and dst_image are not valid image objects.-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="src_image"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="dst_image"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="src_image"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="dst_image"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_CONTEXT</value>
+            </then>
             <!-- CL_IMAGE_FORMAT_MISMATCH if src_image and dst_image do not use the same image format.-->
             <if>
                 <or>
@@ -4879,7 +5269,6 @@
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the 2D or 3D rectangular region specified by dst_origin and dst_origin + region refers to a region outside dst_image.-->
             <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
@@ -4912,7 +5301,105 @@
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in src_origin, dst_origin and region do not follow rules described in the argument description for src_origin, dst_origin and region-->
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>src_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>src_origin[1]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>src_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>dst_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>dst_origin[1]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>dst_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the 2D or 3D rectangular region specified by dst_origin and dst_origin + region refers to a region outside dst_image.-->
             <if>
                 <or>
                     <and>
@@ -4936,7 +5423,7 @@
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -4948,6 +5435,22 @@
             </if>
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for src_image or dst_image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for src_image or dst_image are not supported by device associated with queue. -->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_OPERATION</value>
             </then>
             <!-- CL_MEM_COPY_OVERLAP if src_image and dst_image are the same image object and the source and destination regions overlap-->
         </command>
@@ -4966,6 +5469,32 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="image"/>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>fill_color</name>                         <literal>NULL</literal>
@@ -4982,7 +5511,6 @@
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <!-- limits on fill_color - see spec-->
-            <!-- CL_INVALID_VALUE if the region being filled as specified by origin and region is out of bounds.-->
             <if>
                 <or>
                     <array_len_ls>
@@ -5012,7 +5540,59 @@
             <then>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in origin and region do not follow rules described in the argument description for origin and region.-->
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. 
+                If image is a 2D image object, region[2] must be 1. 
+                If image is a 1D image array object, region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
+                If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>origin[1]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>origin[2]</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the region being filled as specified by origin and region is out of bounds.-->
             <if>
                 <or>
                     <and>
@@ -5036,7 +5616,7 @@
             <then>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -5049,6 +5629,14 @@
             <then>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
         </command>
 
     <!-- 5.3.5 -->

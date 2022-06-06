@@ -902,7 +902,7 @@ bool struct_violation(
   return false;
 }
 
-// chack all besides checked above
+// check all besides checked above
 bool struct_violation(
   const cl_image_desc * const image_desc, 
   cl_context context,
@@ -1005,4 +1005,14 @@ bool struct_violation(
   if ((image_desc->num_mip_levels != 0) || (image_desc->num_samples != 0))
     return true;
 
+}
+
+// tenmporary - to remove !!!
+cl_int clSetCommandQueueProperty(
+  cl_command_queue command_queue,
+  cl_command_queue_properties properties,
+  cl_bool enable,
+  cl_command_queue_properties * old_properties)
+{
+  return 0;
 }

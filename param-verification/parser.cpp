@@ -48,6 +48,10 @@ std::string parse_expression(xml_node<> const * const node)
 
         res = "std::max(" + list[0] + ", " + list[1] + ")";
     }
+    else if (strcmp(name, "query") == 0) {
+        res = "query<" + std::string(node->first_attribute("property")->value()) + ">(" + 
+            node->first_attribute("object")->value() + ")";
+    }
 
     return res;
 }
@@ -80,16 +84,15 @@ std::vector<std::string> parse_list(xml_node<> const * const node)
 std::string parse_violation(xml_node<> const * const violation)
 {
     std::string test;
-    xml_node<> const * const node = violation;
 
-    if (node != nullptr)
+    if (violation != nullptr)
     {
-        char const * const name = node->name();
+        char const * const name = violation->name();
         
         if (strcmp(name, "or") == 0)
         {
             //printf("or:");
-            std::vector<std::string> list(parse_list(node));
+            std::vector<std::string> list(parse_list(violation));
 
             int n = 0;
             for (auto a : list)
@@ -105,7 +108,7 @@ std::string parse_violation(xml_node<> const * const violation)
         else if (strcmp(name, "and") == 0)
         {
             //printf("and:");
-            std::vector<std::string> list(parse_list(node));
+            std::vector<std::string> list(parse_list(violation));
 
             int n = 0;
             for (auto a : list)
@@ -120,7 +123,7 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "mutex_violation") == 0)
         {
-            std::vector<std::string> list(parse_list(node));
+            std::vector<std::string> list(parse_list(violation));
 
             int n = 0;
             for (auto a : list)
@@ -133,139 +136,139 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "not") == 0)
         {
-            test = "(!(" + parse_violation(node->first_node()) + "))";
+            test = "(!(" + parse_violation(violation->first_node()) + "))";
         }
         else if (strcmp(name, "eq") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(" + list[0] + " == " + list[1] + ")";
         }
         else if (strcmp(name, "neq") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(" + list[0] + " != " + list[1] + ")";
         }
         else if (strcmp(name, "ls") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(" + list[0] + " < " + list[1] + ")";
         }
         else if (strcmp(name, "gt") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(" + list[0] + " > " + list[1] + ")";
         }
         else if (strcmp(name, "bit_and") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(" + list[0] + " & " + list[1] + ")";
         }
         else if (strcmp(name, "array_len_ls") == 0)
         {
-            auto list = parse_2expressions(node);
+            auto list = parse_2expressions(violation);
 
             test = "(array_len_ls(" + list[0] + ", " + list[1] + "))";
         }
         else if (strcmp(name, "enum_violation") == 0)
         {
-            std::string tmp = node->first_attribute("name")->value();
+            std::string tmp = violation->first_attribute("name")->value();
 
             test = "(enum_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
         }
         else if (strcmp(name, "bitfield_violation") == 0)
         {
-            std::string tmp = node->first_attribute("name")->value();
+            std::string tmp = violation->first_attribute("name")->value();
 
             test = "(bitfield_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
         }
         else if (strcmp(name, "list_violation") == 0)
         {
-            std::string tmp = node->first_attribute("name")->value();
+            std::string tmp = violation->first_attribute("name")->value();
 
-            if (node->first_attribute("param"))
+            if (violation->first_attribute("param"))
                 test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + ", " 
-                    + node->first_attribute("param")->value() + "))";
+                    + violation->first_attribute("param")->value() + "))";
             else
                 test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
         }
         else if (strcmp(name, "struct_violation") == 0)
         {
-            std::string tmp = node->first_attribute("name")->value();
+            std::string tmp = violation->first_attribute("name")->value();
 
-            if (node->first_attribute("param"))
+            if (violation->first_attribute("param"))
                 test = "(struct_violation(" + tmp + ", " 
-                    + node->first_attribute("param")->value() + "))";
+                    + violation->first_attribute("param")->value() + "))";
             else
                 test = "(struct_violation(" + tmp + "))";
         }
         else if (strcmp(name, "object_is_invalid") == 0)
         {
-            std::string tmp = node->first_attribute("name")->value();
+            std::string tmp = violation->first_attribute("name")->value();
 
-            if (node->first_attribute("type"))
+            if (violation->first_attribute("type"))
                 test = "(!object_is_valid(" + tmp + ", " 
-                    + node->first_attribute("type")->value() + "))";
+                    + violation->first_attribute("type")->value() + "))";
             else
                 test = "(!object_is_valid(" + tmp + "))";
         }
         else if (strcmp(name, "any_zero") == 0)
         {
             test = "(any_zero("
-                + std::string(node->first_attribute("array")->value())
+                + std::string(violation->first_attribute("array")->value())
                 + ", "
-                + std::string(node->first_attribute("elements")->value())
+                + std::string(violation->first_attribute("elements")->value())
                 + "))";
         }
         else if (strcmp(name, "any_nullptr") == 0)
         {
             test = "(any_nullptr("
-                + std::string(node->first_attribute("array")->value())
+                + std::string(violation->first_attribute("array")->value())
                 + ", "
-                + std::string(node->first_attribute("elements")->value())
+                + std::string(violation->first_attribute("elements")->value())
                 + "))";
         }
         else if (strcmp(name, "any_invalid") == 0)
         {
             test = "(any_invalid("
-                + std::string(node->first_attribute("array")->value())
+                + std::string(violation->first_attribute("array")->value())
                 + ", "
-                + std::string(node->first_attribute("elements")->value())
+                + std::string(violation->first_attribute("elements")->value())
                 + "))";
         }
         else if (strcmp(name, "any_not_available") == 0)
         {
             test = "(any_not_available("
-                + std::string(node->first_attribute("array")->value())
+                + std::string(violation->first_attribute("array")->value())
                 + ", "
-                + std::string(node->first_attribute("elements")->value())
+                + std::string(violation->first_attribute("elements")->value())
                 + "))";
         }
         else if (strcmp(name, "object_not_in") == 0)
         {
             test = "(object_not_in("
-                + std::string(node->first_attribute("object")->value())
+                + std::string(violation->first_attribute("object")->value())
                 + ", "
-                + std::string(node->first_attribute("in")->value())
+                + std::string(violation->first_attribute("in")->value())
                 + "))";
         }
         else if (strcmp(name, "any_object_not_in") == 0)
         {
             test = "(any_object_not_in("
-                + std::string(node->first_attribute("array")->value())
+                + std::string(violation->first_attribute("array")->value())
                 + ", "
-                + std::string(node->first_attribute("elements")->value())
+                + std::string(violation->first_attribute("elements")->value())
                 + ", "
-                + std::string(node->first_attribute("in")->value())
+                + std::string(violation->first_attribute("in")->value())
                 + "))";
         }
         else if (strcmp(name, "from") == 0)
         {
-            test = "(from(\"" + std::string(node->first_attribute("version")->value()) + "\"))";
+            test = "(from(\"" + std::string(violation->first_attribute("version")->value()) + "\"))";
         }
 /*        else if (strcmp(name, "name") == 0)
         {
@@ -466,12 +469,11 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
                                 enum_val != nullptr;
                                 enum_val = enum_val->next_sibling("enum")) {
                                 // remove [] from the type - we demand at least 1 element for any returned array
-                                if (strstr(enum_val->first_attribute("return_type")->value(), "[]") == 
-                                    enum_val->first_attribute("return_type")->value() + strlen(enum_val->first_attribute("return_type")->value()) - 2)
-                                    enum_val->first_attribute("return_type")->value()[strlen(enum_val->first_attribute("return_type")->value()) - 2] = '\0';
+                                std::string type = enum_val->first_attribute("return_type")->value();
+                                type = std::regex_replace(type, std::regex("\\[\\]$"), "[1]");
 
                                 code << "        case " << enum_val->first_attribute("name")->value() << ":\n"
-                                     << "          return sizeof(" << enum_val->first_attribute("return_type")->value() << ");\n";
+                                     << "          return sizeof(" << type << ");\n";
                             }
 
                             code << "      }\n\n";
@@ -490,6 +492,138 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
          << "  return 0;\n"
          << "}\n\n";
     //printf("\n");
+
+    code << "// special case of cl_image_format *\n"
+         << "template<>\n"
+         << "size_t literal_list(const char * name, cl_image_format * const param)\n"
+         << "{\n"
+         << "  return pixel_size(param);\n"
+         << "}\n"
+         << "template<>\n"
+         << "size_t literal_list(const char * name, const cl_image_format * const param)\n"
+         << "{\n"
+         << "  return pixel_size(param);\n"
+         << "}\n\n";
+
+}
+
+void parse_queries(std::stringstream& code, xml_node<> *& root_node)
+{
+    ///////////////////////////////////////////////////////////////////////
+    // queries
+    ///////////////////////////////////////////////////////////////////////
+
+    code << "template<cl_uint property>\n"
+         << "using return_type =\n";
+
+    std::string end = ";\n";
+
+    std::vector<std::string> enums_list = 
+        {"cl_platform_info",
+        "cl_device_info",
+        "cl_context_info",
+        "cl_command_queue_info",
+        "cl_image_info",
+        "cl_pipe_info",
+        "cl_mem_info",
+        "cl_sampler_info",
+        "cl_program_info",
+        "cl_program_build_info",
+        "cl_kernel_exec_info",
+        "cl_kernel_info",
+        "cl_kernel_work_group_info",
+        "cl_kernel_sub_group_info",
+        "cl_kernel_arg_info",
+        "cl_event_info",
+        "cl_profiling_info"};
+
+    // Iterate over the versions
+    for (xml_node<> * version_node = root_node->first_node("feature");
+        version_node != nullptr;
+        version_node = version_node->next_sibling("feature"))
+    {
+        for (auto i : enums_list) {
+            for (xml_node<> * enum_node = version_node->first_node("require");
+                enum_node != nullptr;
+                enum_node = enum_node->next_sibling("require")) {
+                    if (enum_node->first_attribute("comment") != nullptr) {
+                        //printf("I have visited %s.\n", 
+                        //    enum_node->first_attribute("comment")->value());
+                        if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
+
+                            for (xml_node<> * enum_val = enum_node->first_node("enum");
+                                enum_val != nullptr;
+                                enum_val = enum_val->next_sibling("enum")) {
+                                code << "  std::conditional_t<property == " << enum_val->first_attribute("name")->value() << ", "
+                                     << enum_val->first_attribute("return_type")->value() << ",\n";
+                                end = "> " + end;
+                            }
+                        }
+                    }
+                }
+        }
+
+        //printf("I have visited %s.\n", 
+        //    version_node->first_attribute("number")->value());
+        //    version_node->value());
+    }
+    code << "  void" << end << "\n\n";
+
+    code << "template<typename T, cl_uint property>\n"
+         << "auto query(T object)\n"
+         << "{\n"
+         << "  printf(\"Bad query!\\n\");\n"
+         << "  exit(-1);\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "auto query(cl_platform_id platform)\n"
+         << "{\n"
+         << "  return_type<property> a;\n"
+         << "  clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
+         << "  return a;\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "auto query(cl_device_id device)\n"
+         << "{\n"
+         << "  return_type<property> a;\n"
+         << "  clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
+         << "  return a;\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "auto query(cl_context context)\n"
+         << "{\n"
+         << "  return_type<property> a;\n"
+         << "  clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
+         << "  return a;\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "auto query(cl_command_queue queue)\n"
+         << "{\n"
+         << "  return_type<property> a;\n"
+         << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
+         << "    clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
+         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n\n"
+         << "    cl_device_id d;\n"
+         << "    clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
+         << "    clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    printf(\"Wrong query on queue!\\n\");\n"
+         << "    exit(-1);\n"
+         << "  }\n"
+         << "  return a;\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "auto query(cl_mem object)\n"
+         << "{\n"
+         << "  return_type<property> a;\n"
+         << "  clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  return a;\n"
+         << "}\n\n";
 }
 
 void parse_commands(std::stringstream& code, xml_node<> *& root_node)
@@ -518,7 +652,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
             proto = std::regex_replace(proto, std::regex("[ ]+"), " ");
 
 //            if (param_node->value())
-            //    printf("I have visited %s\n", proto.c_str());
+                //printf("I have visited %s\n", proto.c_str());
 //            code << proto;
 
             int n = 0;
@@ -603,10 +737,7 @@ int main()
          << "#include <string.h>\n"
          << "#include <stdio.h>\n"
          << "#include <algorithm>\n"
-         << "#include \"object_is_valid.cpp\"\n"
-         << "#include \"list_violation.cpp\"\n"
-         << "#include \"struct_violation.cpp\"\n"
-         << "\n\n";
+         << "#include \"func.h\"\n";
 
     xml_document<> doc;
     xml_node<> * root_node;
@@ -626,7 +757,7 @@ int main()
 
     parse_literal_lists(code, root_node);
 
-    parse_commands(code, root_node);
+    parse_queries(code, root_node);
 
     // dummy funcs
     code << "bool from(char * version)\n"
@@ -675,6 +806,17 @@ int main()
          << "{\n"
          << "  return false;\n"
          << "}\n\n";
+
+    code << "//////////////////////////////////////////////////////////////////////\n\n";
+
+    code << "#include \"object_is_valid.cpp\"\n"
+         << "#include \"list_violation.cpp\"\n"
+         << "#include \"struct_violation.cpp\"\n"
+         << "\n\n";
+
+    code << "//////////////////////////////////////////////////////////////////////\n\n";
+
+    parse_commands(code, root_node);
 
     std::ofstream file("res.cpp");
     file << code.str();
