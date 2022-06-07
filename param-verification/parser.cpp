@@ -705,7 +705,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     log_node != nullptr;
                     log_node = log_node->next_sibling("log"))
                 {
-                    code << "    printf(\"" << log_node->value() << "\");\n";
+                    code << "    printf(\"" << name << ": \"\n"
+                         << "      \"" << log_node->value() << "\\n\");\n\n";
                 }
 
                 std::string ret = "    return ";

@@ -1104,13 +1104,13 @@
             <if>
                 <object_is_invalid name="platform"/>
             </if>
-            <then>
+            <then>      <log>platform is not a valid platform</log>
                 <name>clGetPlatformInfo</name>                          <value>CL_INVALID_PLATFORM</value>
             </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetPlatformInfo</name>                          <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -1123,7 +1123,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetPlatformInfo</name>                          <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1132,11 +1132,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetPlatformInfo</name>                          <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -1245,9 +1248,9 @@
                 <name>clGetDeviceInfo</name>                            <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetDeviceInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -1260,7 +1263,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetDeviceInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1269,11 +1272,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetDeviceInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -1622,9 +1628,9 @@
                 <name>clGetContextInfo</name>                           <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetContextInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -1637,7 +1643,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetContextInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1646,11 +1652,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetContextInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -1687,30 +1696,30 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <object_is_invalid name="context" param="device"/>
+                <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <object_not_in object="device" in="context"/>
             </if>
-            <then>
+            <then>      <log>device is not associated with context</log>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <list_violation name="properties"/>
             </if>
-            <then>
+            <then>      <log>values specified in properties are not valid</log>
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -1829,7 +1838,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetCommandQueueInfo</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_command_queue_info</type>                   <name>param_name</name></param>
@@ -1840,13 +1849,28 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>param_name</name>                         <literal>CL_QUEUE_SIZE</literal>
+                    </eq>
+                    <not>
+                        <bit_and>
+                            <literal>CL_QUEUE_ON_DEVICE</literal>       <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                        </bit_and>
+                    </not>
+                </and>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue for param_name</log>
                 <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not one of the supported values</log>
                 <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -1859,7 +1883,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1868,11 +1892,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetCommandQueueInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -4961,7 +4988,7 @@
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
                 </eq>
             </if>
-            <then>
+            <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_OPERATION</value>
             </then>
             <if>
@@ -4974,7 +5001,7 @@
                     </bit_and>
                 </or>
             </if>
-            <then>
+            <then>      <log>image has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags or if image has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
@@ -4996,7 +5023,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -5004,13 +5031,20 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and> 
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <object_is_invalid name="image"/>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
             </if>
-            <then>
+            <then>      <log>image is not a valid image object</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
@@ -5656,7 +5690,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -5664,7 +5698,7 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and> 
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -5677,26 +5711,26 @@
                     <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>src_image is not a valid image object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_is_invalid name="dst_buffer" type="CL_MEM_OBJECT_BUFFER"/>
             </if>
-            <then>
+            <then>      <log>dst_buffer is not a valid buffer object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <!-- CL_INVALID_MEM_OBJECT if src_image is a 1D image buffer object created from dst_buffer. -->
             <if>
                 <object_not_in object="command_queue" in="src_image"/>
             </if>
-            <then>
+            <then>      <log>context associated with command_queue and src_image are not the same</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="dst_buffer"/>
             </if>
-            <then>
+            <then>      <log>context associated with command_queue and dst_buffer are not the same</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -5709,7 +5743,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>src_origin or region is NULL</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -5722,7 +5756,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>src_origin or region is too short</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -5738,7 +5772,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>the values in region cannot be 0</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0. 
@@ -5760,8 +5794,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
-                <log>values in src_origin and region do not follow rules for 2D image or 1D image array object</log>
+            <then>      <log>values in src_origin and region do not follow rules for 2D image or 1D image array object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
@@ -5788,8 +5821,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
-                <log>values in src_origin and region do not follow rules for 1D image or 1D image buffer object</log>
+            <then>      <log>values in src_origin and region do not follow rules for 1D image or 1D image buffer object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the region specified by dst_offset and dst_offset + dst_cb to a region outside dst_buffer.-->
@@ -5803,8 +5835,7 @@
                     </gt>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -5817,8 +5848,7 @@
                     </eq>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -5831,22 +5861,19 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is too short</log>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
-                <log>event objects in event_wait_list are not valid events</log>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
@@ -5857,8 +5884,7 @@
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
                 </eq>
             </if>
-            <then>
-                <log>the device associated with command_queue does not support images</log>
+            <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
@@ -5878,7 +5904,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -5886,13 +5912,13 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and> 
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="src_buffer" type="CL_MEM_OBJECT_BUFFER"/>
             </if>
-            <then>
+            <then>      <log>src_buffer is not a valid buffer object</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
@@ -5905,10 +5931,22 @@
                     <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>dst_image is not a valid image object</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <!-- CL_INVALID_MEM_OBJECT if dst_image is a 1D image buffer object created from src_buffer. -->
+            <if>
+                <object_not_in object="command_queue" in="src_buffer"/>
+            </if>
+            <then>      <log>context associated with command_queue and src_buffer are not the same</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="dst_image"/>
+            </if>
+            <then>      <log>context associated with command_queue and dst_image are not the same</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -5919,7 +5957,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>dst_origin or region is NULL</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -5932,7 +5970,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>dst_origin or region is too short</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -5948,7 +5986,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>the values in region cannot be 0</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0. 
@@ -5970,8 +6008,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
-                <log>values in dst_origin and region do not follow rules for 2D image or 1D image array object</log>
+            <then>      <log>values in dst_origin and region do not follow rules for 2D image or 1D image array object</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
@@ -5998,8 +6035,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
-                <log>values in dst_origin and region do not follow rules for 1D image or 1D image buffer object</log>
+            <then>      <log>values in dst_origin and region do not follow rules for 1D image or 1D image buffer object</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by dst_origin and dst_origin + region refer to a region outside dst_image, or if the region specified by src_offset and src_offset + src_cb refer to a region outside src_buffer.-->
@@ -6013,8 +6049,7 @@
                     </gt>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -6027,8 +6062,7 @@
                     </eq>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -6041,22 +6075,19 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
-                <log>event_wait_list is too short</log>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
-                <log>event objects in event_wait_list are not valid events</log>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
@@ -6067,8 +6098,7 @@
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
                 </eq>
             </if>
-            <then>
-                <log>he device associated with command_queue does not support images</log>
+            <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
@@ -6091,6 +6121,43 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>      <log>image is not a valid image object</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="image"/>
+            </if>
+            <then>      <log>context associated with command_queue and image are not the same</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <bitfield_violation name="map_flags"/>
                     <eq>
@@ -6098,24 +6165,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
-                <name>clEnqueueMapImage</name>                          <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
-            </then>
-            <if>
-                <or>
-                    <eq>
-                        <name>origin</name>                             <literal>NULL</literal>
-                    </eq>
-                    <eq>
-                        <name>region</name>                             <literal>NULL</literal>
-                    </eq>
-                    <eq>
-                        <name>image_row_pitch</name>                    <literal>NULL</literal>
-                    </eq>
-                </or>
-            </if>
-            <then>
+            <then>      <log>values specified in map_flags are not valid</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -6134,11 +6184,24 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>values specified in map_flags are not compatible</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if region being mapped given by (origin, origin + region) is out of bounds-->
+            <if>
+                <or>
+                    <eq>
+                        <name>origin</name>                             <literal>NULL</literal>
+                    </eq>
+                    <eq>
+                        <name>region</name>                             <literal>NULL</literal>
+                    </eq>
+                </or>
+            </if>
+            <then>      <log>origin or region is NULL</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
             <if>
                 <or>
                     <array_len_ls>
@@ -6149,7 +6212,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is too short</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -6166,37 +6229,118 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>the values in region cannot be 0</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in origin and region do not follow rules described in the argument description for origin and region-->
-            <!-- CL_INVALID_VALUE if image is a 3D image, 1D or 2D image array object and image_slice_pitch is NULL-->
-            <if>
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
                         <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
                         </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
                     </and>
+                    <neq>
+                        <name>origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values in origin and region do not follow rules for 2D image or 1D image array object</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>src_origin[1]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>src_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>      <log>values in origin and region do not follow rules for 1D image or 1D image buffer object</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if region being mapped given by (origin, origin + region) is out of bounds -->
+            <if>
+                <eq>
+                    <name>image_row_pitch</name>                        <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>image_row_pitch is NULL</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <not>
+                        <and>
+                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                        </and>
+                    </not>
+                    <eq>
+                        <name>image_slice_pitch</name>                  <literal>NULL</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>image is a 3D image, 1D or 2D image array object and image_slice_pitch is NULL</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -6206,19 +6350,84 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue.-->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue-->
-            <!-- CL_INVALID_OPERATION if image has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags or if image has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags-->
-            <!-- CL_INVALID_OPERATION if mapping would lead to overlapping regions being mapped for writing-->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>      <log>the device associated with command_queue does not support images</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <or>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_WRITE_ONLY</literal>   <query object="image" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_NO_ACCESS</literal>    <query object="image" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                    </or>
+                    <bit_and>
+                        <name>map_flags</name>                          <literal>CL_MAP_READ</literal>
+                    </bit_and>
+                </and>
+            </if>
+            <then>      <log>image has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <or>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_READ_ONLY</literal>    <query object="image" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_NO_ACCESS</literal>    <query object="image" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                    </or>
+                    <or>
+                        <bit_and>
+                            <name>map_flags</name>                      <literal>CL_MAP_WRITE</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>map_flags</name>                      <literal>CL_MAP_WRITE_INVALIDATE_REGION</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <!-- CL_INVALID_OPERATION if mapping would lead to overlapping regions being mapped for writing -->
         </command>
 
-        <!--5.3.7-->
+    <!-- 5.3.7 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetImageInfo</name></proto>
             <param><type>cl_mem</type>                                  <name>image</name></param>
             <param><type>cl_image_info</type>                           <name>param_name</name></param>
@@ -6227,9 +6436,9 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetImageInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6242,7 +6451,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetImageInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -6251,12 +6460,28 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetImageInfo</name>                             <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>      <log>image is not a valid image object</log>
+                <name>clGetImageInfo</name>                             <value>CL_INVALID_MEM_OBJECT</value>
             </then>
         </command>
 
@@ -6272,6 +6497,14 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreatePipe</name>                               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- CL_INVALID_OPERATION if no devices in context support pipes -->
+            <if>
                 <not>
                     <or>
                         <eq>
@@ -6286,7 +6519,7 @@
                     </or>
                 </not>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid for pipe</log>
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -6295,7 +6528,7 @@
                     <name>properties</name>                             <literal>NULL</literal>
                 </neq>
             </if>
-            <then>
+            <then>      <log>properties is not NULL</log>
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -6307,18 +6540,23 @@
                     <eq>
                         <name>pipe_max_packets</name>                   <literal>0</literal>
                     </eq>
-                    <!-- or pipe_packet_size exceeds CL_DEVICE_PIPE_MAX_PACKET_SIZE value specified in the Device Queries table for all devices in context -->
                 </or>
             </if>
-            <then>
+            <then>      <log>pipe_packet_size is 0 or pipe_max_packets is 0</log>
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PIPE_SIZE</value>
             </then>
+            <!--<if>
+            </if>
+            <then>      <log>the pipe_packet_size exceeds CL_DEVICE_PIPE_MAX_PACKET_SIZE value specified in the Device Queries table for all devices in context</log>
+                <name>clCreatePipe</name>                               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_PIPE_SIZE</value>
+            </then>-->
         </command>
 
     <!-- 5.4.2 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetPipeInfo</name></proto>
             <param><type>cl_mem</type>                                  <name>pipe</name></param>
             <param><type>cl_pipe_info</type>                            <name>param_name</name></param>
@@ -6327,9 +6565,15 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="pipe" type="CL_MEM_OBJECT_PIPE"/>
             </if>
-            <then>
+            <then>      <log>pipe is not a valid pipe object</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
+            </if>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetPipeInfo</name>                              <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6342,7 +6586,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetPipeInfo</name>                              <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -6351,46 +6595,78 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetPipeInfo</name>                              <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-    <!-- 5.5.1 -->
+    <!-- 5.5.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainMemObject</name></proto>
             <param><type>cl_mem</type>                                  <name>memobj</name></param>
+
+            <if>
+                <object_is_invalid name="memobj"/>
+                <!--<and>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_BUFFER"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>-->
+            </if>
+            <then>      <log>memobj is not a valid memory object</log>
+                <name>clRetainMemObject</name>                          <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseMemObject</name></proto>
             <param><type>cl_mem</type>                                  <name>memobj</name></param>
+
+            <if>
+                <object_is_invalid name="memobj"/>
+            </if>
+            <then>      <log>memobj is not a valid memory object</log>
+                <name>clReleaseMemObject</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetMemObjectDestructorCallback</name></proto>
             <param><type>cl_mem</type>                                  <name>memobj</name></param>
             <param>void (CL_CALLBACK*                                   <name>pfn_notify</name>)(cl_mem memobj, void* user_data)</param>
             <param><type>void</type>*                                   <name>user_data</name></param>
 
             <if>
+                <object_is_invalid name="memobj"/>
+            </if>
+            <then>      <log>memobj is not a valid memory object</log>
+                <name>clSetMemObjectDestructorCallback</name>           <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
                 <eq>
                     <name>pfn_notify</name>                             <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>pfn_notify is NULL</log>
                 <name>clSetMemObjectDestructorCallback</name>           <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-    <!-- 5.5.2 -->
+    <!-- 5.5.2 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueUnmapMemObject</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>memobj</name></param>
@@ -6400,29 +6676,62 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="memobj"/>
+            </if>
+            <then>      <log>memobj is not a valid memory object</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <not>
+                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_PIPE"/>
+                </not>
+            </if>
+            <then>      <log>memobj is a pipe object</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <!-- not possible without state
+            CL_INVALID_VALUE if mapped_ptr is not a valid pointer returned by clEnqueueMapBuffer or clEnqueueMapImage for memobj -->
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -6432,15 +6741,32 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <!-- CL_INVALID_CONTEXT if context associated with command_queue and memobj are not the same or if the context associated with command_queue and events in event_wait_list are not the same-->
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="memobj"/>
+            </if>
+            <then>      <log>context associated with command_queue and memobj are not the same</log>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_CONTEXT</value>
+            </then>
         </command>
 
-    <!-- 5.5.4 -->
+    <!-- 5.5.4 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueMigrateMemObjects</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_mem_objects</name></param>
@@ -6450,7 +6776,20 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if the context associated with command_queue and memory objects in mem_objects are not the same or if the context associated with command_queue and events in event_wait_list are not the same-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -6459,36 +6798,64 @@
                     <eq>
                         <name>mem_objects</name>                        <literal>NULL</literal>
                     </eq>
-                    <bitfield_violation name="flags"/> <!-- 0 is valid here-->
                 </or>
             </if>
-            <then>
+            <then>      <log>num_mem_objects is zero or if mem_objects is NULL</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>mem_objects</name>                            <name>num_mem_objects</name>
+                </array_len_ls>
+            </if>
+            <then>      <log>mem_objects is too short</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <any_invalid array="mem_objects" elements="num_mem_objects"/>
+            </if>
+            <then>      <log>some of the memory objects in mem_objects is not a valid memory object</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <any_object_not_in array="mem_objects" elements="num_mem_objects" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and memory objects in mem_objects are not the same</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <bitfield_violation name="flags"/> <!-- 0 is valid here-->
+            </if>
+            <then>      <log>flags is not 0 and is not any of the valid values</log>
                 <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -6498,14 +6865,26 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
         </command>
 
-    <!-- 5.5.5 -->
+    <!-- 5.5.5 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetMemObjectInfo</name></proto>
             <param><type>cl_mem</type>                                  <name>memobj</name></param>
             <param><type>cl_mem_info</type>                             <name>param_name</name></param>
@@ -6514,9 +6893,15 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="memobj"/>
             </if>
-            <then>
+            <then>      <log>memobj is not a valid memory object</log>
+                <name>clGetMemObjectInfo</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
+            </if>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetMemObjectInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6529,7 +6914,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetMemObjectInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -6538,11 +6923,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetMemObjectInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7130,7 +7518,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetSamplerInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7139,11 +7527,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetSamplerInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7644,7 +8035,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetProgramInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7653,11 +8044,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetProgramInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7687,7 +8081,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7696,11 +8090,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7781,7 +8178,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7803,11 +8200,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7833,7 +8233,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetKernelInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7846,7 +8246,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetKernelInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7855,11 +8255,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetKernelInfo</name>                            <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -7876,7 +8279,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7889,7 +8292,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7898,11 +8301,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <!-- CL_INVALID_VALUE if param_name is CL_KERNEL_GLOBAL_WORK_SIZE and device is not a custom device and kernel is not a built-in kernel-->
@@ -7922,7 +8328,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7935,7 +8341,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -7944,11 +8350,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -8031,7 +8440,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetKernelArgInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -8044,7 +8453,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetKernelArgInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -8053,11 +8462,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetKernelArgInfo</name>                         <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -8468,7 +8880,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetEventInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -8481,7 +8893,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetEventInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -8490,11 +8902,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetEventInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -8693,7 +9108,7 @@
             <if>
                 <enum_violation name="param_name"/>
             </if>
-            <then>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetEventProfilingInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -8706,7 +9121,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>size in bytes specified by param_value_size is &lt; size of return type and param_value is not NULL</log>
                 <name>clGetEventProfilingInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -8715,11 +9130,14 @@
                         <name>param_value</name>                        <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>param_value</name>                        <literal_list>param_name</literal_list>
+                        <name>param_value</name>                        <max>
+                                                                            <literal_list>param_name</literal_list>
+                                                                            <name>param_value_size</name>
+                                                                        </max>
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>param_value is too short</log>
                 <name>clGetEventProfilingInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
         </command>
