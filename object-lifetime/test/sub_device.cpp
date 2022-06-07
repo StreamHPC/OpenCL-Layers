@@ -2,6 +2,7 @@
 #include <memory>
 #include <algorithm>
 #include <array>
+#include <vector>
 
 int main(int argc, char *argv[]) {
   cl_platform_id platform;
@@ -19,13 +20,11 @@ int main(int argc, char *argv[]) {
   {
     size_t size;
     EXPECT_SUCCESS(clGetDeviceInfo(device, CL_DEVICE_PARTITION_PROPERTIES, 0, nullptr, &size));
-    size_t len = size / sizeof(cl_device_partition_property);
-    auto properties = std::make_unique<cl_device_partition_property[]>(len);
-    EXPECT_SUCCESS(clGetDeviceInfo(device, CL_DEVICE_PARTITION_PROPERTIES, size, properties.get(), nullptr));
+    std::vector<cl_device_partition_property> properties(1, 0);//size / sizeof(cl_device_partition_property));
+    EXPECT_SUCCESS(clGetDeviceInfo(device, CL_DEVICE_PARTITION_PROPERTIES, size, reinterpret_cast<void*>(properties.data() + 4), nullptr));
 
-    if (std::find(properties.get(), properties.get() + len, CL_DEVICE_PARTITION_EQUALLY) == properties.get() + len) {
+    if (std::find(properties.cbegin(), properties.cend(), CL_DEVICE_PARTITION_PROPERTIES) == properties.cend()) {
       LAYER_TEST_LOG() << "test device does not support CL_DEVICE_PARTITION_EQUALLY" << std::endl;
-      layer_test::TEST_CONTEXT.fail();
       return layer_test::finalize();
     }
   }

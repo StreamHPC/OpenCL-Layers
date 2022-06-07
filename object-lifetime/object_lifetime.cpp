@@ -149,6 +149,7 @@ struct layer_settings {
   DebugLogType log_type = DebugLogType::StdErr;
   std::string log_filename;
   bool transparent = false;
+  bool corrective = true;
 };
 
 layer_settings layer_settings::load() {
@@ -164,6 +165,10 @@ layer_settings layer_settings::load() {
   parser.get_enumeration("log_sink", debug_log_values, settings.log_type);
   parser.get_filename("log_filename", settings.log_filename);
   parser.get_bool("transparent", settings.transparent);
+  parser.get_bool("corrective", settings.corrective);
+
+  std::cout << "settings.transparent = " << settings.transparent << std::endl;
+  std::cout << "settings.corrective = " << settings.corrective << std::endl;
 
   return settings;
 }
@@ -200,7 +205,7 @@ static cl_int error_invalid_type(const trimmed__func__& func, void *handle, obje
                " was used whereas function expects: " <<
                object_type_names[expect] << "\n";
   log_stream->flush();
-  return settings.transparent ? CL_SUCCESS : object_errors[expect];
+  return settings.transparent ? CL_SUCCESS : object_errors[t];
 }
 
 static cl_int error_does_not_exist(const trimmed__func__& func, void *handle, object_type t) {
@@ -240,21 +245,20 @@ static cl_int error_implicitly_retained(const trimmed__func__& func, void *handl
 
 template<object_type T>
 cl_int check_error(const trimmed__func__& func, void *handle, cl_int layer_err, cl_int icd_err) {
-  *log_stream << "In " << func << " " <<
-               object_type_names[T] <<
-               ": " << handle <<
-               " was used and layer " <<
-               (settings.transparent ? "would've" : "") <<
-               " had to correct ICD error code from " << 
-               icd_err << " to " << layer_err << "\n";
-  log_stream->flush();
-  return settings.transparent ?
-    icd_err :
-    (
-      layer_err != CL_SUCCESS ?
-        layer_err :
-        icd_err
-    );
+  if (layer_err != CL_SUCCESS && icd_err == CL_SUCCESS ||
+      layer_err == CL_SUCCESS && icd_err != CL_SUCCESS
+  )
+  {
+    *log_stream << "In " << func << " " <<
+                 object_type_names[T] <<
+                 ": " << handle <<
+                 " was used and layer " <<
+                 (settings.corrective ? "would've had" : "had") <<
+                 " to correct ICD error code from " << 
+                 icd_err << " to " << layer_err << "\n";
+    log_stream->flush();
+  }
+  return settings.corrective ? layer_err : icd_err;
 }
 
 static cl_version get_platform_version(cl_platform_id platform) {
@@ -913,15 +917,24 @@ static void report() {
   deleted_objects.clear();
 }
 
-#define CHECK_RETAIN(type, handle, func)                           \
-  do {                                                             \
-    const auto layer_err = check_retain<type>(RTRIM_FUNC, handle); \
-    const auto icd_err = func;                                     \
-    return check_error<type>(                                      \
-      RTRIM_FUNC,                                                  \
-      handle,                                                      \
-      layer_err,                                                   \
-      icd_err);                                                    \
+//    if (!settings.transparent && layer_err != CL_SUCCESS) \
+
+#define CHECK_RETAIN(type, handle, func)                  \
+  do {                                                    \
+    const auto layer_err = check_retain<type>(            \
+      RTRIM_FUNC,                                         \
+      handle);                                            \
+    if (!settings.transparent && layer_err != CL_SUCCESS) \
+      return layer_err;                                   \
+    else                                                  \
+    {                                                     \
+      const auto icd_err = func;                          \
+      return check_error<type>(                           \
+        RTRIM_FUNC,                                       \
+        handle,                                           \
+        layer_err,                                        \
+        icd_err);                                         \
+    }                                                     \
   } while (false)
 
   /* Layer API entry points */
