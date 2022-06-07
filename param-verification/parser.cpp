@@ -701,6 +701,13 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
             {
                 code << "  if (" << parse_violation(violation_node->first_node()) << ") {\n";
 
+                for (xml_node<> * log_node = result_node->first_node("log");
+                    log_node != nullptr;
+                    log_node = log_node->next_sibling("log"))
+                {
+                    code << "    printf(\"" << log_node->value() << "\");\n";
+                }
+
                 std::string ret = "    return ";
                 for (xml_node<> * name_node = result_node->first_node("name"),
                                 * value_node = result_node->first_node("value");
@@ -737,7 +744,7 @@ int main()
          << "#include <string.h>\n"
          << "#include <stdio.h>\n"
          << "#include <algorithm>\n"
-         << "#include \"func.h\"\n";
+         << "#include \"func.h\"\n\n\n";
 
     xml_document<> doc;
     xml_node<> * root_node;

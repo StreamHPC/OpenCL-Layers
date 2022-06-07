@@ -5654,6 +5654,52 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="dst_buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <!-- CL_INVALID_MEM_OBJECT if src_image is a 1D image buffer object created from dst_buffer. -->
+            <if>
+                <object_not_in object="command_queue" in="src_image"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="dst_buffer"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>src_origin</name>                         <literal>NULL</literal>
@@ -5666,7 +5712,6 @@
             <then>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the region specified by dst_offset and dst_offset + dst_cb to a region outside dst_buffer.-->
             <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
@@ -5696,31 +5741,87 @@
             <then>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in src_origin and region do not follow rules described in the argument description for src_origin and region.-->
-            <if>
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
                         <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
                         </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
                     </and>
+                    <neq>
+                        <name>src_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
                 </or>
             </if>
             <then>
+                <log>values in src_origin and region do not follow rules for 2D image or 1D image array object</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>src_origin[1]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>src_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <log>values in src_origin and region do not follow rules for 1D image or 1D image buffer object</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the region specified by dst_offset and dst_offset + dst_cb to a region outside dst_buffer.-->
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>
+                <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>
+                <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -5731,9 +5832,35 @@
                 </and>
             </if>
             <then>
+                <log>event_wait_list is too short</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for src_image or dst_image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for src_image or dst_image are not supported by device associated with queue. -->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>
+                <log>the device associated with command_queue does not support images</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
@@ -5749,6 +5876,40 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="src_buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="dst_image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <!-- CL_INVALID_MEM_OBJECT if dst_image is a 1D image buffer object created from src_buffer. -->
+            <if>
                 <or>
                     <eq>
                         <name>dst_origin</name>                         <literal>NULL</literal>
@@ -5761,7 +5922,6 @@
             <then>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by dst_origin and dst_origin + region refer to a region outside dst_image, or if the region specified by src_offset and src_offset + src_cb refer to a region outside src_buffer.-->
             <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
@@ -5791,31 +5951,87 @@
             <then>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values in dst_origin and region do not follow rules described in the argument description for dst_origin and region-->
-            <if>
+            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+                If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
                         <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
+                            <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
                         </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
                     </and>
+                    <neq>
+                        <name>dst_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
                 </or>
             </if>
             <then>
+                <log>values in dst_origin and region do not follow rules for 2D image or 1D image array object</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
+                <or>
+                    <and>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                        <neq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </neq>
+                    </and>
+                    <neq>
+                        <name>dst_origin[1]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>dst_origin[2]</name>                      <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>region[1]</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>region[2]</name>                          <literal>1</literal>
+                    </neq>
+                </or>
+            </if>
+            <then>
+                <log>values in dst_origin and region do not follow rules for 1D image or 1D image buffer object</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by dst_origin and dst_origin + region refer to a region outside dst_image, or if the region specified by src_offset and src_offset + src_cb refer to a region outside src_buffer.-->
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>
+                <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>
+                <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -5826,9 +6042,35 @@
                 </and>
             </if>
             <then>
+                <log>event_wait_list is too short</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>
+                <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>
+                <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
+            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for dst_image or dst_image are not supported by device associated with queue. -->
+            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for dst_image or dst_image are not supported by device associated with queue. -->
+            <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>
+                <log>he device associated with command_queue does not support images</log>
+                <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
     <!-- 5.3.6 -->
