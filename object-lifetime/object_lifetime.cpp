@@ -139,7 +139,7 @@ struct stream_deleter {
   }
 };
 
-std::unique_ptr<std::ostream, stream_deleter> log_stream;
+ocl_layer_utils::stream_ptr log_stream;
 
 struct layer_settings {
   enum class DebugLogType { StdOut, StdErr, File };

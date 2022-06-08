@@ -488,7 +488,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
         //    version_node->value());
     }
 
-    code << "  printf(\"Unknown return type!\");\n"
+    code << "  *log_stream << \"Unknown return type passed to literal_list(). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "  return 0;\n"
          << "}\n\n";
     //printf("\n");
@@ -606,7 +606,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "    clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
          << "    clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
-         << "    printf(\"Wrong query on queue!\\n\");\n"
+         << "    *log_stream << \"Invalid command queue query in query(cl_command_queue). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "    exit(-1);\n"
          << "  }\n"
          << "  return a;\n"
@@ -704,8 +704,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     log_node != nullptr;
                     log_node = log_node->next_sibling("log"))
                 {
-                    code << "    printf(\"" << name << ": \"\n"
-                         << "      \"" << log_node->value() << "\\n\");\n\n";
+                    code << "    *log_stream << \"" << name << ": \"\n"
+                         << "      \"" << log_node->value() << "\" << std::endl;\n\n";
                 }
 
                 std::string ret = "    return ";
@@ -755,9 +755,8 @@ int main(int argc, char* argv[])
     std::stringstream code;
     code << "#include <CL/cl.h>\n"
          << "#include <string.h>\n"
-         << "#include <stdio.h>\n"
          << "#include <algorithm>\n"
-         << "#include \"func.h\"\n\n\n";
+         << "#include \"param_verification.hpp\"\n\n\n";
 
     xml_document<> doc;
     xml_node<> * root_node;

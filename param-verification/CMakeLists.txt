@@ -17,11 +17,13 @@ add_custom_command (
 add_library (
   CLParamVerificationLayer
   SHARED
+  param_verification.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/res.cpp
   $<$<AND:$<PLATFORM_ID:Windows>,$<OR:$<CXX_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:Clang>>>:param_verification.def>
   $<$<CXX_COMPILER_ID:GNU>:param_verification.map>
 )
 target_include_directories (CLParamVerificationLayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries (CLParamVerificationLayer PRIVATE LayersCommon LayersUtils)
 if (NOT WIN32 AND NOT APPLE)
     set_target_properties (CLParamVerificationLayer PROPERTIES LINK_FLAGS "-Wl,--version-script -Wl,${CMAKE_CURRENT_SOURCE_DIR}/param_verification.map")
 endif ()

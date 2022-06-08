@@ -1,5 +1,7 @@
 #include <map>
 #include <string>
+#include <iostream>
+#include <memory>
 
 namespace ocl_layer_utils {
 
@@ -63,5 +65,17 @@ private:
   std::string prefix_;
   const std::map<std::string, std::string> *settings_;
 };
+
+namespace detail {
+struct stream_deleter {
+  void operator()(std::ostream *stream) noexcept {
+    if (stream != &std::cout && stream != &std::cerr) {
+      delete stream;
+    }
+  }
+};
+}
+
+using stream_ptr = std::unique_ptr<std::ostream, detail::stream_deleter>;
 
 } // namespace ocl_layer_utils
