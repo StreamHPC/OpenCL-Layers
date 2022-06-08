@@ -571,11 +571,8 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     }
     code << "  void" << end << "\n\n";
 
-    code << "template<typename T, cl_uint property>\n"
-         << "auto query(T object);\n\n";
-
     code << "template<cl_uint property>\n"
-         << "auto query(cl_platform_id platform)\n"
+         << "return_type<property> query(cl_platform_id platform)\n"
          << "{\n"
          << "  return_type<property> a;\n"
          << "  clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
@@ -583,7 +580,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "}\n\n";
 
     code << "template<cl_uint property>\n"
-         << "auto query(cl_device_id device)\n"
+         << "return_type<property> query(cl_device_id device)\n"
          << "{\n"
          << "  return_type<property> a;\n"
          << "  clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
@@ -591,7 +588,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "}\n\n";
 
     code << "template<cl_uint property>\n"
-         << "auto query(cl_context context)\n"
+         << "return_type<property> query(cl_context context)\n"
          << "{\n"
          << "  return_type<property> a;\n"
          << "  clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
@@ -599,7 +596,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "}\n\n";
 
     code << "template<cl_uint property>\n"
-         << "auto query(cl_command_queue queue)\n"
+         << "return_type<property> query(cl_command_queue queue)\n"
          << "{\n"
          << "  return_type<property> a;\n"
          << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
@@ -616,7 +613,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "}\n\n";
 
     code << "template<cl_uint property>\n"
-         << "auto query(cl_mem object)\n"
+         << "return_type<property> query(cl_mem object)\n"
          << "{\n"
          << "  return_type<property> a;\n"
          << "  clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
