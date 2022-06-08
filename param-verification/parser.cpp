@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <regex>
-#include "rapidxml-1.13/rapidxml.hpp"
+#include "rapidxml.hpp"
 
 using namespace rapidxml;
 

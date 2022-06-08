@@ -2,7 +2,7 @@ add_executable (
   CLParamVerificationGenerator
   parser.cpp
 )
-target_link_libraries (CLParamVerificationGenerator PRIVATE RapidXml)
+target_link_libraries (CLParamVerificationGenerator PRIVATE RapidXml::RapidXml)
 
 add_custom_command (
   OUTPUT
