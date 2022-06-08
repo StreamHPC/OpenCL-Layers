@@ -49,7 +49,7 @@ std::string parse_expression(xml_node<> const * const node)
         res = "std::max(" + list[0] + ", " + list[1] + ")";
     }
     else if (strcmp(name, "query") == 0) {
-        res = "query<" + std::string(node->first_attribute("property")->value()) + ">(" + 
+        res = "query<" + std::string(node->first_attribute("property")->value()) + ">(" +
             node->first_attribute("object")->value() + ")";
     }
 
@@ -88,7 +88,7 @@ std::string parse_violation(xml_node<> const * const violation)
     if (violation != nullptr)
     {
         char const * const name = violation->name();
-        
+
         if (strcmp(name, "or") == 0)
         {
             //printf("or:");
@@ -191,7 +191,7 @@ std::string parse_violation(xml_node<> const * const violation)
             std::string tmp = violation->first_attribute("name")->value();
 
             if (violation->first_attribute("param"))
-                test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + ", " 
+                test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + ", "
                     + violation->first_attribute("param")->value() + "))";
             else
                 test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
@@ -201,7 +201,7 @@ std::string parse_violation(xml_node<> const * const violation)
             std::string tmp = violation->first_attribute("name")->value();
 
             if (violation->first_attribute("param"))
-                test = "(struct_violation(" + tmp + ", " 
+                test = "(struct_violation(" + tmp + ", "
                     + violation->first_attribute("param")->value() + "))";
             else
                 test = "(struct_violation(" + tmp + "))";
@@ -211,7 +211,7 @@ std::string parse_violation(xml_node<> const * const violation)
             std::string tmp = violation->first_attribute("name")->value();
 
             if (violation->first_attribute("type"))
-                test = "(!object_is_valid(" + tmp + ", " 
+                test = "(!object_is_valid(" + tmp + ", "
                     + violation->first_attribute("type")->value() + "))";
             else
                 test = "(!object_is_valid(" + tmp + "))";
@@ -300,8 +300,8 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
     {
         code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
 
-        std::vector<std::string> enums_list = 
-            {"cl_platform_info", 
+        std::vector<std::string> enums_list =
+            {"cl_platform_info",
             "cl_device_info",
             "cl_context_info",
             "cl_command_queue_info",
@@ -321,13 +321,13 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
             "cl_profiling_info",
             "cl_channel_order",
             "cl_channel_type"};
-        
+
         for (auto a : enums_list) {
             for (xml_node<> * enum_node = version_node->first_node("require");
                 enum_node != nullptr;
                 enum_node = enum_node->next_sibling("require")) {
                     if (enum_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n", 
+                        //printf("I have visited %s.\n",
                         //    enum_node->first_attribute("comment")->value());
                         if (strstr(enum_node->first_attribute("comment")->value(), a.c_str()) != nullptr) {
                             code << "    if (strcmp(name, \"" << a << "\") == 0)\n"
@@ -347,7 +347,7 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
         }
 
         code << "  }\n\n";
-        //printf("I have visited %s.\n", 
+        //printf("I have visited %s.\n",
         //    version_node->first_attribute("number")->value());
         //    version_node->value());
     }
@@ -377,7 +377,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
     {
         code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
 
-        std::vector<std::string> bitfields_list = 
+        std::vector<std::string> bitfields_list =
             {"cl_device_type",
             "cl_mem_flags",
             "cl_map_flags",
@@ -390,7 +390,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
                 bitfield_node != nullptr;
                 bitfield_node = bitfield_node->next_sibling("require")) {
                     if (bitfield_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n", 
+                        //printf("I have visited %s.\n",
                         //    bitfield_node->first_attribute("comment")->value());
                         if (strstr(bitfield_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
                             code << "    if (strcmp(name, \"" << i << "\") == 0) {\n";
@@ -408,7 +408,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
         }
 
         code << "  }\n\n";
-        //printf("I have visited %s.\n", 
+        //printf("I have visited %s.\n",
         //    version_node->first_attribute("number")->value());
         //    version_node->value());
     }
@@ -435,7 +435,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
     {
         code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
 
-        std::vector<std::string> enums_list = 
+        std::vector<std::string> enums_list =
             {"cl_platform_info",
             "cl_device_info",
             "cl_context_info",
@@ -459,7 +459,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
                 enum_node != nullptr;
                 enum_node = enum_node->next_sibling("require")) {
                     if (enum_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n", 
+                        //printf("I have visited %s.\n",
                         //    enum_node->first_attribute("comment")->value());
                         if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
                             code << "    if (strcmp(name, \"" << i << "\") == 0)\n"
@@ -483,7 +483,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
         }
 
         code << "  }\n\n";
-        //printf("I have visited %s.\n", 
+        //printf("I have visited %s.\n",
         //    version_node->first_attribute("number")->value());
         //    version_node->value());
     }
@@ -518,7 +518,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
 
     std::string end = ";\n";
 
-    std::vector<std::string> enums_list = 
+    std::vector<std::string> enums_list =
         {"cl_platform_info",
         "cl_device_info",
         "cl_context_info",
@@ -547,7 +547,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
                 enum_node != nullptr;
                 enum_node = enum_node->next_sibling("require")) {
                     if (enum_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n", 
+                        //printf("I have visited %s.\n",
                         //    enum_node->first_attribute("comment")->value());
                         if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
 
@@ -563,7 +563,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
                 }
         }
 
-        //printf("I have visited %s.\n", 
+        //printf("I have visited %s.\n",
         //    version_node->first_attribute("number")->value());
         //    version_node->value());
     }
@@ -674,7 +674,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 // read all the contents as text omitting tags - works for 1-level tags only
                 node = param_node->first_node();
                 while (node != nullptr) {
-                    if (tmp.back() != ' ') 
+                    if (tmp.back() != ' ')
                         tmp += " ";
                     tmp += std::regex_replace(node->value(), std::regex("[ ]+"), " ");
                     if (strstr(node->name(), "name") != nullptr)
@@ -737,8 +737,19 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <path to cl.xml>" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::ifstream theFile(argv[1]);
+    if (!theFile) {
+        std::cerr << "Error: failed to open '" << argv[1] << "'" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // stream for generated code
     std::stringstream code;
     code << "#include <CL/cl.h>\n"
@@ -750,10 +761,9 @@ int main()
     xml_document<> doc;
     xml_node<> * root_node;
     // Read the xml file into a vector
-    std::ifstream theFile ("cl-avl.xml");
     std::vector<char> buffer((std::istreambuf_iterator<char>(theFile)), std::istreambuf_iterator<char>());\
     buffer.push_back('\0');
-    // Parse the buffer using the xml file parsing library into doc 
+    // Parse the buffer using the xml file parsing library into doc
     doc.parse<0>(&buffer[0]);
 
     // Find our root node
