@@ -630,6 +630,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
     // commands
     ///////////////////////////////////////////////////////////////////////
 
+    std::stringstream init_dispatch;
+
     // Iterate over the commands
     for (xml_node<> * commands_node = root_node->first_node("commands");
         commands_node != nullptr;
@@ -644,10 +646,12 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
             const char * const name = proto_node->first_node("name")->value();
             std::string type = proto_node->first_node("type")->value();
 
-            std::string invoke = name;
+            std::string invoke = std::string("tdispatch->") + name;
             invoke += "(\n";
             std::string proto = type + " " + qual + " " + name + "_layer(\n";
             proto = std::regex_replace(proto, std::regex("[ ]+"), " ");
+
+            init_dispatch << "    dispatch." << name << " = &" << name << "_layer;\n";
 
 //            if (param_node->value())
                 //printf("I have visited %s\n", proto.c_str());
@@ -733,6 +737,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
         }
 
     }
+
+    code << "void init_dispatch() {\n" << init_dispatch.rdbuf() << "}\n";
 }
 
 int main(int argc, char* argv[])

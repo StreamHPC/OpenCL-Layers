@@ -31,7 +31,7 @@ clGetLayerInfo(
   return CL_SUCCESS;
 }
 
-static void _init_dispatch(void);
+static void init_dispatch(void);
 
 CL_API_ENTRY cl_int CL_API_CALL
 clInitLayer(
@@ -39,14 +39,13 @@ clInitLayer(
     const struct _cl_icd_dispatch  *target_dispatch,
     cl_uint                        *num_entries_out,
     const struct _cl_icd_dispatch **layer_dispatch_ret) {
-  if (!target_dispatch || !layer_dispatch_ret ||!num_entries_out || num_entries < sizeof(dispatch)/sizeof(dispatch.clGetPlatformIDs))
+  if (!target_dispatch || !layer_dispatch_ret || !num_entries_out || num_entries < sizeof(dispatch) / sizeof(dispatch.clGetPlatformIDs))
     return CL_INVALID_VALUE;
 
   tdispatch = target_dispatch;
-  _init_dispatch();
+  init_dispatch();
 
   *layer_dispatch_ret = &dispatch;
   *num_entries_out = sizeof(dispatch)/sizeof(dispatch.clGetPlatformIDs);
-  //atexit(report);
   return CL_SUCCESS;
 }
