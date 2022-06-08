@@ -708,7 +708,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                          << "      \"" << log_node->value() << "\" << std::endl;\n\n";
                 }
 
-                std::string ret = "    return ";
+                std::string ret = "";
                 for (xml_node<> * name_node = result_node->first_node("name"),
                                 * value_node = result_node->first_node("value");
                     (name_node != nullptr) && (value_node != nullptr);
@@ -717,8 +717,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 {
                     if (strcmp(name, name_node->value()) == 0)
                     {
-                        ret += value_node->value();
-                        ret += ";\n";
+                        ret = std::string("    return ") + value_node->value() + ";\n";
                     }
                     else
                     {

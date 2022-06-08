@@ -11,6 +11,10 @@ add_custom_command (
     CLParamVerificationGenerator ${CMAKE_CURRENT_SOURCE_DIR}/cl-avl.xml
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/cl-avl.xml
+    ${CMAKE_CURRENT_SOURCE_DIR}/param_verification.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/object_is_valid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/list_violation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/struct_violation.cpp
     CLParamVerificationGenerator
 )
 

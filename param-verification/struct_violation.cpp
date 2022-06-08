@@ -11,19 +11,19 @@ bool is_3D_image_fits(
   size_t width, height, depth;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE3D_MAX_WIDTH,
       sizeof(size_t),
       &width,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE3D_MAX_HEIGHT,
       sizeof(size_t),
       &height,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE3D_MAX_DEPTH,
       sizeof(size_t),
@@ -53,13 +53,13 @@ bool is_2D_image_fits(
   size_t width, height;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_WIDTH,
       sizeof(size_t),
       &width,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_HEIGHT,
       sizeof(size_t),
@@ -88,7 +88,7 @@ bool is_1D_image_fits(
   size_t width;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_WIDTH,
       sizeof(size_t),
@@ -116,19 +116,19 @@ bool is_2D_array_fits(
   size_t width, height, size;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_WIDTH,
       sizeof(size_t),
       &width,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_HEIGHT,
       sizeof(size_t),
       &height,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE_MAX_ARRAY_SIZE,
       sizeof(size_t),
@@ -158,13 +158,13 @@ bool is_1D_array_fits(
   size_t width, size;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE2D_MAX_WIDTH,
       sizeof(size_t),
       &width,
       NULL);
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE_MAX_ARRAY_SIZE,
       sizeof(size_t),
@@ -193,7 +193,7 @@ bool is_1D_buffer_fits(
   size_t width;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       CL_DEVICE_IMAGE_MAX_BUFFER_SIZE,
       sizeof(size_t),
@@ -217,7 +217,7 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
 
   if (from("1.1"))
   {
-    clGetContextInfo(context,
+    tdispatch->clGetContextInfo(context,
       CL_CONTEXT_NUM_DEVICES,
       sizeof(cl_uint),
       number,
@@ -226,7 +226,7 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
     size = *number * sizeof(cl_device_id);
     devices = (cl_device_id *)malloc(size);
 
-    clGetContextInfo(context,
+    tdispatch->clGetContextInfo(context,
       CL_CONTEXT_DEVICES,
       size,
       devices,
@@ -238,7 +238,7 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
     size = *number * sizeof(cl_device_id);
     devices = (cl_device_id *)malloc(size);
 
-    clGetContextInfo(context,
+    tdispatch->clGetContextInfo(context,
       CL_CONTEXT_DEVICES,
       size,
       devices,
@@ -249,167 +249,6 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
   }
 
   return devices;
-}
-
-size_t max_image_width(cl_context context, cl_mem_object_type image_type)
-{
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
-
-  size_t res = 0;
-  cl_device_info name;
-  switch (image_type) {
-    case CL_MEM_OBJECT_IMAGE1D_BUFFER:
-      name = CL_DEVICE_IMAGE_MAX_BUFFER_SIZE;
-      break;
-
-    case CL_MEM_OBJECT_IMAGE1D:
-    case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-    case CL_MEM_OBJECT_IMAGE2D:
-    case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-      name = CL_DEVICE_IMAGE2D_MAX_WIDTH;
-      break;
-
-    case CL_MEM_OBJECT_IMAGE3D:
-      name = CL_DEVICE_IMAGE3D_MAX_WIDTH;
-      break;
-
-    default:
-      printf("Bad image type\n");
-      return 0;
-  }
-
-  // find maximum image width for all devices in the context
-  size_t size;
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    clGetDeviceInfo(
-      devices[i],
-      name,
-      sizeof(size_t),
-      &size,
-      NULL);
-    if (size > res)
-      res = size;
-  }
-
-  free(devices);
-  return res;
-}
-
-size_t max_image_height(cl_context context, cl_mem_object_type image_type)
-{
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
-
-  size_t res = 0;
-  cl_device_info name;
-  switch (image_type) {
-    case CL_MEM_OBJECT_IMAGE2D:
-    case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-      name = CL_DEVICE_IMAGE2D_MAX_HEIGHT;
-      break;
-
-    case CL_MEM_OBJECT_IMAGE3D:
-      name = CL_DEVICE_IMAGE3D_MAX_HEIGHT;
-      break;
-
-    default:
-      printf("Bad image type\n");
-      return 0;
-  }
-
-  // find maximum image height for all devices in the context
-  size_t size;
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    clGetDeviceInfo(
-      devices[i],
-      name,
-      sizeof(size_t),
-      &size,
-      NULL);
-    if (size > res)
-      res = size;
-  }
-
-  free(devices);
-  return res;
-}
-
-size_t max_image_depth(cl_context context, cl_mem_object_type image_type)
-{
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
-
-  size_t res = 0;
-  cl_device_info name;
-  switch (image_type) {
-    case CL_MEM_OBJECT_IMAGE3D:
-      name = CL_DEVICE_IMAGE3D_MAX_DEPTH;
-      break;
-
-    default:
-      printf("Bad image type\n");
-      return 0;
-  }
-
-  // find maximum image depth for all devices in the context
-  size_t size;
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    clGetDeviceInfo(
-      devices[i],
-      name,
-      sizeof(size_t),
-      &size,
-      NULL);
-    if (size > res)
-      res = size;
-  }
-
-  free(devices);
-  return res;
-}
-
-size_t max_image_array(cl_context context, cl_mem_object_type image_type)
-{
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
-
-  size_t res = 0;
-  cl_device_info name;
-  switch (image_type) {
-    case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-    case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-      name = CL_DEVICE_IMAGE_MAX_ARRAY_SIZE;
-      break;
-
-    default:
-      printf("Bad image type\n");
-      return 0;
-  }
-
-  // find maximum image array size for all devices in the context
-  size_t size;
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    clGetDeviceInfo(
-      devices[i],
-      name,
-      sizeof(size_t),
-      &size,
-      NULL);
-    if (size > res)
-      res = size;
-  }
-
-  free(devices);
-  return res;
 }
 
 cl_uint max_pitch_al(cl_context context)
@@ -425,7 +264,7 @@ cl_uint max_pitch_al(cl_context context)
   cl_uint size;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo( // give 0 for devices not supporting such image creation
+    tdispatch->clGetDeviceInfo( // give 0 for devices not supporting such image creation
       devices[i],
       CL_DEVICE_IMAGE_PITCH_ALIGNMENT,
       sizeof(cl_uint),
@@ -452,7 +291,7 @@ cl_uint max_base_al(cl_context context)
   cl_uint size;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo( // give 0 for devices not supporting such image creation
+    tdispatch->clGetDeviceInfo( // give 0 for devices not supporting such image creation
       devices[i],
       CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT,
       sizeof(cl_uint),
@@ -551,7 +390,7 @@ size_t pixel_size(const cl_image_format * image_format)
 bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_format * image_format)
 {
   cl_image_format format;
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_FORMAT,
     sizeof(cl_image_format),
@@ -613,7 +452,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
 
   size_t size = 0;
 
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_WIDTH,
     sizeof(size_t),
@@ -622,7 +461,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
   if (size != image_desc->image_width)
     return false;
 
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_HEIGHT,
     sizeof(size_t),
@@ -631,7 +470,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
   if (size != image_desc->image_height)
     return false;
 
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_DEPTH,
     sizeof(size_t),
@@ -640,7 +479,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
   if (size != 0)
     return false;
 
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_ARRAY_SIZE,
     sizeof(size_t),
@@ -655,7 +494,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
     return false;
   if (image_desc->image_row_pitch != 0)
     image_row_pitch = image_desc->image_row_pitch;
-  clGetImageInfo(
+  tdispatch->clGetImageInfo(
     image_desc->mem_object,
     CL_IMAGE_ROW_PITCH,
     sizeof(size_t),
@@ -673,7 +512,7 @@ bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_
 size_t buffer_size(cl_mem buffer)
 {
   size_t size = 0;
-  clGetMemObjectInfo(
+  tdispatch->clGetMemObjectInfo(
     buffer,
     CL_MEM_SIZE,
     sizeof(size_t),
@@ -747,7 +586,7 @@ bool struct_violation(
 
     // check if base pointer is aligned properly
     cl_mem_flags flags;
-    clGetMemObjectInfo(
+    tdispatch->clGetMemObjectInfo(
       image_desc->buffer,
       CL_MEM_FLAGS,
       sizeof(cl_mem_flags),
@@ -756,7 +595,7 @@ bool struct_violation(
     if (flags | CL_MEM_USE_HOST_PTR)
     { 
       void * host_ptr;
-      clGetMemObjectInfo(
+      tdispatch->clGetMemObjectInfo(
         image_desc->buffer,
         CL_MEM_HOST_PTR,
         sizeof(void *),
@@ -792,7 +631,7 @@ bool struct_violation(
     case CL_MEM_OBJECT_IMAGE2D:
       if (image_desc->mem_object != NULL) {
         cl_mem_flags old_flags;
-        clGetMemObjectInfo(
+        tdispatch->clGetMemObjectInfo(
           image_desc->mem_object,
           CL_MEM_FLAGS,
           sizeof(cl_mem_flags),
@@ -935,8 +774,7 @@ bool struct_violation(
   switch (image_desc->image_type) {
     case CL_MEM_OBJECT_IMAGE2D_ARRAY: 
     case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-      if ((image_desc->image_array_size == 0) || 
-        (image_desc->image_array_size > max_image_array(context, image_desc->image_type)))
+      if (image_desc->image_array_size == 0)
         return true;
   }
 
@@ -1006,18 +844,4 @@ bool struct_violation(
     return true;
 
   return false;
-}
-
-// tenmporary - to remove !!!
-cl_int clSetCommandQueueProperty(
-  cl_command_queue command_queue,
-  cl_command_queue_properties properties,
-  cl_bool enable,
-  cl_command_queue_properties * old_properties)
-{
-  (void)command_queue;
-  (void)properties;
-  (void)enable;
-  (void)old_properties;
-  return 0;
 }

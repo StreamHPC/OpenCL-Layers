@@ -2341,26 +2341,29 @@
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -2373,23 +2376,34 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
-            <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_WRITE_ONLY</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0">
@@ -2447,26 +2461,29 @@
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -2479,23 +2496,34 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
-            <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_READ_ONLY</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_1">
@@ -2733,26 +2761,29 @@
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -2765,20 +2796,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
             <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
@@ -3020,26 +3051,29 @@
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -3052,20 +3086,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
             <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
@@ -3123,26 +3157,29 @@
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -3155,20 +3192,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_VALUE if src_offset, dst_offset, size, src_offset + size or dst_offset + size require accessing elements outside the src_buffer and dst_buffer buffer objects respectively. -->
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
@@ -3456,27 +3493,30 @@
             </then>
             <!-- CL_INVALID_VALUE if (src_origin, region, src_row_pitch, src_slice_pitch) or (dst_origin, region, dst_row_pitch, dst_slice_pitch) require accessing elements outside the src_buffer and dst_buffer buffer objects respectively. -->
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
-                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <and>
@@ -3488,20 +3528,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
@@ -3615,26 +3655,29 @@
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -3647,20 +3690,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
         </command>
@@ -3746,26 +3789,30 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
@@ -3779,23 +3826,23 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
-            <then>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_OPERATION if buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags or if buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags-->
         </command>
@@ -3814,7 +3861,7 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
@@ -4940,26 +4987,29 @@
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -4972,14 +5022,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
@@ -5170,26 +5226,29 @@
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -5202,14 +5261,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
@@ -5435,26 +5500,29 @@
             </then>
             <!-- CL_INVALID_VALUE if the 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the 2D or 3D rectangular region specified by dst_origin and dst_origin + region refers to a region outside dst_image.-->
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -5467,14 +5535,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for src_image or dst_image are not supported by device associated with queue. -->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for src_image or dst_image are not supported by device associated with queue. -->
@@ -5505,7 +5579,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -5513,19 +5587,26 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and> 
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <object_is_invalid name="image"/>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
             </if>
-            <then>
+            <then>      <log>image is not a valid image object</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="image"/>
             </if>
-            <then>
+            <then>      <log>context associated with command_queue and image are not the same</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -5628,26 +5709,29 @@
             </then>
             <!-- CL_INVALID_VALUE if the region being filled as specified by origin and region is out of bounds.-->
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
@@ -5660,14 +5744,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
@@ -5874,7 +5964,7 @@
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
-                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for src_image or dst_image are not supported by device associated with queue. -->
@@ -6366,7 +6456,7 @@
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
-                <name>errcode_ret</name>                                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue.-->
             <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue-->
@@ -6554,7 +6644,7 @@
             </then>-->
         </command>
 
-    <!-- 5.4.2 -->
+    <!-- 5.4.2 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetPipeInfo</name></proto>
@@ -6754,7 +6844,7 @@
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
-                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="memobj"/>
@@ -6878,7 +6968,7 @@
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
-                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
@@ -6944,6 +7034,13 @@
             <param><type>size_t</type>                                  <name>size</name></param>
             <param><type>cl_uint</type>                                 <name>alignment</name></param>
 
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <!-- no devices in context support SVM -->
             <if> <!-- spec is not clear whether 0 is a valid value-->
                 <or>
                     <bitfield_violation name="flags"/>
@@ -6952,83 +7049,99 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
             <if>
-                <or>
-                    <mutex_violation>
-                        <bit_and>
-                            <name>flags</name>                          <literal>CL_MEM_READ_WRITE</literal>
-                        </bit_and>
-                        <bit_and>
-                            <name>flags</name>                          <literal>CL_MEM_WRITE_ONLY</literal>
-                        </bit_and>
-                        <bit_and>
-                            <name>flags</name>                          <literal>CL_MEM_READ_ONLY</literal>
-                        </bit_and>
-                    </mutex_violation>
-                    <and>
-                        <bit_and>
-                            <name>flags</name>                          <literal>CL_MEM_SVM_ATOMICS</literal>
-                        </bit_and>
-                        <not>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_SVM_FINE_GRAIN_BUFFER</literal>
-                            </bit_and>
-                        </not>
-                    </and>
-                </or>
+                <mutex_violation>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_READ_WRITE</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_WRITE_ONLY</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_READ_ONLY</literal>
+                    </bit_and>
+                </mutex_violation>
             </if>
-            <then>
+            <then>      <log>read/write flags are not compatible</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
             <if>
-                <or>
-                    <eq>
-                        <name>size</name>                               <literal>0</literal>
-                    </eq>
-                    <!-- size is > CL_DEVICE_MAX_MEM_ALLOC_SIZE value for any device in context-->
-                    <and> <!-- alignment is the minimum alignment in bytes that is required for the newly created buffers memory region. It must be a power of two up to the largest data type supported by the OpenCL device. For the full profile, the largest data type is long16. For the embedded profile, it is long16 if the device supports 64-bit integers; otherwise it is int16. If alignment is 0, a default alignment will be used that is equal to the size of largest data type supported by the OpenCL implementation-->
-                        <neq>
-                            <name>alignment</name>                      <literal>0</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>1</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>2</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>4</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>8</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>16</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>32</literal>
-                        </neq>
-                        <neq>
-                            <name>alignment</name>                      <literal>64</literal>
-                        </neq>
-                        <neq> <!-- this can still provide fail for embedded devices-->
-                            <name>alignment</name>                      <literal>128</literal>
-                        </neq>
-                    </and>
-                </or>
+                <and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_SVM_ATOMICS</literal>
+                    </bit_and>
+                    <not>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_SVM_FINE_GRAIN_BUFFER</literal>
+                        </bit_and>
+                    </not>
+                </and>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible: CL_MEM_SVM_ATOMICS is valid only if CL_MEM_SVM_FINE_GRAIN_BUFFER is specified</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
+            <if>
+                <eq>
+                    <name>size</name>                                   <literal>0</literal>
+                </eq>
+            </if>
+            <then>      <log>size is 0</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <!-- size is &gt; CL_DEVICE_MAX_MEM_ALLOC_SIZE value for any device in context-->
+            <if>
+                <and> <!-- alignment is the minimum alignment in bytes that is required for the newly created buffers memory region. It must be a power of two up to the largest data type supported by the OpenCL device. For the full profile, the largest data type is long16. For the embedded profile, it is long16 if the device supports 64-bit integers; otherwise it is int16. If alignment is 0, a default alignment will be used that is equal to the size of largest data type supported by the OpenCL implementation-->
+                    <neq>
+                        <name>alignment</name>                          <literal>0</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>2</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>4</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>8</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>16</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>32</literal>
+                    </neq>
+                    <neq>
+                        <name>alignment</name>                          <literal>64</literal>
+                    </neq>
+                    <neq> <!-- this can still provide fail for embedded devices-->
+                        <name>alignment</name>                          <literal>128</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>alignment is invalid</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <!-- the OpenCL implementation cannot support the specified alignment for at least one device in context -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
             <proto><type>void</type>                                    <name>clSVMFree</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>void</type>*                                   <name>svm_pointer</name></param>
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+            </then>
+            <!-- no devices in context support SVM -->
+            <!-- with state can check that svm_pointer is the value returned by a call to clSVMAlloc -->
+            <!-- and that context is a valid OpenCL context used to create the SVM buffer -->
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
@@ -7043,52 +7156,96 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>num_svm_pointers</name>               <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <name>svm_pointers</name>                   <literal>NULL</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>num_svm_pointers</name>               <literal>0</literal>
-                        </neq>
-                        <eq>
-                            <name>svm_pointers</name>                   <literal>NULL</literal>
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>num_svm_pointers</name>                   <literal>0</literal>
+                    </eq>
+                    <neq>
+                        <name>svm_pointers</name>                       <literal>NULL</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>num_svm_pointers is 0 and svm_pointers is non-NULL</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <neq>
+                        <name>num_svm_pointers</name>                   <literal>0</literal>
+                    </neq>
+                    <eq>
+                        <name>svm_pointers</name>                       <literal>NULL</literal>
+                    </eq>
+                </and>
             </if>
-            <then>
+            <then>      <log>svm_pointers is NULL and num_svm_pointers is not 0</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>svm_pointers</name>                       <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>svm_pointers</name>                       <name>num_svm_pointers</name>
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>svm_pointers is too short</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- with state can check that each pointer in svm_pointers that was allocated using clSVMAlloc has been allocated from the same context from which command_queue was created -->
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -7098,8 +7255,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
@@ -7114,31 +7283,57 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if the context associated with command_queue and events in event_wait_list are not the same-->
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -7148,8 +7343,20 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <or>
@@ -7161,7 +7368,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>dst_ptr or src_ptr is NULL</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <!-- CL_MEM_COPY_OVERLAP if the values specified for dst_ptr, src_ptr and size result in an overlapping copy-->
@@ -7178,61 +7385,143 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if the context associated with command_queue and events in event_wait_list are not the same-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <eq>
                     <name>svm_ptr</name>                                <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>svm_ptr is NULL</log>
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <eq>
-                        <name>pattern</name>                            <literal>NULL</literal>
-                    </eq>
-                    <and>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>1</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>2</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>4</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>8</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>16</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>32</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>64</literal>
-                        </neq>
-                        <neq>
-                            <name>pattern_size</name>                   <literal>128</literal>
-                        </neq>
-                    </and>
-                    <neq>
-                        <mod>
-                            <name>size</name>
-                            <name>pattern_size</name>
-                        </mod>                                          <literal>0</literal>
-                    </neq>
-                </or>
+                <eq>
+                    <name>pattern</name>                                <literal>NULL</literal>
+                </eq>
             </if>
-            <then>
+            <then>      <log>pattern is NULL</log>
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if svm_ptr is not aligned to pattern_size bytes-->
+            <if>
+                <and>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>2</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>4</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>8</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>16</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>32</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>64</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>128</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>pattern_size is not one of {1, 2, 4, 8, 16, 32, 64, 128}</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <neq>
+                    <mod>
+                        <name>size</name>
+                        <name>pattern_size</name>
+                    </mod>                                              <literal>0</literal>
+                </neq>
+            </if>
+            <then>      <log>size is not a multiple of pattern_size</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if svm_ptr is not aligned to pattern_size bytes -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMMap</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_bool</type>                                 <name>blocking_map</name></param>
@@ -7243,13 +7532,87 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if context associated with command_queue and events in event_wait_list are not the same-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <eq>
                     <name>svm_ptr</name>                                <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>svm_ptr is NULL</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7257,7 +7620,7 @@
                     <name>size</name>                                   <literal>0</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>size is 0</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7268,7 +7631,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in map_flags are not valid</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7286,48 +7649,12 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>values specified in map_flags are not compatible</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_VALUE</value>
-            </then>
-            <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
-            </if>
-            <then>
-                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
-            </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
-                <and>
-                    <neq>
-                        <name>event_wait_list</name>                    <literal>NULL</literal>
-                    </neq>
-                    <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
-                    </array_len_ls>
-                </and>
-            </if>
-            <then>
-                <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMUnmap</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>void</type>*                                   <name>svm_ptr</name></param>
@@ -7335,39 +7662,57 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if context associated with command_queue and events in event_wait_list are not the same-->
             <if>
-                <eq>
-                    <name>svm_ptr</name>                                <literal>NULL</literal>
-                </eq>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
-                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_VALUE</value>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -7377,8 +7722,28 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <eq>
+                    <name>svm_ptr</name>                                <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>svm_ptr is NULL</log>
+                <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
@@ -7393,7 +7758,81 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_CONTEXT if context associated with command_queue and events in event_wait_list are not the same-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and> 
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command queue does not support SVM</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is too short</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -7404,45 +7843,11 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>num_svm_pointers is zero or svm_pointers is NULL</log>
                 <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
-                        </eq>
-                    </and>
-                </or>
-            </if>
-            <then>
-                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
-            </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
-                <and>
-                    <neq>
-                        <name>event_wait_list</name>                    <literal>NULL</literal>
-                    </neq>
-                    <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
-                    </array_len_ls>
-                </and>
-            </if>
-            <then>
-                <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
-            </then>
+            <!-- state needed for 
+            CL_INVALID_VALUE if sizes[i] is non-zero and range [svm_pointers[i], svm_pointers[i]+sizes[i]) is not contained within an existing clSVMAlloc allocation -->
         </command>
 
     <!-- 5.7.1 -->
@@ -7454,16 +7859,23 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateSamplerWithProperties</name>              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <list_violation name="sampler_properties"/>
             </if>
-            <then>
+            <then>      <log>the property name in sampler_properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once</log>
                 <name>clCreateSamplerWithProperties</name>              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <!-- CL_INVALID_OPERATION if images are not supported by any device associated with context (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE)-->
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED"> <!--?-->
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED">
             <proto><type>cl_sampler</type>                              <name>clCreateSampler</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_bool</type>                                 <name>normalized_coords</name></param>
@@ -7472,29 +7884,55 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <or>
-                    <enum_violation name="addressing_mode"/>
-                    <enum_violation name="filter_mode"/>
-                </or>
+                <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateSampler</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <enum_violation name="addressing_mode"/>
+            </if>
+            <then>      <log>addressing_mode is not valid</log>
                 <name>clCreateSampler</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <enum_violation name="filter_mode"/>
+            </if>
+            <then>      <log>filter_mode is not valid</log>
+                <name>clCreateSampler</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if a combination of addressing_mode, filter_mode, normalized_coords are not valid -->
             <!-- CL_INVALID_OPERATION if images are not supported by any device associated with context (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE)-->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainSampler</name></proto>
             <param><type>cl_sampler</type>                              <name>sampler</name></param>
+
+            <if>
+                <object_is_invalid name="sampler"/>
+            </if>
+            <then>      <log>sampler is not a valid sampler object</log>
+                <name>clRetainSampler</name>                            <value>CL_INVALID_SAMPLER</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseSampler</name></proto>
             <param><type>cl_sampler</type>                              <name>sampler</name></param>
+
+            <if>
+                <object_is_invalid name="sampler"/>
+            </if>
+            <then>      <log>sampler is not a valid sampler object</log>
+                <name>clReleaseSampler</name>                           <value>CL_INVALID_SAMPLER</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetSamplerInfo</name></proto>
             <param><type>cl_sampler</type>                              <name>sampler</name></param>
             <param><type>cl_sampler_info</type>                         <name>param_name</name></param>
@@ -7503,9 +7941,15 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="sampler"/>
             </if>
-            <then>
+            <then>      <log>sampler is not a valid sampler object</log>
+                <name>clGetSamplerInfo</name>                           <value>CL_INVALID_SAMPLER</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
+            </if>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetSamplerInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -7541,7 +7985,7 @@
 
     <!-- 5.8.1 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clCreateProgramWithSource</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_uint</type>                                 <name>count</name></param>
@@ -7550,16 +7994,27 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <or>
-                    <eq>
-                        <name>count</name>                              <literal>0</literal>
-                    </eq>
-                    <eq>
-                        <name>strings</name>                            <literal>NULL</literal>
-                    </eq>
-                </or>
+                <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateProgramWithSource</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <eq>
+                    <name>count</name>                                  <literal>0</literal>
+                </eq>
+            </if>
+            <then>      <log>count is zero</log>
+                <name>clCreateProgramWithSource</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>strings</name>                                <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>strings is NULL</log>
                 <name>clCreateProgramWithSource</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -7573,7 +8028,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>lengths is too short</log>
                 <name>clCreateProgramWithSource</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -7582,14 +8037,14 @@
                     <name>strings</name>                                <name>count</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>strings is too short</log>
                 <name>clCreateProgramWithSource</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <any_nullptr array="strings" elements="count"/>
             </if>
-            <then>
+            <then>      <log>some entry in strings is NULL</log>
                 <name>clCreateProgramWithSource</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -7603,6 +8058,14 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateProgramWithIL</name>                      <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- CL_INVALID_OPERATION if no devices in context support intermediate language programs -->
+            <if>
                 <or>
                     <eq>
                         <name>il</name>                                 <literal>NULL</literal>
@@ -7612,7 +8075,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>il is NULL or if length is zero</log>
                 <name>clCreateProgramWithIL</name>                      <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -7621,13 +8084,13 @@
                     <name>il</name>                                     <name>length</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>il is too short</log>
                 <name>clCreateProgramWithIL</name>                      <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clCreateProgramWithBinary</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -7638,6 +8101,13 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>device_list</name>                        <literal>NULL</literal>
@@ -7647,11 +8117,26 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>device_list is NULL or num_devices is zero</log>
                 <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_DEVICE if any device in device_list is not in the list of devices associated with context-->
+            <if> <!-- not specified in standard-->
+                <array_len_ls>
+                    <name>device_list</name>                            <name>num_devices</name>
+                </array_len_ls>
+            </if>
+            <then>      <log>device_list is too short</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_object_not_in array="device_list" elements="num_devices" in="context"/>
+            </if>
+            <then>      <log>some device in device_list is not in the list of devices associated with context</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -7662,45 +8147,59 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>lengths or binaries is NULL</log>
                 <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not specified in standard-->
-                <or>
-                    <array_len_ls>
-                        <name>lengths</name>                            <name>num_devices</name>
-                    </array_len_ls>
-                    <array_len_ls>
-                        <name>binaries</name>                           <name>num_devices</name>
-                    </array_len_ls>
-                    <and>
-                        <neq>
-                            <name>binary_status</name>                  <literal>NULL</literal>
-                        </neq>
-                        <array_len_ls>
-                            <name>binary_status</name>                  <name>num_devices</name>
-                        </array_len_ls>
-                    </and>
-                </or>
+                <array_len_ls>
+                    <name>lengths</name>                                <name>num_devices</name>
+                </array_len_ls>
             </if>
-            <then>
+            <then>      <log>lengths is too short</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not specified in standard-->
+                <array_len_ls>
+                    <name>binaries</name>                               <name>num_devices</name>
+                </array_len_ls>
+            </if>
+            <then>      <log>binaries is too short</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not specified in standard-->
+                <and>
+                    <neq>
+                        <name>binary_status</name>                      <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>binary_status</name>                      <name>num_devices</name>
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>binary_status is too short</log>
                 <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <any_zero array="lengths" elements="num_devices"/>
-                    <any_nullptr array="binaries" elements="num_devices"/>
-                </or>
+                <any_zero array="lengths" elements="num_devices"/>
             </if>
-            <then>
+            <then>      <log>some entry in lengths is zero</log>
+                <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_nullptr array="binaries" elements="num_devices"/>
+            </if>
+            <then>      <log>some entry in binaries is NULL</log>
                 <name>clCreateProgramWithBinary</name>                  <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clCreateProgramWithBuiltInKernels</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -7709,6 +8208,13 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
                 <or>
                     <eq>
                         <name>device_list</name>                        <literal>NULL</literal>
@@ -7716,12 +8222,9 @@
                     <eq>
                         <name>num_devices</name>                        <literal>0</literal>
                     </eq>
-                    <eq>
-                        <name>kernel_names</name>                       <literal>NULL</literal>
-                    </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>device_list is NULL or num_devices is zero</log>
                 <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -7730,11 +8233,45 @@
                     <name>device_list</name>                            <name>num_devices</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>device_list is too short</log>
                 <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_DEVICE if any device in device_list is not in the list of devices associated with context-->
+            <if>
+                <any_object_not_in array="device_list" elements="num_devices" in="context"/>
+            </if>
+            <then>      <log>some device in device_list is not in the list of devices associated with context</log>
+                <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>device_list</name>                            <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>device_list is NULL</log>
+                <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>num_devices</name>                            <literal>0</literal>
+                </eq>
+            </if>
+            <then>      <log>num_devices is zero</log>
+                <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>kernel_names</name>                           <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>kernel_names is NULL</log>
+                <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if kernel_names contains a kernel name that is not supported by any of the devices in device_list. -->
         </command>
 
     <!-- 5.8.2 -->
