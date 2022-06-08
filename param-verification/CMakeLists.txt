@@ -7,9 +7,10 @@ add_custom_command (
   OUTPUT
     ${CMAKE_CURRENT_BINARY_DIR}/res.cpp
   COMMAND
-    CLInputVerificationGenerator ${CMAKE_CURRENT_SOURCE_DIR}/cl-avl.xml
+    CLParamVerificationGenerator ${CMAKE_CURRENT_SOURCE_DIR}/cl-avl.xml
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/cl-avl.xml
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
 )
 
 add_library (

@@ -1005,6 +1005,7 @@ bool struct_violation(
   if ((image_desc->num_mip_levels != 0) || (image_desc->num_samples != 0))
     return true;
 
+  return false;
 }
 
 // tenmporary - to remove !!!
@@ -1014,5 +1015,9 @@ cl_int clSetCommandQueueProperty(
   cl_bool enable,
   cl_command_queue_properties * old_properties)
 {
+  (void)command_queue;
+  (void)properties;
+  (void)enable;
+  (void)old_properties;
   return 0;
 }

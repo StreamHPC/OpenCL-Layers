@@ -6267,10 +6267,10 @@
                         </neq>
                     </and>
                     <neq>
-                        <name>src_origin[1]</name>                      <literal>0</literal>
+                        <name>origin[1]</name>                      <literal>0</literal>
                     </neq>
                     <neq>
-                        <name>src_origin[2]</name>                      <literal>0</literal>
+                        <name>origin[2]</name>                      <literal>0</literal>
                     </neq>
                     <neq>
                         <name>region[1]</name>                          <literal>1</literal>
@@ -6298,9 +6298,9 @@
                 <and>
                     <not>
                         <and>
-                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
-                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
-                            <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                            <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                            <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                            <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
                         </and>
                     </not>
                     <eq>
@@ -6568,7 +6568,7 @@
                 <object_is_invalid name="pipe" type="CL_MEM_OBJECT_PIPE"/>
             </if>
             <then>      <log>pipe is not a valid pipe object</log>
-                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+                <name>clGetPipeInfo</name>                              <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <enum_violation name="param_name"/>

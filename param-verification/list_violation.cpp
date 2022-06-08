@@ -477,10 +477,34 @@ bool object_not_in(cl_event event, cl_command_queue command_queue)
   return true;
 }
 
+// mem objects and command queue should belong to the same context
+//template<>
+bool object_not_in(cl_mem object, cl_command_queue command_queue)
+{
+  cl_context m_context;
+  clGetMemObjectInfo(
+    object,
+    CL_MEM_CONTEXT,
+    sizeof(cl_context),
+    &m_context,
+    NULL);
+  cl_context c_context;
+  clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_CONTEXT,
+    sizeof(cl_context),
+    &c_context,
+    NULL);
+
+  if (m_context == c_context)
+      return false;
+  return true;
+}
+
 template<typename T1, typename T2>
 bool any_object_not_in(T1 * objects, size_t n, T2 in)
 {
-  for (size_t i = 0; i < n; +i)
+  for (size_t i = 0; i < n; ++i)
     if (object_not_in(objects[i], in))
       return true;
   return false;

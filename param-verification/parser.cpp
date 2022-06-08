@@ -497,11 +497,13 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
          << "template<>\n"
          << "size_t literal_list(const char * name, cl_image_format * const param)\n"
          << "{\n"
+         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n"
          << "template<>\n"
          << "size_t literal_list(const char * name, const cl_image_format * const param)\n"
          << "{\n"
+         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n\n";
 
@@ -570,11 +572,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "  void" << end << "\n\n";
 
     code << "template<typename T, cl_uint property>\n"
-         << "auto query(T object)\n"
-         << "{\n"
-         << "  printf(\"Bad query!\\n\");\n"
-         << "  exit(-1);\n"
-         << "}\n\n";
+         << "auto query(T object);\n\n";
 
     code << "template<cl_uint property>\n"
          << "auto query(cl_platform_id platform)\n"
@@ -699,7 +697,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 violation_node = violation_node->next_sibling("if"),
                 result_node = result_node->next_sibling("then"))
             {
-                code << "  if (" << parse_violation(violation_node->first_node()) << ") {\n";
+                code << "  if " << parse_violation(violation_node->first_node()) << " {\n";
 
                 for (xml_node<> * log_node = result_node->first_node("log");
                     log_node != nullptr;
@@ -778,9 +776,18 @@ int main(int argc, char* argv[])
     parse_queries(code, root_node);
 
     // dummy funcs
-    code << "bool from(char * version)\n"
+    code << "bool from(const char * version)\n"
          << "{\n"
+         << "  (void)version;\n"
          << "  return true;\n"
+         << "}\n\n";
+
+    code << "template<typename T>\n"
+         << "bool array_len_ls(T * ptr, size_t size)\n"
+         << "{\n"
+         << "  (void)ptr;\n"
+         << "  (void)size;\n"
+         << "  return false;\n"
          << "}\n\n";
 
     // real funcs
@@ -816,12 +823,6 @@ int main(int argc, char* argv[])
          << "    if (!avail) return true;\n"
          << "    avail = false;\n"
          << "  }\n"
-         << "  return false;\n"
-         << "}\n\n";
-
-    code << "template<typename T>\n"
-         << "bool array_len_ls(T * ptr, size_t size)\n"
-         << "{\n"
          << "  return false;\n"
          << "}\n\n";
 

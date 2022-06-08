@@ -31,7 +31,7 @@ bool object_is_valid(cl_mem mem) {
 bool object_is_valid(cl_mem mem, cl_mem_object_type type) {
   cl_mem_object_type curr_type = 0;
   cl_int res = clGetMemObjectInfo(mem, CL_MEM_TYPE, sizeof(cl_mem_object_type), &curr_type, nullptr);
-  return curr_type == type;
+  return (res == CL_SUCCESS) && (curr_type == type);
 }
 
 bool object_is_valid(cl_sampler sampler) {
