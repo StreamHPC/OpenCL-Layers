@@ -753,12 +753,16 @@ bool struct_violation(
     if (image_desc->image_depth == 0)
       return true;
 
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
       image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY)
     if (image_desc->image_depth == 0)
       return true;
 
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
       image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_BUFFER ||
       image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
     if (image_desc->image_width == 0)
