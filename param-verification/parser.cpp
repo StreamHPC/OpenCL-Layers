@@ -266,6 +266,26 @@ std::string parse_violation(xml_node<> const * const violation)
                 + std::string(violation->first_attribute("in")->value())
                 + "))";
         }
+        else if (strcmp(name, "for_all") == 0)
+        {
+            test = "(for_all("
+                + std::string(violation->first_attribute("in")->value())
+                + ", [=](return_type<"
+                + std::string(violation->first_attribute("query")->value())
+                + "> query){ return static_cast<bool>("
+                + parse_violation(violation->first_node())
+                + "); })";
+        }
+        else if (strcmp(name, "for_any") == 0)
+        {
+            test = "(for_any("
+                + std::string(violation->first_attribute("in")->value())
+                + ", [=](return_type<"
+                + std::string(violation->first_attribute("query")->value())
+                + "> query){ return static_cast<bool>("
+                + parse_violation(violation->first_node())
+                + "); })";
+        }
         else if (strcmp(name, "from") == 0)
         {
             test = "(from(\"" + std::string(violation->first_attribute("version")->value()) + "\"))";
@@ -575,7 +595,12 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_platform_id platform)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
+         << "  if (!enum_violation(\"cl_platform_info\", property)) {\n\n"
+         << "    clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
          << "  return a;\n"
          << "}\n\n";
 
@@ -583,7 +608,16 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_device_id device)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
+         << "  if (!enum_violation(\"cl_device_info\", property)) {\n"
+         << "    clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
+         << "  } else if (!enum_violation(\"cl_platform_info\", property)) {\n\n"
+         << "    cl_platform_id p;\n"
+         << "    clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(cl_platform_id), &p, NULL);\n"
+         << "    clGetPlatformInfo(p, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid device query in query(cl_device_id). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
          << "  return a;\n"
          << "}\n\n";
 
@@ -591,7 +625,12 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_context context)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
+         << "  if (!enum_violation(\"cl_context_info\", property)) {\n"
+         << "    clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid context query in query(cl_context). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
          << "  return a;\n"
          << "}\n\n";
 
@@ -601,7 +640,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "  return_type<property> a;\n"
          << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
          << "    clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n\n"
+         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n"
          << "    cl_device_id d;\n"
          << "    clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
          << "    clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
@@ -616,7 +655,16 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_mem object)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  if (!enum_violation(\"cl_mem_info\", property)) {\n"
+         << "    clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  } else if (!enum_violation(\"cl_image_info\", property)) {\n"
+         << "    clGetImageInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  } else if (!enum_violation(\"cl_pipe_info\", property)) {\n"
+         << "    clGetPipeInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
          << "  return a;\n"
          << "}\n\n";
 }
