@@ -24,7 +24,7 @@ bool list_violation(
           &cu,
           NULL);
 
-        if ((param[1] <= 0) || (param[1] > cu) || (param[2] != 0))
+        if ((param[1] <= 0) || (static_cast<cl_uint>(param[1]) > cu) || (param[2] != 0))
           return true;
         if (cu / param[1] > num_devices)
           return true;
@@ -100,7 +100,7 @@ bool list_violation(
           &cu,
           NULL);
 
-        if ((param[1] <= 0) || (param[1] > cu) || (param[2] != 0))
+        if ((param[1] <= 0) || (static_cast<cl_uint>(param[1]) > cu) || (param[2] != 0))
           return true;
         return false;
 
