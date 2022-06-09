@@ -749,34 +749,26 @@ bool struct_violation(
   const cl_image_format * image_format)
 {
   // check image types and sizes (upper limits are checked in prev function)
-  switch (image_desc->image_type) {
-    case CL_MEM_OBJECT_IMAGE3D:
-      if (image_desc->image_depth == 0)
-        return true;
-
-    case CL_MEM_OBJECT_IMAGE2D:
-    case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-      if (image_desc->image_height == 0)
-        return true;
-
-    case CL_MEM_OBJECT_IMAGE1D:
-    case CL_MEM_OBJECT_IMAGE1D_BUFFER:
-    case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-      if (image_desc->image_width == 0)
-        return true;
-      break;
-    
-    default:
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D)
+    if (image_desc->image_depth == 0)
       return true;
-  }
+
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D)
+    if (image_desc->image_depth == 0)
+      return true;
+
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_BUFFER ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
+    if (image_desc->image_width == 0)
+      return true;
 
   // check array size
-  switch (image_desc->image_type) {
-    case CL_MEM_OBJECT_IMAGE2D_ARRAY: 
-    case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-      if (image_desc->image_array_size == 0)
-        return true;
-  }
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
+    if (image_desc->image_array_size == 0)
+      return true;
 
   // check image_row_pitch
   if ((host_ptr == NULL) && (image_desc->image_row_pitch != 0))
