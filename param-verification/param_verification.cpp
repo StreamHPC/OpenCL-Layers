@@ -1,5 +1,6 @@
 #include "param_verification.hpp"
 #include <fstream>
+#include <memory>
 
 struct _cl_icd_dispatch dispatch = {};
 
@@ -8,6 +9,8 @@ const struct _cl_icd_dispatch *tdispatch;
 ocl_layer_utils::stream_ptr log_stream;
 
 namespace {
+  constexpr const static cl_version FALLBACK_VERSION = CL_MAKE_VERSION(3, 0, 0);
+
   struct layer_settings {
     enum class DebugLogType { StdOut, StdErr, File };
 
@@ -96,4 +99,195 @@ clInitLayer(
   *layer_dispatch_ret = &dispatch;
   *num_entries_out = sizeof(dispatch)/sizeof(dispatch.clGetPlatformIDs);
   return CL_SUCCESS;
+}
+
+cl_version get_object_version(cl_platform_id platform) {
+  if (!platform)
+    return FALLBACK_VERSION;
+  size_t version_len;
+  cl_int res;
+  res = tdispatch->clGetPlatformInfo(platform, CL_PLATFORM_VERSION, 0, nullptr, &version_len);
+  if (res != CL_SUCCESS)
+    return FALLBACK_VERSION;
+
+  auto version_str = std::make_unique<char[]>(version_len);
+  res = tdispatch->clGetPlatformInfo(platform, CL_PLATFORM_VERSION, version_len, version_str.get(), nullptr);
+  if (res != CL_SUCCESS)
+    return FALLBACK_VERSION;
+
+  cl_version version;
+  if (!ocl_layer_utils::parse_cl_version_string(version_str.get(), &version)) {
+    return FALLBACK_VERSION;
+  }
+  return version;
+}
+
+cl_version get_object_version(cl_device_id device) {
+  if (!device)
+    return FALLBACK_VERSION;
+  cl_platform_id platform;
+  cl_int res = tdispatch->clGetDeviceInfo(
+    device,
+    CL_DEVICE_PLATFORM,
+    sizeof(cl_platform_id),
+    &platform,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(platform);
+}
+
+cl_version get_object_version(cl_context context) {
+  if (!context)
+    return FALLBACK_VERSION;
+  // Note: need to query all devices, even if we only need one.
+  size_t devices_size;
+  cl_int res = tdispatch->clGetContextInfo(
+    context,
+    CL_CONTEXT_DEVICES,
+    0,
+    NULL,
+    &devices_size);
+  if (res != CL_SUCCESS || devices_size == 0) {
+    return FALLBACK_VERSION;
+  }
+
+  auto devices = std::make_unique<cl_device_id[]>(devices_size / sizeof(cl_device_id));
+  res = tdispatch->clGetContextInfo(
+    context,
+    CL_CONTEXT_DEVICES,
+    devices_size,
+    (void*)devices.get(),
+    NULL);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(devices[0]); // platform should be the same for all devices in the context
+}
+
+cl_version get_object_version(cl_command_queue queue) {
+  if (!queue)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetCommandQueueInfo(
+    queue,
+    CL_QUEUE_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_version get_object_version(cl_mem mem) {
+  if (!mem)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetMemObjectInfo(
+    mem,
+    CL_MEM_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_version get_object_version(cl_sampler sampler) {
+  if (!sampler)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetSamplerInfo(
+    sampler,
+    CL_SAMPLER_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_version get_object_version(cl_program program) {
+  if (!program)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetProgramInfo(
+    program,
+    CL_PROGRAM_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_version get_object_version(cl_kernel kernel) {
+  if (!kernel)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetKernelInfo(
+    kernel,
+    CL_KERNEL_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_version get_object_version(cl_event event) {
+  if (!event)
+    return FALLBACK_VERSION;
+  cl_context context;
+  cl_int res = tdispatch->clGetEventInfo(
+    event,
+    CL_EVENT_CONTEXT,
+    sizeof(cl_context),
+    &context,
+    nullptr);
+  if (res != CL_SUCCESS) {
+    return FALLBACK_VERSION;
+  }
+
+  return get_object_version(context);
+}
+
+cl_platform_id get_context_properties_platform(const cl_context_properties * properties) {
+  // Keep logic in sync with khrIcdContextPropertiesGetPlatform from OpenCL-ICD-Loader.
+  cl_platform_id platform = nullptr;
+  for (const cl_context_properties *property = properties; property && property[0]; property += 2) {
+    if ((cl_context_properties) CL_CONTEXT_PLATFORM == property[0]) {
+      platform = (cl_platform_id) property[1];
+    }
+  }
+  if (!platform) {
+    // Fetch the first platform reported by clGetPlatformIDs.
+    cl_uint num_platforms;
+    cl_int status = tdispatch->clGetPlatformIDs(
+      1,
+      &platform,
+      &num_platforms);
+    if (status != CL_SUCCESS || num_platforms == 0) {
+      platform = nullptr;
+    }
+  }
+  return platform;
 }

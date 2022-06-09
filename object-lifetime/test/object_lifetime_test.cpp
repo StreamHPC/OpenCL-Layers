@@ -1,7 +1,8 @@
 #include "object_lifetime_test.hpp"
 #include <memory>
-#include <sstream>
 #include <cstdlib>
+
+#include "utils.hpp"
 
 namespace layer_test {
   TestContext TEST_CONTEXT;
@@ -81,22 +82,14 @@ namespace layer_test {
     auto version_data = std::make_unique<char[]>(version_length);
     EXPECT_SUCCESS(clGetPlatformInfo(platform, CL_PLATFORM_VERSION, version_length, version_data.get(), nullptr));
 
-    std::stringstream version;
-    version.write(version_data.get(), version_length);
-
-    std::string opencl;
-    cl_uint major, minor;
-    version >> opencl;
-    version >> major;
-    version.get();
-    version >> minor;
-
-    if (version.fail()) {
+    if (!ocl_layer_utils::parse_cl_version_string(version_data.get(), &TEST_CONTEXT.version)) {
       LAYER_TEST_LOG() << "Failed to parse platform OpenCL version" << std::endl;
+      exit(EXIT_FAILURE);
     }
 
-    TEST_CONTEXT.version = CL_MAKE_VERSION(major, minor, 0);
-    LAYER_TEST_LOG() << "platform opencl version is " << major << "." << minor << std::endl;
+    LAYER_TEST_LOG() << "platform opencl version is "
+                     << CL_VERSION_MAJOR(TEST_CONTEXT.version) << "." << CL_VERSION_MINOR(TEST_CONTEXT.version)
+                     << std::endl;
 
     if (TEST_CONTEXT.version < required_version) {
       LAYER_TEST_LOG() << "test requires at least version " << CL_VERSION_MAJOR(required_version)

@@ -1,7 +1,7 @@
 // auxilary functions
 
 bool is_3D_image_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -43,7 +43,7 @@ bool is_3D_image_fits(
 }
 
 bool is_2D_image_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -78,7 +78,7 @@ bool is_2D_image_fits(
 }
 
 bool is_1D_image_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -106,7 +106,7 @@ bool is_1D_image_fits(
 }
 
 bool is_2D_array_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -148,7 +148,7 @@ bool is_2D_array_fits(
 }
 
 bool is_1D_array_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -183,7 +183,7 @@ bool is_1D_array_fits(
 }
 
 bool is_1D_buffer_fits(
-  const cl_image_desc * const image_desc, 
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
   cl_uint nd;
@@ -215,38 +215,20 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
   size_t size;
   cl_device_id * devices = NULL;
 
-  if (from("1.1"))
-  {
-    tdispatch->clGetContextInfo(context,
-      CL_CONTEXT_NUM_DEVICES,
-      sizeof(cl_uint),
-      number,
-      &size);
+  tdispatch->clGetContextInfo(
+    context,
+    CL_CONTEXT_NUM_DEVICES,
+    0,
+    nullptr,
+    &size);
 
-    size = *number * sizeof(cl_device_id);
-    devices = (cl_device_id *)malloc(size);
-
-    tdispatch->clGetContextInfo(context,
-      CL_CONTEXT_DEVICES,
-      size,
-      devices,
-      &size);
-  }
-  else
-  {
-    *number = 65535;
-    size = *number * sizeof(cl_device_id);
-    devices = (cl_device_id *)malloc(size);
-
-    tdispatch->clGetContextInfo(context,
-      CL_CONTEXT_DEVICES,
-      size,
-      devices,
-      &size);
-
-    *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
-    devices = (cl_device_id *)realloc(devices, size);
-  }
+  devices = static_cast<cl_device_id *>(malloc(size));
+  *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
+  tdispatch->clGetContextInfo(context,
+    CL_CONTEXT_DEVICES,
+    size,
+    devices,
+    nullptr);
 
   return devices;
 }
@@ -259,7 +241,7 @@ cl_uint max_pitch_al(cl_context context)
 
   cl_uint res = 0;
 
-  // find maximum row pitch alignment size in pixels for 2D images 
+  // find maximum row pitch alignment size in pixels for 2D images
   // created from a buffer for all devices in the context
   cl_uint size;
   for (cl_uint i = 0; i < nd; ++i)
@@ -286,7 +268,7 @@ cl_uint max_base_al(cl_context context)
 
   cl_uint res = 0;
 
-  // find maximum base address alignment size in pixels for 2D images 
+  // find maximum base address alignment size in pixels for 2D images
   // created from a buffer for all devices in the context
   cl_uint size;
   for (cl_uint i = 0; i < nd; ++i)
@@ -324,9 +306,9 @@ size_t pixel_size(const cl_image_format * image_format)
       break;
 
 // For 3 channels we can safely use 4 for pixel_size as all supported data types
-// are powers of 2 in bit size (see below) and we are interesed in 
+// are powers of 2 in bit size (see below) and we are interesed in
 // the next or equal power of two of (channels * channel_size)*8 bits:
-// "The number of bits per element determined by the image_channel_data_type 
+// "The number of bits per element determined by the image_channel_data_type
 // and image_channel_order must be a power of two."
     case CL_RGB:
     case CL_RGx:
@@ -526,11 +508,11 @@ size_t buffer_size(cl_mem buffer)
 
 // check image_format violation
 bool struct_violation(
-  const cl_image_format * const image_format)
+  cl_version version, const cl_image_format * const image_format)
 {
-  if (enum_violation("cl_channel_order", image_format->image_channel_order))
+  if (enum_violation(version, "cl_channel_order", image_format->image_channel_order))
     return true;
-  if (enum_violation("cl_channel_type", image_format->image_channel_data_type))
+  if (enum_violation(version, "cl_channel_type", image_format->image_channel_data_type))
     return true;
 
   if (((image_format->image_channel_data_type == CL_UNORM_SHORT_555) ||
@@ -547,13 +529,14 @@ bool struct_violation(
 
 // check image_format violation and correctness of 2D image creation from buffer or 2D image
 bool struct_violation(
+  cl_version version,
   const cl_image_format * const image_format,
   cl_context context,
   const cl_image_desc * const image_desc)
 {
-  if (enum_violation("cl_channel_order", image_format->image_channel_order))
+  if (enum_violation(version, "cl_channel_order", image_format->image_channel_order))
     return true;
-  if (enum_violation("cl_channel_type", image_format->image_channel_data_type))
+  if (enum_violation(version, "cl_channel_type", image_format->image_channel_data_type))
     return true;
 
   if (((image_format->image_channel_data_type == CL_UNORM_SHORT_555) ||
@@ -593,7 +576,7 @@ bool struct_violation(
       &flags,
       NULL);
     if (flags | CL_MEM_USE_HOST_PTR)
-    { 
+    {
       void * host_ptr;
       tdispatch->clGetMemObjectInfo(
         image_desc->buffer,
@@ -622,9 +605,11 @@ bool struct_violation(
 
 // check memory flags
 bool struct_violation(
+  cl_version version,
   const cl_image_desc * const image_desc,
   cl_mem_flags flags)
 {
+  (void)version;
   // check image creation from buffer or other image
   switch (image_desc->image_type) {
     case CL_MEM_OBJECT_IMAGE1D_BUFFER:
@@ -638,23 +623,23 @@ bool struct_violation(
           &old_flags,
           NULL);
 
-        if ((old_flags | CL_MEM_WRITE_ONLY) && 
+        if ((old_flags | CL_MEM_WRITE_ONLY) &&
           ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_READ_ONLY)))
           return true;
-        if ((old_flags | CL_MEM_READ_ONLY) && 
+        if ((old_flags | CL_MEM_READ_ONLY) &&
           ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_WRITE_ONLY)))
           return true;
-        if ((flags | CL_MEM_USE_HOST_PTR) || 
+        if ((flags | CL_MEM_USE_HOST_PTR) ||
           (flags | CL_MEM_ALLOC_HOST_PTR) ||
           (flags | CL_MEM_COPY_HOST_PTR))
           return true;
-        if ((old_flags | CL_MEM_HOST_WRITE_ONLY) && 
+        if ((old_flags | CL_MEM_HOST_WRITE_ONLY) &&
           (flags | CL_MEM_HOST_READ_ONLY))
           return true;
-        if ((old_flags | CL_MEM_HOST_READ_ONLY) && 
+        if ((old_flags | CL_MEM_HOST_READ_ONLY) &&
           (flags | CL_MEM_HOST_WRITE_ONLY))
           return true;
-        if ((old_flags | CL_MEM_HOST_NO_ACCESS) && 
+        if ((old_flags | CL_MEM_HOST_NO_ACCESS) &&
           ((flags | CL_MEM_HOST_READ_ONLY) || (flags | CL_MEM_HOST_WRITE_ONLY)))
           return true;
       }
@@ -670,9 +655,11 @@ bool struct_violation(
 
 // check image sizes to fit into some device of the context
 bool struct_violation(
-  const cl_image_desc * const image_desc, 
+  cl_version version,
+  const cl_image_desc * const image_desc,
   cl_context context)
 {
+  (void)version;
   switch (image_desc->image_type) {
     case CL_MEM_OBJECT_IMAGE3D:
       return !is_3D_image_fits(image_desc, context);
@@ -699,13 +686,15 @@ bool struct_violation(
 
 // check size of host_ptr
 bool struct_violation(
-  const cl_image_desc * const image_desc, 
+  cl_version version,
+  const cl_image_desc * const image_desc,
   void * host_ptr,
   const cl_image_format * image_format)
 {
+  (void)version;
   if (host_ptr != NULL) {
-    size_t image_row_pitch = 
-      std::max(image_desc->image_row_pitch, 
+    size_t image_row_pitch =
+      std::max(image_desc->image_row_pitch,
         image_desc->image_width * pixel_size(image_format));
 
     switch (image_desc->image_type) {
@@ -714,24 +703,24 @@ bool struct_violation(
         return array_len_ls(host_ptr, image_row_pitch);
 
       case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-        return array_len_ls(host_ptr, 
-          image_desc->image_array_size * 
+        return array_len_ls(host_ptr,
+          image_desc->image_array_size *
             std::max(image_desc->image_slice_pitch, image_row_pitch));
 
       case CL_MEM_OBJECT_IMAGE2D:
-        return array_len_ls(host_ptr, 
+        return array_len_ls(host_ptr,
           image_row_pitch * image_desc->image_height);
 
       case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-        return array_len_ls(host_ptr, 
-          image_desc->image_array_size * 
-            std::max(image_desc->image_slice_pitch, 
+        return array_len_ls(host_ptr,
+          image_desc->image_array_size *
+            std::max(image_desc->image_slice_pitch,
               image_row_pitch * image_desc->image_height));
 
       case CL_MEM_OBJECT_IMAGE3D:
-        return array_len_ls(host_ptr, 
-          image_desc->image_depth * 
-            std::max(image_desc->image_slice_pitch, 
+        return array_len_ls(host_ptr,
+          image_desc->image_depth *
+            std::max(image_desc->image_slice_pitch,
               image_row_pitch * image_desc->image_height));
 
       default:
@@ -743,11 +732,13 @@ bool struct_violation(
 
 // check all besides checked above
 bool struct_violation(
+  cl_version version,
   const cl_image_desc * const image_desc, 
   cl_context,
   void * host_ptr,
   const cl_image_format * image_format)
 {
+  (void)version;
   // check image types and sizes (upper limits are checked in prev function)
   if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D)
     if (image_desc->image_depth == 0)
@@ -777,12 +768,12 @@ bool struct_violation(
   // check image_row_pitch
   if ((host_ptr == NULL) && (image_desc->image_row_pitch != 0))
     return true;
-  if ((host_ptr != NULL) && (image_desc->image_row_pitch > 1) && 
+  if ((host_ptr != NULL) && (image_desc->image_row_pitch > 1) &&
     (image_desc->image_row_pitch < image_desc->image_width * pixel_size(image_format)))
     return true;
   if (image_desc->image_row_pitch % pixel_size(image_format) != 0)
     return true;
-  size_t image_row_pitch = 
+  size_t image_row_pitch =
     std::max(image_desc->image_row_pitch, image_desc->image_width * pixel_size(image_format));
   // it is checked in image_format
   //if ((image_desc->image_type == CL_MEM_OBJECT_IMAGE2D) &&
@@ -798,13 +789,13 @@ bool struct_violation(
     switch (image_desc->image_type) {
       case CL_MEM_OBJECT_IMAGE3D:
       case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-        if ((image_desc->image_slice_pitch > 1) && 
+        if ((image_desc->image_slice_pitch > 1) &&
           (image_desc->image_slice_pitch < image_row_pitch * image_desc->image_height))
           return true;
         break;
 
       case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-        if ((image_desc->image_slice_pitch > 1) && 
+        if ((image_desc->image_slice_pitch > 1) &&
           (image_desc->image_slice_pitch < image_row_pitch))
           return true;
         break;
@@ -846,10 +837,12 @@ bool struct_violation(
 
 // check validity of structure
 bool struct_violation(
+  cl_version version,
   const void * buffer_create_info,
   cl_buffer_create_type buffer_create_type)
 {
   (void)buffer_create_info;
+  (void)version;
 
   if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
     //const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
@@ -862,9 +855,11 @@ bool struct_violation(
 
 // check if out-of-bounds
 bool struct_violation(
+  cl_version version,
   const void * buffer_create_info,
   cl_mem buffer)
 {
+  (void)version;
   const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
   size_t buffer_size;
   tdispatch->clGetMemObjectInfo(
@@ -881,8 +876,9 @@ bool struct_violation(
 
 // check if size = 0
 bool struct_violation(
-  const void * buffer_create_info)
+  cl_version version, const void * buffer_create_info)
 {
+  (void)version;
   const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
   if (sb->size == 0)
     return true;
@@ -894,10 +890,12 @@ bool struct_violation(
 // for which the origin field of the cl_buffer_region structure
 // passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value
 bool struct_violation(
+  cl_version version,
   const void * buffer_create_info,
   cl_buffer_create_type buffer_create_type,
   cl_mem buffer)
 {
+  (void)version;
   if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
     cl_context context;
     tdispatch->clGetMemObjectInfo(
