@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include <regex>
+#include <map>
+#include <array>
 #include "rapidxml.hpp"
 
 using namespace rapidxml;
@@ -583,7 +585,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_device_id device)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
+         << "  tdispatch->clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
          << "  return a;\n"
          << "}\n\n";
 
@@ -600,11 +602,11 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  return_type<property> a;\n"
          << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
-         << "    clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
+         << "    tdispatch->clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
          << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n\n"
          << "    cl_device_id d;\n"
-         << "    clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
-         << "    clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
+         << "    tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
+         << "    tdispatch->clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid command queue query in query(cl_command_queue). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "    exit(-1);\n"
@@ -616,7 +618,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_mem object)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  tdispatch->clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
          << "  return a;\n"
          << "}\n\n";
 }
@@ -752,7 +754,10 @@ int main(int argc, char* argv[])
 
     // stream for generated code
     std::stringstream code;
-    code << "#include <CL/cl.h>\n"
+    code << "#ifdef _WIN32\n"
+         << "#define NOMINMAX\n"
+         << "#endif\n"
+         << "#include <CL/cl.h>\n"
          << "#include <string.h>\n"
          << "#include <algorithm>\n"
          << "#include \"param_verification.hpp\"\n\n\n";
@@ -820,7 +825,7 @@ int main(int argc, char* argv[])
          << "{\n"
          << "  cl_bool avail = false;\n"
          << "  for (size_t i = 0; i < size; ++i) {\n"
-         << "    clGetDeviceInfo(devices[i], CL_DEVICE_AVAILABLE, sizeof(cl_bool), &avail, NULL);\n"
+         << "    tdispatch->clGetDeviceInfo(devices[i], CL_DEVICE_AVAILABLE, sizeof(cl_bool), &avail, NULL);\n"
          << "    if (!avail) return true;\n"
          << "    avail = false;\n"
          << "  }\n"

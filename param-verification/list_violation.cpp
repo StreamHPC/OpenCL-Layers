@@ -18,7 +18,7 @@ bool list_violation(
 
     switch (param[0]) {
       case CL_DEVICE_PARTITION_EQUALLY:
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_MAX_COMPUTE_UNITS,
           sizeof(cl_uint),
           &cu,
@@ -31,13 +31,13 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_COUNTS:
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_MAX_COMPUTE_UNITS,
           sizeof(cl_uint),
           &cu,
           NULL);
 
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_PARTITION_MAX_SUB_DEVICES,
           sizeof(cl_uint),
           &sd,
@@ -46,7 +46,7 @@ bool list_violation(
         ++pos;
         while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
         {
-          curr_cu += param[pos];
+          curr_cu += (cl_uint)param[pos];
           curr_sd++;
           if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd))
             return true;
@@ -94,7 +94,7 @@ bool list_violation(
 
     switch (param[0]) {
       case CL_DEVICE_PARTITION_EQUALLY:
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_MAX_COMPUTE_UNITS,
           sizeof(cl_uint),
           &cu,
@@ -105,13 +105,13 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_COUNTS:
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_MAX_COMPUTE_UNITS,
           sizeof(cl_uint),
           &cu,
           NULL);
 
-        clGetDeviceInfo(device,
+        tdispatch->clGetDeviceInfo(device,
           CL_DEVICE_PARTITION_MAX_SUB_DEVICES,
           sizeof(cl_uint),
           &sd,
@@ -120,7 +120,7 @@ bool list_violation(
         ++pos;
         while ((param[pos] != 0) && (param[pos] != CL_DEVICE_PARTITION_BY_COUNTS_LIST_END))
         {
-          curr_cu += param[pos];
+          curr_cu += (cl_uint)param[pos];
           curr_sd++;
           if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd))
             return true;
@@ -152,7 +152,7 @@ bool list_violation(
     // and not once ???
     cl_uint qs = 0;
     if (from("2.0"))
-      clGetDeviceInfo(device,
+      tdispatch->clGetDeviceInfo(device,
         CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
         sizeof(cl_uint),
         &qs,
@@ -179,7 +179,7 @@ bool list_violation(
 
         case CL_QUEUE_SIZE:
           ++pos;
-          curr_qs = param[pos];
+          curr_qs = (cl_uint)param[pos];
           ++pos;
           if (curr_qs > qs)
             return true;
@@ -417,7 +417,7 @@ bool object_not_in(cl_device_id device, cl_context context)
 bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 {
   cl_device_id q_device;
-  clGetCommandQueueInfo(
+  tdispatch->clGetCommandQueueInfo(
     command_queue, 
     CL_QUEUE_DEVICE, 
     sizeof(cl_device_id), 
@@ -434,14 +434,14 @@ bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
 {
   cl_context c_context;
-  clGetCommandQueueInfo(
+  tdispatch->clGetCommandQueueInfo(
     command_queue,
     CL_QUEUE_CONTEXT,
     sizeof(cl_context),
     &c_context,
     NULL);
   cl_context b_context;
-  clGetMemObjectInfo(
+  tdispatch->clGetMemObjectInfo(
     buffer,
     CL_MEM_CONTEXT,
     sizeof(cl_context),
@@ -458,14 +458,14 @@ bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
 bool object_not_in(cl_event event, cl_command_queue command_queue)
 {
   cl_context e_context;
-  clGetEventInfo(
+  tdispatch->clGetEventInfo(
     event,
     CL_EVENT_CONTEXT,
     sizeof(cl_context),
     &e_context,
     NULL);
   cl_context c_context;
-  clGetCommandQueueInfo(
+  tdispatch->clGetCommandQueueInfo(
     command_queue,
     CL_QUEUE_CONTEXT,
     sizeof(cl_context),
@@ -482,14 +482,14 @@ bool object_not_in(cl_event event, cl_command_queue command_queue)
 bool object_not_in(cl_mem object, cl_command_queue command_queue)
 {
   cl_context m_context;
-  clGetMemObjectInfo(
+  tdispatch->clGetMemObjectInfo(
     object,
     CL_MEM_CONTEXT,
     sizeof(cl_context),
     &m_context,
     NULL);
   cl_context c_context;
-  clGetCommandQueueInfo(
+  tdispatch->clGetCommandQueueInfo(
     command_queue,
     CL_QUEUE_CONTEXT,
     sizeof(cl_context),
