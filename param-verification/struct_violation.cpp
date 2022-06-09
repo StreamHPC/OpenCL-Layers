@@ -754,7 +754,7 @@ bool struct_violation(
       return true;
 
   if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D)
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY)
     if (image_desc->image_depth == 0)
       return true;
 
