@@ -244,7 +244,7 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
       devices,
       &size);
 
-    *number = size / sizeof(cl_device_id);
+    *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
     devices = (cl_device_id *)realloc(devices, size);
   }
 
@@ -347,7 +347,7 @@ size_t pixel_size(const cl_image_format * image_format)
 
     default:
       printf("Wrong image channel order!\n");
-      return -1;
+      return 0;
   }
 
   size_t channel_size = 0;
@@ -379,7 +379,7 @@ size_t pixel_size(const cl_image_format * image_format)
 
     default:
       printf("Wrong image channel data type!\n");
-      return -1;
+      return 0;
   }
 
   return channels * channel_size;
@@ -744,7 +744,7 @@ bool struct_violation(
 // check all besides checked above
 bool struct_violation(
   const cl_image_desc * const image_desc, 
-  cl_context context,
+  cl_context,
   void * host_ptr,
   const cl_image_format * image_format)
 {
