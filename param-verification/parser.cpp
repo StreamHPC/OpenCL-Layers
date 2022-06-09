@@ -647,7 +647,9 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
 
             std::string invoke = std::string("tdispatch->") + name;
             invoke += "(\n";
-            std::string proto = type + " " + qual + " " + name + "_layer(\n";
+            const std::string prefix{"CL_API_ENTRY"},
+                              suffix{"CL_API_CALL"};
+            std::string proto = prefix + " " + type + " " + qual + " " + suffix  + " " + name + "_layer(\n";
             proto = std::regex_replace(proto, std::regex("[ ]+"), " ");
 
             init_dispatch << "    dispatch." << name << " = &" << name << "_layer;\n";
