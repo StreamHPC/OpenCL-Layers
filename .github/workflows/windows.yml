@@ -12,12 +12,14 @@ jobs:
         GEN: [Visual Studio 17 2022]
         BIN: [x64, x86]
         STD: [14, 17]
-        include:
-          - VER: v141
-            EXT: OFF
-            GEN: Ninja Multi-Config
-            BIN: x64
-            STD: 14
+        # TODO: Re-enable v141 check. Track down compiler error causing cl.exe to exhaust runner memory
+        # D:\a\OpenCL-Layers\OpenCL-Layers\build\param-verification\res.cpp(2250): fatal error C1060: compiler is out of heap space
+        #include:
+        #  - VER: v141
+        #    EXT: OFF
+        #    GEN: Ninja Multi-Config
+        #    BIN: x64
+        #    STD: 14
     env:
       NINJA_URL: https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip
       NINJA_ROOT: C:\Tools\Ninja
