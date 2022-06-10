@@ -569,7 +569,7 @@ bool for_all(cl_context context, std::function<bool(return_type<property>)> chec
   bool res = true;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+   tdispatch->clGetDeviceInfo(
       devices[i],
       property,
       sizeof(a),
@@ -593,7 +593,7 @@ bool for_any(cl_context context, std::function<bool(return_type<property>)> chec
   bool res = false;
   for (cl_uint i = 0; i < nd; ++i)
   {
-    clGetDeviceInfo(
+    tdispatch->clGetDeviceInfo(
       devices[i],
       property,
       sizeof(a),
