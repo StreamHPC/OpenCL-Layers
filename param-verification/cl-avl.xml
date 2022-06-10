@@ -2341,11 +2341,9 @@
                 <name>clCreateSubBuffer</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
             </then>
-            <!-- CL_INVALID_MEM_OBJECT if buffer is a sub-buffer object - cannot be queried,
-            query of offset is better then nothing, but not helpful for subbuffer offset = 0 -->
             <if>
                 <neq>
-                   <query object="buffer" property="CL_MEM_OFFSET"/>    <literal>0</literal>
+                   <literal>NULL</literal>                              <query object="buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
                 </neq>
             </if>
             <then>      <log>buffer is a sub-buffer object</log>
@@ -2798,6 +2796,7 @@
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <and>
                     <from version="1.1"/>
@@ -2811,7 +2810,6 @@
             </if>
             <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
-            </then>
             </then>
             <if>
                 <or>
@@ -2828,7 +2826,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueReadBufferRect</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -2848,7 +2846,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -2856,19 +2854,25 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>buffer is not a valid buffer object</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -2884,11 +2888,10 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>buffer_origin, host_origin, or region is NULL</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds. -->
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>buffer_origin</name>                      <literal>3</literal>
@@ -2901,7 +2904,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then> <!-- not sure if this is right error-->
+            <then>      <log>buffer_origin, host_origin, or region is too short</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2917,7 +2920,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2930,7 +2933,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_row_pitch is not 0 and is less than region[0]</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2943,7 +2946,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_row_pitch is not 0 and is less than region[0]</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2970,7 +2973,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2997,7 +3000,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3024,7 +3027,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3051,7 +3054,44 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <mult>
+                            <add>
+                                <name>buffer_origin[2]</name>
+                                <name>region[2]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>buffer_slice_pitch</name>
+                                                                            <mult>
+                                                                                <name>region[1]</name>
+                                                                                <max>
+                                                                                    <name>buffer_row_pitch</name>
+                                                                                    <name>region[0]</name>
+                                                                                </max>
+                                                                            </mult>
+                                                                        </max>
+                        </mult>
+                        <mult>
+                            <add>
+                                <name>buffer_origin[1]</name>
+                                <name>region[1]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>buffer_row_pitch</name>
+                                                                            <name>region[0]</name>
+                                                                        </max>
+                        </mult>
+                        <name>buffer_origin[0]</name>
+                        <name>region[0]</name>
+                    </add>                                               <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being read specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3059,7 +3099,45 @@
                     <name>ptr</name>                                    <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>ptr is NULL</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>ptr</name>
+                    <add>
+                        <mult>
+                            <add>
+                                <name>host_origin[2]</name>
+                                <name>region[2]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>host_slice_pitch</name>
+                                                                            <mult>
+                                                                                <name>region[1]</name>
+                                                                                <max>
+                                                                                    <name>host_row_pitch</name>
+                                                                                    <name>region[0]</name>
+                                                                                </max>
+                                                                            </mult>
+                                                                        </max>
+                        </mult>
+                        <mult>
+                            <add>
+                                <name>host_origin[1]</name>
+                                <name>region[1]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>host_row_pitch</name>
+                                                                            <name>region[0]</name>
+                                                                        </max>
+                        </mult>
+                        <name>host_origin[0]</name>
+                        <name>region[0]</name>
+                    </add>
+                </array_len_ls>
+            </if>
+            <then>      <log>the host region being written specified by (host_origin, region, host_row_pitch, host_slice_pitch) is out of bounds</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3113,12 +3191,36 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
-            <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
-            <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_WRITE_ONLY</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS</log>
+                <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueWriteBufferRect</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -3138,7 +3240,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -3146,19 +3248,25 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>buffer is not a valid buffer object</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -3174,11 +3282,10 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>buffer_origin, host_origin, or region is NULL</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds. -->
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>buffer_origin</name>                      <literal>3</literal>
@@ -3191,7 +3298,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then> <!-- not sure if this is right error-->
+            <then>      <log>buffer_origin, host_origin, or region is too short</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3207,7 +3314,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3220,7 +3327,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_row_pitch is not 0 and is less than region[0]</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3233,7 +3340,7 @@
                     </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_row_pitch is not 0 and is less than region[0]</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3260,7 +3367,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3287,7 +3394,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3314,7 +3421,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3341,7 +3448,44 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <mult>
+                            <add>
+                                <name>buffer_origin[2]</name>
+                                <name>region[2]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>buffer_slice_pitch</name>
+                                                                            <mult>
+                                                                                <name>region[1]</name>
+                                                                                <max>
+                                                                                    <name>buffer_row_pitch</name>
+                                                                                    <name>region[0]</name>
+                                                                                </max>
+                                                                            </mult>
+                                                                        </max>
+                        </mult>
+                        <mult>
+                            <add>
+                                <name>buffer_origin[1]</name>
+                                <name>region[1]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>buffer_row_pitch</name>
+                                                                            <name>region[0]</name>
+                                                                        </max>
+                        </mult>
+                        <name>buffer_origin[0]</name>
+                        <name>region[0]</name>
+                    </add>                                               <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3349,7 +3493,45 @@
                     <name>ptr</name>                                    <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>ptr is NULL</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>ptr</name>
+                    <add>
+                        <mult>
+                            <add>
+                                <name>host_origin[2]</name>
+                                <name>region[2]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>host_slice_pitch</name>
+                                                                            <mult>
+                                                                                <name>region[1]</name>
+                                                                                <max>
+                                                                                    <name>host_row_pitch</name>
+                                                                                    <name>region[0]</name>
+                                                                                </max>
+                                                                            </mult>
+                                                                        </max>
+                        </mult>
+                        <mult>
+                            <add>
+                                <name>host_origin[1]</name>
+                                <name>region[1]</name>
+                                <literal>-1</literal>
+                            </add>                                      <max>
+                                                                            <name>host_row_pitch</name>
+                                                                            <name>region[0]</name>
+                                                                        </max>
+                        </mult>
+                        <name>host_origin[0]</name>
+                        <name>region[0]</name>
+                    </add>
+                </array_len_ls>
+            </if>
+            <then>      <log>the host region being read specified by (host_origin, region, host_row_pitch, host_slice_pitch) is out of bounds</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3403,12 +3585,36 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
-            <!-- CL_INVALID_OPERATION if clEnqueueReadBuffer is called on buffer which has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS.-->
-            <!-- CL_INVALID_OPERATION if clEnqueueWriteBuffer is called on buffer which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS.-->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
+            <if>
+                <or>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_READ_ONLY</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                </or>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS</log>
+                <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueCopyBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>src_buffer</name></param>
@@ -3423,7 +3629,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -3431,32 +3637,66 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="src_buffer"/>
             </if>
-            <then>
+            <then>      <log>src_buffer is not a valid mem object</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="src_buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>src_buffer is not a valid buffer object</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_is_invalid name="dst_buffer"/>
             </if>
-            <then>
+            <then>      <log>dst_buffer is not a valid mem object</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="dst_buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>dst_buffer is not a valid buffer object</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="src_buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and src_buffer are not the same</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="dst_buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and dst_buffer are not the same</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <name>src_offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="src_buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being read specified by (src_offset, size) is out of bounds</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <name>dst_offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="dst_buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being written specified by (dst_offset, size) is out of bounds</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <and>
@@ -3509,10 +3749,233 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_VALUE if src_offset, dst_offset, size, src_offset + size or dst_offset + size require accessing elements outside the src_buffer and dst_buffer buffer objects respectively. -->
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
-            <!--CL_MEM_COPY_OVERLAP if src_buffer and dst_buffer are the same buffer or sub-buffer object and the source and destination regions overlap or if src_buffer and dst_buffer are different sub-buffers of the same associated buffer object and they overlap. The regions overlap if src_offset ≤ dst_offset ≤ src_offset + size - 1 or if dst_offset ≤ src_offset ≤ dst_offset + size - 1. -->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>src_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>src_buffer</name>                         <name>dst_buffer</name>
+                    </eq>
+                    <or>
+                        <and>
+                            <ls>
+                                <name>src_offset</name>                  <add>
+                                                                            <name>dst_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <name>dst_offset</name>                  <add>
+                                                                            <name>src_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                        <and>
+                            <ls>
+                                <name>dst_offset</name>                  <add>
+                                                                            <name>src_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <name>src_offset</name>                  <add>
+                                                                            <name>dst_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>src_buffer and dst_buffer are the same buffer or sub-buffer object and the source and destination regions overlap</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MEM_COPY_OVERLAP</value>
+            </then>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <eq>
+                        <name>src_buffer</name>                         <query object="dst_buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                    </eq>
+                    <or>
+                        <and>
+                            <ls>
+                                <name>src_offset</name>                 <add>
+                                                                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>dst_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <add>
+                                    <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>dst_offset</name>
+                                </add>                                  <add>
+                                                                            <name>src_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                        <and>
+                            <ls>
+                                <add>
+                                    <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>dst_offset</name>
+                                </add>                                  <add>
+                                                                            <name>src_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <name>src_offset</name>                 <add>
+                                                                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>dst_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>dst_buffer is a sub-buffer of src_buffer and the source and destination regions overlap</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MEM_COPY_OVERLAP</value>
+            </then>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <eq>
+                        <name>dst_buffer</name>                         <query object="src_buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                    </eq>
+                    <or>
+                        <and>
+                            <ls>
+                                <add>
+                                    <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>src_offset</name>
+                                </add>                                  <add>
+                                                                            <name>dst_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <name>dst_offset</name>                 <add>
+                                                                            <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>src_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                        <and>
+                            <ls>
+                                <name>dst_offset</name>                 <add>
+                                                                            <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>src_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <add>
+                                    <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>src_offset</name>
+                                </add>                                  <add>
+                                                                            <name>dst_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>src_buffer is a sub-buffer of dst_buffer and the source and destination regions overlap</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MEM_COPY_OVERLAP</value>
+            </then>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <literal>NULL</literal>                         <query object="src_buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                    </neq>
+                    <eq>
+                        <query object="src_buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                        <query object="dst_buffer" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                    </eq>
+                    <or>
+                        <and>
+                            <ls>
+                                <add>
+                                    <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>src_offset</name>
+                                </add>                                  <add>
+                                                                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>dst_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <add>
+                                    <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>dst_offset</name>
+                                </add>                                  <add>
+                                                                            <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>src_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                        <and>
+                            <ls>
+                                <add>
+                                    <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>dst_offset</name>
+                                </add>                                  <add>
+                                                                            <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>src_offset</name>
+                                                                            <literal>1</literal>
+                                                                        </add>
+                            </ls>
+                            <ls>
+                                <add>
+                                    <query object="src_buffer" property="CL_MEM_OFFSET"/>
+                                    <name>src_offset</name>
+                                </add>                                  <add>
+                                                                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                                                                            <name>dst_offset</name>
+                                                                            <name>size</name>
+                                                                        </add>
+                            </ls>
+                        </and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>src_buffer and dst_buffer are different sub-buffers of the same associated buffer object and the source and destination regions overlap</log>
+                <name>clEnqueueCopyBuffer</name>                        <value>CL_MEM_COPY_OVERLAP</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_1">

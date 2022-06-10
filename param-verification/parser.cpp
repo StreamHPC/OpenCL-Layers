@@ -14,8 +14,13 @@ using namespace rapidxml;
 std::map<std::string, std::string> func_params;
 
 // prototypes
-std::string parse_violation(xml_node<> const * const violation);
+std::string parse_expression(xml_node<> const * const node);
 std::array<std::string, 2> parse_2expressions(xml_node<> const * const node);
+std::vector<std::string> parse_list_expressions(xml_node<> const * const node);
+std::string parse_violation(xml_node<> const * const violation);
+std::vector<std::string> parse_list(xml_node<> const * const node);
+
+// realizations
 
 std::string parse_expression(xml_node<> const * const node)
 {
@@ -41,14 +46,28 @@ std::string parse_expression(xml_node<> const * const node)
         res = "(" + list[0] + " % " + list[1] + ")";
     }
     else if (strcmp(name, "mult") == 0) {
-        auto list = parse_2expressions(node);
+        std::vector<std::string> list(parse_list_expressions(node));
 
-        res = "(" + list[0] + " * " + list[1] + ")";
+        int n = 0;
+        for (auto a : list)
+        {
+            res += (n == 0) ? "(" : " * ";
+            res += a;
+            ++n;
+        }
+        res += ")";
     }
     else if (strcmp(name, "add") == 0) {
-        auto list = parse_2expressions(node);
+        std::vector<std::string> list(parse_list_expressions(node));
 
-        res = "(" + list[0] + " + " + list[1] + ")";
+        int n = 0;
+        for (auto a : list)
+        {
+            res += (n == 0) ? "(" : " + ";
+            res += a;
+            ++n;
+        }
+        res += ")";
     }
     else if (strcmp(name, "max") == 0) {
         auto list = parse_2expressions(node);
@@ -69,6 +88,20 @@ std::array<std::string, 2> parse_2expressions(xml_node<> const * const node)
 
     res[0] = parse_expression(node->first_node());
     res[1] = parse_expression(node->first_node()->next_sibling());
+
+    return res;
+}
+
+std::vector<std::string> parse_list_expressions(xml_node<> const * const node)
+{
+    std::vector<std::string> res;
+
+    for (xml_node<> const * list_node = node->first_node();
+        list_node != nullptr;
+        list_node = list_node->next_sibling())
+    {
+        res.push_back(parse_expression(list_node));
+    }
 
     return res;
 }
