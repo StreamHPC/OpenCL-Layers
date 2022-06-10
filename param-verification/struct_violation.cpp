@@ -849,8 +849,10 @@ bool struct_violation(
   const void * buffer_create_info,
   cl_buffer_create_type buffer_create_type)
 {
+  (void)buffer_create_info;
+
   if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
-    const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+    //const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
     // no possible violations
     return false;
   }
