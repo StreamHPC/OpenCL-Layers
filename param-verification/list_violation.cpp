@@ -339,7 +339,7 @@ bool list_violation(const char * name, T param)
     // any order of properties is allowed
     size_t pos = 0;
     // and not once ???
-    cl_uint curr_qs = 0;
+    cl_ulong curr_qs = 0;
     cl_command_queue_properties qp = 0;
 
     while (param[pos] != 0)

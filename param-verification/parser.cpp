@@ -274,9 +274,9 @@ std::string parse_violation(xml_node<> const * const violation)
                 + std::string(violation->first_attribute("query")->value())
                 + ">("
                 + std::string(violation->first_attribute("in")->value())
-                + ", [=](return_type<"
+                + ",\n    [=](return_type<"
                 + std::string(violation->first_attribute("query")->value())
-                + "> query){ return static_cast<bool>("
+                + "> query){\n      return static_cast<bool>("
                 + parse_violation(violation->first_node())
                 + "); }))";
         }

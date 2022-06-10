@@ -2013,14 +2013,13 @@
 
     <!-- 5.2.1 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateBuffer</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
             <param><type>size_t</type>                                  <name>size</name></param>
             <param><type>void</type>*                                   <name>host_ptr</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
-
 
             <if>
                 <object_is_invalid name="context"/>
@@ -2108,38 +2107,42 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <not>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                        </not>
-                        <not>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </not>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is NULL but CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
+                <name>clCreateBuffer</name>                             <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <not>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                    </not>
+                    <not>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </not>
+                </and>
+            </if>
+            <then>      <log> host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
@@ -2153,13 +2156,13 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is too short</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_3_0">
+        <command suffix="CL_API_SUFFIX__VERSION_3_0"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateBufferWithProperties</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>const <type>cl_mem_properties</type>*                <name>properties</name></param>
@@ -2171,14 +2174,14 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <list_violation name="properties"/>
             </if>
-            <then>
+            <then>      <log>a property name in properties is not a supported property name, or the value specified for a supported property name is not valid, or the same property name is specified more than once</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
             </then>
@@ -2190,7 +2193,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -2236,53 +2239,67 @@
                     </mutex_violation>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <eq>
                     <name>size</name>                                   <literal>0</literal>
-                    <!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
                 </eq>
             </if>
-            <then>
+            <then>      <log>size is 0</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <not>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                        </not>
-                        <not>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </not>
-                    </and>
-                </or>
+                <for_all in="context" query="CL_DEVICE_MAX_MEM_ALLOC_SIZE">
+                    <gt>
+                        <name>size</name>                               <name>query</name>
+                    </gt>
+                </for_all>
             </if>
-            <then>
+            <then>      <log>size is greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context</log>
+                <name>clCreateBufferWithProperties</name>               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL but CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
+                <name>clCreateBufferWithProperties</name>               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <not>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                    </not>
+                    <not>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </not>
+                </and>
+            </if>
+            <then>      <log> host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
@@ -2296,7 +2313,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is too short</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
