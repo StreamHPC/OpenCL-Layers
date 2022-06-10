@@ -151,7 +151,7 @@ bool list_violation(
     size_t pos = 0;
     // and not once ???
     cl_uint qs = 0;
-    clGetDeviceInfo(device,
+    tdispatch->clGetDeviceInfo(device,
       CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
       sizeof(cl_uint),
       &qs,
@@ -159,7 +159,7 @@ bool list_violation(
     cl_uint curr_qs = 0;
     cl_device_device_enqueue_capabilities ddec = 0;
     if (from("3.0"))
-      clGetDeviceInfo(device,
+      tdispatch->clGetDeviceInfo(device,
         CL_DEVICE_DEVICE_ENQUEUE_CAPABILITIES,
         sizeof(cl_device_device_enqueue_capabilities),
         &ddec,
