@@ -1880,13 +1880,14 @@
             <if>
                 <not>
                     <bit_and>
-                        <query object="queue" property="CL_QUEUE_PROPERTIES"/>
+                        <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                         <literal>CL_QUEUE_ON_DEVICE</literal>
                     </bit_and>
                 </not>
             </if>
             <then>      <log>command_queue is not a device-side command-queue for device</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->

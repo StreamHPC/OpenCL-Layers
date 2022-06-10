@@ -270,13 +270,15 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "for_all") == 0)
         {
-            test = "(for_all("
+            test = "(for_all<"
+                + std::string(violation->first_attribute("query")->value())
+                + ">("
                 + std::string(violation->first_attribute("in")->value())
                 + ", [=](return_type<"
                 + std::string(violation->first_attribute("query")->value())
                 + "> query){ return static_cast<bool>("
                 + parse_violation(violation->first_node())
-                + "); })";
+                + "); }))";
         }
         else if (strcmp(name, "for_any") == 0)
         {
@@ -810,6 +812,7 @@ int main(int argc, char* argv[])
          << "#include <CL/cl.h>\n"
          << "#include <string.h>\n"
          << "#include <algorithm>\n"
+         << "#include <functional>\n"
          << "#include \"param_verification.hpp\"\n\n\n";
 
     xml_document<> doc;
