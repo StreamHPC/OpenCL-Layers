@@ -45,6 +45,11 @@ std::string parse_expression(xml_node<> const * const node)
 
         res = "(" + list[0] + " * " + list[1] + ")";
     }
+    else if (strcmp(name, "add") == 0) {
+        auto list = parse_2expressions(node);
+
+        res = "(" + list[0] + " + " + list[1] + ")";
+    }
     else if (strcmp(name, "max") == 0) {
         auto list = parse_2expressions(node);
 
@@ -329,6 +334,7 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
             "cl_device_info",
             "cl_context_info",
             "cl_command_queue_info",
+            "cl_buffer_create_type",
             "cl_image_info",
             "cl_mem_info",
             "cl_addressing_mode",
@@ -464,6 +470,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
             "cl_device_info",
             "cl_context_info",
             "cl_command_queue_info",
+            "cl_buffer_create_type",
             "cl_image_info",
             "cl_pipe_info",
             "cl_mem_info",
@@ -599,7 +606,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "return_type<property> query(cl_platform_id platform)\n"
          << "{\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_platform_info\", property)) {\n\n"
+         << "  if (!enum_violation(\"cl_platform_info\", property)) {\n"
          << "    tdispatch->clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer.\" << std::endl;\n"
@@ -614,7 +621,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "  return_type<property> a;\n"
          << "  if (!enum_violation(\"cl_device_info\", property)) {\n"
          << "    tdispatch->clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_platform_info\", property)) {\n\n"
+         << "  } else if (!enum_violation(\"cl_platform_info\", property)) {\n"
          << "    cl_platform_id p;\n"
          << "    tdispatch->clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(cl_platform_id), &p, NULL);\n"
          << "    tdispatch->clGetPlatformInfo(p, property, sizeof(a), &a, NULL);\n"
@@ -644,7 +651,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "  return_type<property> a;\n"
          << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
          << "    tdispatch->clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n\n"
+         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n"
          << "    cl_device_id d;\n"
          << "    tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
          << "    tdispatch->clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"

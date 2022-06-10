@@ -841,3 +841,75 @@ bool struct_violation(
 
   return false;
 }
+
+// 5.2.1
+
+// check validity of structure
+bool struct_violation(
+  const void * buffer_create_info,
+  cl_buffer_create_type buffer_create_type)
+{
+  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
+    const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+    // no possible violations
+    return false;
+  }
+
+  return true;
+}
+
+// check if out-of-bounds
+bool struct_violation(
+  const void * buffer_create_info,
+  cl_mem buffer)
+{
+  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+  size_t buffer_size;
+  tdispatch->clGetMemObjectInfo(
+    buffer,
+    CL_MEM_SIZE,
+    sizeof(size_t),
+    &buffer_size,
+    NULL);
+  if (sb->origin + sb->size > buffer_size)
+    return true;
+
+  return false;
+}
+
+// check if size = 0
+bool struct_violation(
+  const void * buffer_create_info)
+{
+  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+  if (sb->size == 0)
+    return true;
+
+  return false;
+}
+
+// check if there are no devices in context associated with buffer
+// for which the origin field of the cl_buffer_region structure
+// passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value
+bool struct_violation(
+  const void * buffer_create_info,
+  cl_buffer_create_type buffer_create_type,
+  cl_mem buffer)
+{
+  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
+    cl_context context;
+    tdispatch->clGetMemObjectInfo(
+      buffer,
+      CL_MEM_CONTEXT,
+      sizeof(cl_context),
+      &context,
+      NULL);
+
+    const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+    return for_all<CL_DEVICE_MEM_BASE_ADDR_ALIGN>(context, [sb](cl_uint align) {
+      return (sb->origin % align != 0);
+    });
+  }
+
+  return true;
+}

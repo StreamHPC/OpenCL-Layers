@@ -580,7 +580,7 @@
             <enum name="CL_COMMAND_USER"/>
         </require>
         <require comment="cl_buffer_create_type">
-            <enum name="CL_BUFFER_CREATE_TYPE_REGION"/>
+            <enum name="CL_BUFFER_CREATE_TYPE_REGION" return_type="cl_buffer_region"/>
         </require>
         <require comment="Memory Object APIs">
             <command name="clCreateSubBuffer"/>
@@ -2011,7 +2011,7 @@
             <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device -->
         </command>
 
-    <!-- 5.2.1 -->
+    <!-- 5.2.1 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateBuffer</name></proto>
@@ -2319,7 +2319,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateSubBuffer</name></proto>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -2330,18 +2330,134 @@
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
                 <name>clCreateSubBuffer</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
             </then>
-            <!-- CL_INVALID_VALUE if buffer was created with CL_MEM_WRITE_ONLY and flags specifies CL_MEM_READ_WRITE or CL_MEM_READ_ONLY, or if buffer was created with CL_MEM_READ_ONLY and flags specifies CL_MEM_READ_WRITE or CL_MEM_WRITE_ONLY, or if flags specifies CL_MEM_USE_HOST_PTR or CL_MEM_ALLOC_HOST_PTR or CL_MEM_COPY_HOST_PTR.-->
-            <!-- CL_INVALID_VALUE if buffer was created with CL_MEM_HOST_WRITE_ONLY and flags specify CL_MEM_HOST_READ_ONLY, or if buffer was created with CL_MEM_HOST_READ_ONLY and flags specify CL_MEM_HOST_WRITE_ONLY, or if buffer was created with CL_MEM_HOST_NO_ACCESS and flags specify CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_WRITE_ONLY-->
+            <if>
+                <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>buffer is not a valid buffer object</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <!-- CL_INVALID_MEM_OBJECT if buffer is a sub-buffer object - cannot be queried,
+            query of offset is better then nothing, but not helpful for subbuffer offset = 0 -->
             <if>
                 <neq>
-                    <name>buffer_create_type</name>                     <literal>CL_BUFFER_CREATE_TYPE_REGION</literal>
+                   <query object="buffer" property="CL_MEM_OFFSET"/>    <literal>0</literal>
                 </neq>
             </if>
-            <then>
+            <then>      <log>buffer is a sub-buffer object</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <literal>CL_MEM_WRITE_ONLY</literal>            <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <or>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_READ_WRITE</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_READ_ONLY</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>buffer was created with CL_MEM_WRITE_ONLY but flags specifies CL_MEM_READ_WRITE or CL_MEM_READ_ONLY</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <literal>CL_MEM_READ_ONLY</literal>             <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <or>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_READ_WRITE</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_WRITE_ONLY</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>buffer was created with CL_MEM_READ_ONLY but flags specifies CL_MEM_READ_WRITE or CL_MEM_WRITE_ONLY</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <or>
+                    <bit_and>
+                        <name>flags</flags>                             <literal>CL_MEM_USE_HOST_PTR</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</flags>                             <literal>CL_MEM_ALLOC_HOST_PTR</literal>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</flags>                             <literal>CL_MEM_COPY_HOST_PTR</literal>
+                    </bit_and>
+                </or>
+            </if>
+            <then>      <log>flags specifies CL_MEM_USE_HOST_PTR or CL_MEM_ALLOC_HOST_PTR or CL_MEM_COPY_HOST_PTR</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_WRITE_ONLY</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</flags>                             <literal>CL_MEM_HOST_READ_ONLY</literal>
+                    </bit_and>
+                </and>
+            </if>
+            <then>      <log>buffer was created with CL_MEM_HOST_WRITE_ONLY but flags specify CL_MEM_HOST_READ_ONLY</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_READ_ONLY</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <bit_and>
+                        <name>flags</flags>                             <literal>CL_MEM_HOST_WRITE_ONLY</literal>
+                    </bit_and>
+                </and>
+            </if>
+            <then>      <log>buffer was created with CL_MEM_HOST_READ_ONLY but flags specify CL_MEM_HOST_WRITE_ONLY</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                    </bit_and>
+                    <or>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_HOST_READ_ONLY</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</flags>                         <literal>CL_MEM_HOST_WRITE_ONLY</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>buffer was created with CL_MEM_HOST_NO_ACCESS but flags specify CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_WRITE_ONLY</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <enum_violation name="buffer_create_type"/>
+            </if>
+            <then>      <log>the value specified in buffer_create_type is not valid</log>
                 <name>clCreateSubBuffer</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -2350,7 +2466,23 @@
                     <name>buffer_create_info</name>                     <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>buffer_create_info is NULL</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>buffer_create_info</name>                     <literal_list>buffer_create_type</literal_list>
+                </array_len_ls>
+            </if>
+            <then>      <log>buffer_create_info is too short</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- impossible now -->
+                <struct_violation name="buffer_create_info" param="buffer_create_type"/>
+            </if>
+            <then>      <log>value(s) specified in buffer_create_info (for a given buffer_create_type) is not valid</log>
                 <name>clCreateSubBuffer</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -2359,36 +2491,42 @@
                     <eq>
                         <name>buffer_create_type</name>                 <literal>CL_BUFFER_CREATE_TYPE_REGION</literal>
                     </eq>
-                    <array_len_ls>
-                        <name>buffer_create_info</name>                 <sizeof>cl_buffer_region</sizeof>
-                    </array_len_ls>
+                    <struct_violation name="buffer_create_info" param="buffer"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>the region specified by the cl_buffer_region structure passed in buffer_create_info is out of bounds in buffer</log>
                 <name>clCreateSubBuffer</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region specified by the cl_buffer_region structure passed in buffer_create_info is out of bounds in buffer-->
-            <!--<if>-->
-            <!--    <and>-->
-            <!--        <eq>-->
-            <!--            <name>buffer_create_type</name>                 <literal>CL_BUFFER_CREATE_TYPE_REGION</literal>-->
-            <!--        </eq>-->
-            <!--        <eq>-->
-            <!--            <name field="size">buffer_create_info</name>    <literal>0</literal> // type mismatch ???-->
-            <!--        </eq>-->
-            <!--    </and>-->
-            <!--</if>-->
-            <!--<then>-->
-            <!--    <name>clCreateSubBuffer</name>                          <value>NULL</value>-->
-            <!--    <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>-->
-            <!--</then>-->
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if there are no devices in context associated with buffer for which the origin field of the cl_buffer_region structure passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value-->
+            <if>
+                <and>
+                    <eq>
+                        <name>buffer_create_type</name>                 <literal>CL_BUFFER_CREATE_TYPE_REGION</literal>
+                    </eq>
+                    <struct_violation name="buffer_create_info"/>
+                </and>
+            </if>
+            <then>      <log>the size field of the cl_buffer_region structure passed in buffer_create_info is 0</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>buffer_create_type</name>                 <literal>CL_BUFFER_CREATE_TYPE_REGION</literal>
+                    </eq>
+                    <struct_violation name="buffer_create_info" param="buffer_create_type, buffer"/>
+                </and>
+            </if>
+            <then>      <log>there are no devices in context associated with buffer for which the origin field of the cl_buffer_region structure passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value</log>
+                <name>clCreateSubBuffer</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
         </command>
 
     <!-- 5.2.2 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueReadBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -2403,7 +2541,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -2411,28 +2549,33 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>buffer is not a valid buffer object</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <eq>
                     <name>ptr</name>                                    <literal>NULL</literal>
                 </eq>
-                <!-- if the region being read or written specified by (offset, size) is out of bounds -->
             </if>
-            <then>
+            <then>      <log>ptr is a NULL value</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -2440,7 +2583,18 @@
                     <name>ptr</name>                                    <name>size</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>ptr is too short</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <name>offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being read specified by (offset, size) is out of bounds</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2493,6 +2647,20 @@
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueReadBuffer</name>                        <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
             </then>
             <if>
                 <or>
@@ -2509,7 +2677,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueWriteBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -2524,7 +2692,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -2532,19 +2700,25 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
+            </if>
+            <then>      <log>buffer is not a valid buffer object</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -2552,7 +2726,7 @@
                     <name>ptr</name>                                    <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>ptr is a NULL value</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -2560,7 +2734,18 @@
                     <name>ptr</name>                                    <name>size</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>ptr is too short</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <name>offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being written specified by (offset, size) is out of bounds</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -2613,6 +2798,20 @@
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_CONTEXT</value>
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
             </then>
             <if>
                 <or>
