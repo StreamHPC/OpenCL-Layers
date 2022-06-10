@@ -1047,35 +1047,38 @@
 
     <!-- SECTION: CL command definitions. (TBD) -->
     <commands>
-    <!-- 4.1 -->
+    <!-- 4.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetPlatformIDs</name></proto>
             <param><type>cl_uint</type>                                 <name>num_entries</name></param>
             <param><type>cl_platform_id</type>*                         <name>platforms</name></param>
             <param><type>cl_uint</type>*                                <name>num_platforms</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>num_entries</name>                    <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <name>platforms</name>                      <literal>NULL</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>num_platforms</name>                  <literal>NULL</literal>
-                        </eq>
-                        <eq>
-                            <name>platforms</name>                      <literal>NULL</literal>
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>num_entries</name>                        <literal>0</literal>
+                    </eq>
+                    <neq>
+                        <name>platforms</name>                          <literal>NULL</literal>
+                    </neq>
+                </and>
             </if>
-            <then>
+            <then>      <log>num_entries is equal to zero and platforms is not NULL</log>
+                <name>clGetPlatformIDs</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>num_platforms</name>                      <literal>NULL</literal>
+                    </eq>
+                    <eq>
+                        <name>platforms</name>                          <literal>NULL</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>both num_platforms and platforms are NULL</log>
                 <name>clGetPlatformIDs</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1088,12 +1091,12 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>platforms is too short</log>
                 <name>clGetPlatformIDs</name>                           <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetPlatformInfo</name></proto>
             <param><type>cl_platform_id</type>                          <name>platform</name></param>
             <param><type>cl_platform_info</type>                        <name>param_name</name></param>
@@ -1144,9 +1147,9 @@
             </then>
         </command>
 
-    <!-- 4.2 -->
+    <!-- 4.2 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetDeviceIDs</name></proto>
             <param><type>cl_platform_id</type>                          <name>platform</name></param>
             <param><type>cl_device_type</type>                          <name>device_type</name></param>
@@ -1157,7 +1160,7 @@
             <if>
                 <object_is_invalid name="platform"/>
             </if>
-            <then>
+            <then>      <log>platform is not a valid platform</log>
                 <name>clGetDeviceIDs</name>                             <value>CL_INVALID_PLATFORM</value>
             </then>
             <if>
@@ -1168,7 +1171,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>device_type is not a valid value</log>
                 <name>clGetDeviceIDs</name>                             <value>CL_INVALID_DEVICE_TYPE</value>
             </then>
             <if>
@@ -1192,30 +1195,33 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>device_type is not compatible</log>
                 <name>clGetDeviceIDs</name>                             <value>CL_INVALID_DEVICE_TYPE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>num_entries</name>                    <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <name>devices</name>                        <literal>NULL</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>num_devices</name>                    <literal>NULL</literal>
-                        </eq>
-                        <eq>
-                            <name>devices</name>                        <literal>NULL</literal>
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>num_entries</name>                        <literal>0</literal>
+                    </eq>
+                    <neq>
+                        <name>devices</name>                            <literal>NULL</literal>
+                    </neq>
+                </and>
             </if>
-            <then>
+            <then>      <log>num_entries is equal to zero and devices is not NULL</log>
+                <name>clGetDeviceIDs</name>                             <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>num_devices</name>                        <literal>NULL</literal>
+                    </eq>
+                    <eq>
+                        <name>devices</name>                            <literal>NULL</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>both num_devices and devices are NULL</log>
                 <name>clGetDeviceIDs</name>                             <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1228,12 +1234,12 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>devices is too short</log>
                 <name>clGetDeviceIDs</name>                             <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetDeviceInfo</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
             <param><type>cl_device_info</type>                          <name>param_name</name></param>
@@ -1244,7 +1250,7 @@
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clGetDeviceInfo</name>                            <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
@@ -1284,7 +1290,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetDeviceAndHostTimer</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
             <param><type>cl_ulong</type>*                               <name>device_timestamp</name></param>
@@ -1293,25 +1299,36 @@
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clGetDeviceAndHostTimer</name>                    <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
-                <or>
-                    <eq>
-                        <name>host_timestamp</name>                     <literal>NULL</literal>
-                    </eq>
-                    <eq>
-                        <name>device_timestamp</name>                   <literal>NULL</literal>
-                    </eq>
-                </or>
+                <eq>
+                    <literal>0</literal>                                <query object="device" property="CL_PLATFORM_HOST_TIMER_RESOLUTION"/>
+                </eq>
             </if>
-            <then>
+            <then>      <log>the platform associated with device does not support device and host timer synchronization</log>
+                <name>clGetDeviceAndHostTimer</name>                    <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <eq>
+                    <name>host_timestamp</name>                         <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>host_timestamp is NULL</log>
+                <name>clGetDeviceAndHostTimer</name>                    <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>device_timestamp</name>                       <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>device_timestamp is NULL</log>
                 <name>clGetDeviceAndHostTimer</name>                    <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetHostTimer</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
             <param><type>cl_ulong</type>*                               <name>host_timestamp</name></param>
@@ -1319,22 +1336,30 @@
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clGetHostTimer</name>                             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <eq>
+                    <literal>0</literal>                                <query object="device" property="CL_PLATFORM_HOST_TIMER_RESOLUTION"/>
+                </eq>
+            </if>
+            <then>      <log>the platform associated with device does not support device and host timer synchronization</log>
+                <name>clGetHostTimer</name>                             <value>CL_INVALID_OPERATION</value>
             </then>
             <if>
                 <eq>
                     <name>host_timestamp</name>                         <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>host_timestamp is NULL</log>
                 <name>clGetHostTimer</name>                             <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-    <!-- 4.3 -->
+    <!-- 4.3 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clCreateSubDevices</name></proto>
             <param><type>cl_device_id</type>                            <name>in_device</name></param>
             <param>const <type>cl_device_partition_property</type>*     <name>properties</name></param>
@@ -1345,24 +1370,23 @@
             <if>
                 <object_is_invalid name="in_device"/>
             </if>
-            <then>
+            <then>      <log>in_device is not a valid device</log>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_DEVICE</value>
             </then>
-            <!-- CL_INVALID_VALUE if values specified in properties are not valid or if values specified in properties are valid but not supported by the device. -->
             <if>
                 <list_violation name="properties"/>
             </if>
-            <then>
+            <then>      <log>values specified in properties are not valid</log>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_DEVICE_PARTITION_COUNT if the partition name specified in properties is CL_DEVICE_PARTITION_BY_COUNTS and the number of sub-devices requested exceeds CL_DEVICE_PARTITION_MAX_SUB_DEVICES or the total number of compute units requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device, or the number of compute units requested for one or more sub-devices is less than zero or the number of sub-devices requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device. -->
+            <!-- CL_INVALID_VALUE if values specified in properties are valid but not supported by the device -->
+            <!-- CL_DEVICE_PARTITION_FAILED if the partition name is supported by the implementation but in_device could not be further partitioned -->
             <if>
                 <list_violation name="properties" param="in_device"/>
             </if>
-            <then>
+            <then>      <log>the partition name specified in properties is CL_DEVICE_PARTITION_BY_COUNTS and the number of sub-devices requested exceeds CL_DEVICE_PARTITION_MAX_SUB_DEVICES or the total number of compute units requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device, or the number of compute units requested for one or more sub-devices is less than zero or the number of sub-devices requested exceeds CL_DEVICE_MAX_COMPUTE_UNITS for in_device</log>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_DEVICE_PARTITION_COUNT</value>
             </then>
-            <!-- CL_INVALID_VALUE if out_devices is not NULL and num_devices is less than the number of sub-devices created by the partition scheme. -->
             <if>
                 <and>
                     <neq>
@@ -1371,7 +1395,7 @@
                     <list_violation name="properties" param="in_device, num_devices"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>out_devices is not NULL and num_devices is less than the number of sub-devices created by the partition scheme</log>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -1384,38 +1408,38 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>out_devices is too short</log>
                 <name>clCreateSubDevices</name>                         <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainDevice</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
 
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clRetainDevice</name>                             <value>CL_INVALID_DEVICE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseDevice</name></proto>
             <param><type>cl_device_id</type>                            <name>device</name></param>
 
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clReleaseDevice</name>                            <value>CL_INVALID_DEVICE</value>
             </then>
         </command>
 
-    <!-- 4.4 -->
+    <!-- 4.4 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_context</type>                              <name>clCreateContext</name></proto>
             <param>const <type>cl_context_properties</type>*            <name>properties</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -1424,31 +1448,44 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
-            <!-- CL_INVALID_PROPERTY if context property name in properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once. This error code is missing before version 1.1. -->
             <if>
                 <and>
                     <from version="1.1"/>
                     <list_violation name="properties"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>context property name in properties is not a supported property name or the same property name is specified more than once</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
             </then>
-            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected or if platform value specified in properties is not a valid platform. -->
+            <if>
+                <and>
+                    <not>
+                        <from version="1.1"/>
+                    </not>
+                    <list_violation name="properties"/>
+                </and>
+            </if>
+            <then>      <log>context property name in properties is not a supported property name or the same property name is specified more than once</log>
+                <name>clCreateContext</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected -->
             <if>
                 <list_violation name="properties" param="user_data"/>
             </if>
-            <then>
+            <then>      <log>platform value specified in properties is not a valid platform</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PLATFORM</value>
             </then>
+            <!-- CL_INVALID_PROPERTY if the value specified for a supported property name is not valid. This error code is missing before version 1.1 - CL_INVALID_VALUE should be used instead.
+            platform is checked already, only cl_bool CL_CONTEXT_INTEROP_USER_SYNC can be checked, but do we need it? -->
             <if>
                 <eq>
                     <name>devices</name>                                <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>devices is NULL</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -1457,35 +1494,30 @@
                     <name>num_devices</name>                            <literal>0</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>num_devices is equal to zero</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
-                <and>
-                    <neq>
-                        <name>devices</name>                            <literal>NULL</literal>
-                    </neq>
-                    <array_len_ls>
-                        <name>devices</name>                            <name>num_devices</name>
-                    </array_len_ls>
-                </and>
+                <array_len_ls>
+                    <name>devices</name>                                <name>num_devices</name>
+                </array_len_ls>
             </if>
-            <then>
+            <then>      <log>devices is too short</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <any_invalid array="devices" elements="num_devices"/>
             </if>
-            <then>
+            <then>      <log>some device in devices is not a valid device</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <any_not_available array="devices" elements="num_devices"/>
             </if>
-            <then>
+            <then>      <log>a device in devices is currently not available</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_DEVICE_NOT_AVAILABLE</value>
             </then>
@@ -1499,13 +1531,13 @@
                     </neq>
                 </and>
             </if>
-            <then>
+            <then>      <log>pfn_notify is NULL but user_data is not NULL</log>
                 <name>clCreateContext</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_context</type>                              <name>clCreateContextFromType</name></proto>
             <param>const <type>cl_context_properties</type>*            <name>properties</name></param>
             <param><type>cl_device_type</type>                          <name>device_type</name></param>
@@ -1513,25 +1545,38 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
-            <!-- CL_INVALID_PROPERTY if context property name in properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once. This error code is missing before version 1.1. -->
             <if>
                 <and>
                     <from version="1.1"/>
                     <list_violation name="properties"/>
                 </and>
             </if>
-            <then>
+            <then>      <log>context property name in properties is not a supported property name or the same property name is specified more than once</log>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
             </then>
-            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected or if platform value specified in properties is not a valid platform. -->
+            <if>
+                <and>
+                    <not>
+                        <from version="1.1"/>
+                    </not>
+                    <list_violation name="properties"/>
+                </and>
+            </if>
+            <then>      <log>context property name in properties is not a supported property name or the same property name is specified more than once</log>
+                <name>clCreateContextFromType</name>                    <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_PLATFORM if properties is NULL and no platform could be selected -->
             <if>
                 <list_violation name="properties" param="user_data"/>
             </if>
-            <then>
+            <then>      <log>platform value specified in properties is not a valid platform</log>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PLATFORM</value>
             </then>
+            <!-- CL_INVALID_PROPERTY if the value specified for a supported property name is not valid. This error code is missing before version 1.1 - CL_INVALID_VALUE should be used instead.
+            platform is checked already, only cl_bool CL_CONTEXT_INTEROP_USER_SYNC can be checked, but do we need it? -->
             <if>
                 <and>
                     <eq>
@@ -1542,7 +1587,7 @@
                     </neq>
                 </and>
             </if>
-            <then>
+            <then>      <log>pfn_notify is NULL but user_data is not NULL</log>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -1554,7 +1599,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>device_type is not a valid value</log>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE_TYPE</value>
             </then>
@@ -1579,41 +1624,40 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>device_type is not compatible</log>
                 <name>clCreateContextFromType</name>                    <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE_TYPE</value>
             </then>
-            <!--  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            <!-- don't think it is not "going into implementation"
             CL_DEVICE_NOT_AVAILABLE if no devices that match device_type and property values specified in properties are currently available.
-            CL_DEVICE_NOT_FOUND if no devices that match device_type and property values specified in properties were found. 
-            -->
+            CL_DEVICE_NOT_FOUND if no devices that match device_type and property values specified in properties were found. -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainContext</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
 
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a vaild context</log>
                 <name>clRetainContext</name>                            <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseContext</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
 
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a vaild context</log>
                 <name>clReleaseContext</name>                           <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetContextInfo</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_context_info</type>                         <name>param_name</name></param>
@@ -1624,7 +1668,7 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a vaild context</log>
                 <name>clGetContextInfo</name>                           <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -1664,7 +1708,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_3_0">
+        <command suffix="CL_API_SUFFIX__VERSION_3_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetContextDestructorCallback</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>void (CL_CALLBACK*                                   <name>pfn_notify</name>)(cl_context context, void* user_data)</param>
@@ -1673,7 +1717,7 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a vaild context</log>
                 <name>clSetContextDestructorCallback</name>             <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -1681,14 +1725,14 @@
                     <name>pfn_notify</name>                             <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>pfn_notify is NULL</log>
                 <name>clSetContextDestructorCallback</name>             <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-    <!-- 5.1 -->
+    <!-- 5.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_command_queue</type>                        <name>clCreateCommandQueueWithProperties</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -1723,10 +1767,17 @@
                 <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
+            <if> <!-- it is possible that device has additional limitations, for example
+            it is not possible before 3.0 to query device about device queue support -->
+                <list_violation name="properties" param="device"/>
+            </if>
+            <then>      <log>values specified in properties are valid but are not supported by the device</log>
+                <name>clCreateCommandQueueWithProperties</name>         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_QUEUE_PROPERTIES</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED"> <!--DONE-->
             <proto><type>cl_command_queue</type>                        <name>clCreateCommandQueue</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -1736,21 +1787,21 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateCommandQueue</name>                       <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clCreateCommandQueue</name>                       <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <object_not_in object="device" in="context"/>
             </if>
-            <then>
+            <then>      <log>device is not associated with context</log>
                 <name>clCreateCommandQueue</name>                       <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
             </then>
@@ -1769,14 +1820,14 @@
                     </or>
                 </not>
             </if>
-            <then>
+            <then>      <log>values specified in properties are not valid</log>
                 <name>clCreateCommandQueue</name>                       <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
+            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetDefaultDeviceCommandQueue</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -1785,55 +1836,79 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a vaild context</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <object_is_invalid name="device"/>
             </if>
-            <then>
+            <then>      <log>device is not a valid device</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <object_not_in object="device" in="context"/>
             </if>
-            <then>
+            <then>      <log>device is not associated with context</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if> <!-- from 3.0 only -->
+                <and>
+                    <from version="3.0"/>
+                    <not>
+                        <bit_and>
+                            <query object="device" property="CL_DEVICE_DEVICE_ENQUEUE_CAPABILITIES"/>
+                            <literal>CL_DEVICE_QUEUE_REPLACEABLE_DEFAULT</literal>
+                        </bit_and>
+                    </not>
+                </and>
+            </if>
+            <then>      <log>device does not support a replaceable default on-device queue</log>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_OPERATION</value>
             </then>
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="device"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue for device</log>
                 <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <query object="queue" property="CL_QUEUE_PROPERTIES"/>
+                        <literal>CL_QUEUE_ON_DEVICE</literal>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>command_queue is not a device-side command-queue for device</log>
+                <name>clSetDefaultDeviceCommandQueue</name>             <value>CL_INVALID_COMMAND_QUEUE</value>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainCommandQueue</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
 
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clRetainCommandQueue</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseCommandQueue</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
 
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clReleaseCommandQueue</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
         </command>
@@ -1904,7 +1979,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0_DEPRECATED">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetCommandQueueProperty</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_command_queue_properties</type>             <name>properties</name></param>
@@ -1914,25 +1989,25 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
-                <name>clSetCommandQueueProperty</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clSetCommandQueueProperty</name>                  <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <not>
                     <or>
                         <bit_and>
-                            <name>properties</name>                         <literal>CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE</literal>
+                            <name>properties</name>                     <literal>CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE</literal>
                         </bit_and>
                         <bit_and>
-                            <name>properties</name>                         <literal>CL_QUEUE_PROFILING_ENABLE</literal>
+                            <name>properties</name>                     <literal>CL_QUEUE_PROFILING_ENABLE</literal>
                         </bit_and>
                     </or>
                 </not>
             </if>
-            <then>
+            <then>      <log>values specified in properties are not valid</log>
                 <name>clSetCommandQueueProperty</name>                  <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device. -->
+            <!-- CL_INVALID_QUEUE_PROPERTIES if values specified in properties are valid but are not supported by the device -->
         </command>
 
     <!-- 5.2.1 -->
@@ -1949,7 +2024,7 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
@@ -1961,7 +2036,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -2007,17 +2082,27 @@
                     </mutex_violation>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <eq>
                     <name>size</name>                                   <literal>0</literal>
-                    <!-- or greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context-->
                 </eq>
             </if>
-            <then>
+            <then>      <log>size is 0</log>
+                <name>clCreateBuffer</name>                             <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
+            </then>
+            <if>
+                <for_all in="context" query="CL_DEVICE_MAX_MEM_ALLOC_SIZE">
+                    <gt>
+                        <name>size</name>                               <name>query</name>
+                    </gt>
+                </for_all>
+            </if>
+            <then>      <log>size is greater than CL_DEVICE_MAX_MEM_ALLOC_SIZE for all devices in context</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_BUFFER_SIZE</value>
             </then>
@@ -2306,7 +2391,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueReadBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -2346,7 +2431,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -2359,7 +2444,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -2372,7 +2457,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -2427,7 +2512,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -2466,7 +2551,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -2479,7 +2564,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -2492,7 +2577,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -2552,7 +2637,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -2766,7 +2851,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -2779,7 +2864,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -2792,7 +2877,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -2842,7 +2927,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueWriteBufferRect</name>                   <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3056,7 +3141,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -3069,7 +3154,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -3082,7 +3167,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -3127,7 +3212,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueCopyBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3162,7 +3247,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -3175,7 +3260,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -3188,7 +3273,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -3238,7 +3323,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3498,7 +3583,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -3511,7 +3596,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -3524,7 +3609,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -3571,7 +3656,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -3660,7 +3745,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -3673,7 +3758,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -3686,7 +3771,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -3733,7 +3818,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
@@ -3794,7 +3879,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -3808,7 +3893,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -3822,7 +3907,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -3968,7 +4053,7 @@
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
-            <!-- if values specified in image_format are not valid OR 
+            <!-- if values specified in image_format are not valid OR
             if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
             if a 2D image is created from a 2D image object and the rules described above are not followed -->
             <if>
@@ -4179,7 +4264,7 @@
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
-            <!-- if values specified in image_format are not valid OR 
+            <!-- if values specified in image_format are not valid OR
             if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
             if a 2D image is created from a 2D image object and the rules described above are not followed -->
             <if>
@@ -4853,7 +4938,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -4915,9 +5000,9 @@
             <then>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
-                If image is a 1D image array object, origin[2] must be 0. 
-                If image is a 2D image object, region[2] must be 1. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
+                If image is a 1D image array object, origin[2] must be 0.
+                If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
                 <or>
                     <and>
@@ -4992,7 +5077,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -5005,7 +5090,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -5018,7 +5103,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -5085,7 +5170,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -5154,9 +5239,9 @@
             <then>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
-                If image is a 1D image array object, origin[2] must be 0. 
-                If image is a 2D image object, region[2] must be 1. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
+                If image is a 1D image array object, origin[2] must be 0.
+                If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
                 <or>
                     <and>
@@ -5231,7 +5316,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -5244,7 +5329,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -5257,7 +5342,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -5322,7 +5407,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -5400,7 +5485,7 @@
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
@@ -5449,7 +5534,7 @@
             <then>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
@@ -5505,7 +5590,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -5518,7 +5603,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -5531,7 +5616,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -5585,7 +5670,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -5655,9 +5740,9 @@
             <then>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
-                If image is a 1D image array object, origin[2] must be 0. 
-                If image is a 2D image object, region[2] must be 1. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
+                If image is a 1D image array object, origin[2] must be 0.
+                If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
                 <or>
                     <and>
@@ -5714,7 +5799,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -5727,7 +5812,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -5740,7 +5825,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -5786,7 +5871,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -5865,7 +5950,7 @@
             <then>      <log>the values in region cannot be 0</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
@@ -5921,7 +6006,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -5934,7 +6019,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -5947,7 +6032,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -6000,7 +6085,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -6079,7 +6164,7 @@
             <then>      <log>the values in region cannot be 0</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
@@ -6135,7 +6220,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -6148,7 +6233,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -6161,7 +6246,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -6220,7 +6305,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
@@ -6323,7 +6408,7 @@
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- If image is a 2D image object, origin[2] must be 0. 
+            <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
                 <or>
                     <and>
@@ -6408,7 +6493,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -6422,7 +6507,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -6436,7 +6521,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -6774,7 +6859,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -6801,7 +6886,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -6814,7 +6899,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -6827,7 +6912,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -6875,7 +6960,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueMigrateMemObjects</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -6925,7 +7010,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -6938,7 +7023,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -6951,7 +7036,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7164,7 +7249,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7225,7 +7310,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7238,7 +7323,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7251,7 +7336,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7292,7 +7377,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7313,7 +7398,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7326,7 +7411,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7339,7 +7424,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7394,7 +7479,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7415,7 +7500,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7428,7 +7513,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7441,7 +7526,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7541,7 +7626,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7562,7 +7647,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7575,7 +7660,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7588,7 +7673,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7671,7 +7756,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7692,7 +7777,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7705,7 +7790,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7718,7 +7803,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7767,7 +7852,7 @@
             <if>
                 <bit_and>
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
-                </bit_and> 
+                </bit_and>
             </if>
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
@@ -7788,7 +7873,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </eq>
                     <gt>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </gt>
                 </and>
             </if>
@@ -7801,7 +7886,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <eq>
-                        <name>num_events_in_wait_list</name>            <literal>0</literal> 
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
                     </eq>
                 </and>
             </if>
@@ -7814,7 +7899,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -7846,7 +7931,7 @@
             <then>      <log>num_svm_pointers is zero or svm_pointers is NULL</log>
                 <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- state needed for 
+            <!-- state needed for
             CL_INVALID_VALUE if sizes[i] is non-zero and range [svm_pointers[i], svm_pointers[i]+sizes[i]) is not contained within an existing clSVMAlloc allocation -->
         </command>
 
@@ -9109,7 +9194,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </eq>
                         <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </gt>
                     </and>
                     <and>
@@ -9117,7 +9202,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </neq>
                         <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </eq>
                     </and>
                 </or>
@@ -9131,7 +9216,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -9156,7 +9241,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </eq>
                         <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </gt>
                     </and>
                     <and>
@@ -9164,7 +9249,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </neq>
                         <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </eq>
                     </and>
                 </or>
@@ -9178,7 +9263,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -9318,7 +9403,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </eq>
                         <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </gt>
                     </and>
                     <and>
@@ -9326,7 +9411,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </neq>
                         <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </eq>
                     </and>
                 </or>
@@ -9340,7 +9425,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -9507,7 +9592,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </eq>
                         <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </gt>
                     </and>
                     <and>
@@ -9515,7 +9600,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </neq>
                         <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </eq>
                     </and>
                 </or>
@@ -9529,7 +9614,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>
@@ -9596,7 +9681,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </eq>
                         <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </gt>
                     </and>
                     <and>
@@ -9604,7 +9689,7 @@
                             <name>event_wait_list</name>                <literal>NULL</literal>
                         </neq>
                         <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal> 
+                            <name>num_events_in_wait_list</name>        <literal>0</literal>
                         </eq>
                     </and>
                 </or>
@@ -9618,7 +9703,7 @@
                         <name>event_wait_list</name>                    <literal>NULL</literal>
                     </neq>
                     <array_len_ls>
-                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name> 
+                        <name>event_wait_list</name>                    <name>num_events_in_wait_list</name>
                     </array_len_ls>
                 </and>
             </if>

@@ -1,9 +1,9 @@
 // version that checks number of subdevices for clCreateSubDevices
 template<typename T>
 bool list_violation(
-  const char * name, 
-  T param, 
-  cl_device_id device, 
+  const char * name,
+  T param,
+  cl_device_id device,
   cl_uint num_devices)
 {
   if (strcmp(name, "cl_device_partition_property") == 0)
@@ -74,12 +74,12 @@ bool list_violation(
   return true;
 }
 
-// version that checks device limits for clCreateSubDevices 
-// and max size of device queue for clCreateCommandQueueWithProperties
+// version that checks device limits for clCreateSubDevices
+// and max size of device queue and support for for clCreateCommandQueueWithProperties
 template<typename T>
 bool list_violation(
-  const char * name, 
-  T param, 
+  const char * name,
+  T param,
   cl_device_id device)
 {
   if (strcmp(name, "cl_device_partition_property") == 0)
@@ -122,7 +122,7 @@ bool list_violation(
         {
           curr_cu += (cl_uint)param[pos];
           curr_sd++;
-          if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd))
+          if ((param[pos] < 0) || (curr_cu > cu) || (curr_sd > sd) || (curr_sd > cu))
             return true;
           ++pos;
         }
@@ -143,7 +143,7 @@ bool list_violation(
   }
 
   if (strcmp(name, "cl_queue_properties") == 0)
-  { // clCreateCommandQueueWithProperties
+  { // clCreateCommandQueueWithProperties - min 2.0
     if (param == NULL)
       return false;
 
@@ -151,13 +151,19 @@ bool list_violation(
     size_t pos = 0;
     // and not once ???
     cl_uint qs = 0;
-    if (from("2.0"))
-      tdispatch->clGetDeviceInfo(device,
-        CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
-        sizeof(cl_uint),
-        &qs,
-        NULL);
+    clGetDeviceInfo(device,
+      CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE,
+      sizeof(cl_uint),
+      &qs,
+      NULL);
     cl_uint curr_qs = 0;
+    cl_device_device_enqueue_capabilities ddec = 0;
+    if (from("3.0"))
+      clGetDeviceInfo(device,
+        CL_DEVICE_DEVICE_ENQUEUE_CAPABILITIES,
+        sizeof(cl_device_device_enqueue_capabilities),
+        &ddec,
+        NULL);
     cl_command_queue_properties qp = 0;
 
     while (param[pos] != 0)
@@ -169,11 +175,11 @@ bool list_violation(
           ++pos;
           if (bitfield_violation("cl_command_queue_properties", qp))
             return true;
-          // from("2.0") is not needed as if any of the flags are set 
-          // for earlier implementation it is a bitfield violation above
-          if ((qp | CL_QUEUE_ON_DEVICE) && !(qp | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
+          if ((qp & CL_QUEUE_ON_DEVICE) && !(qp & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
             return true;
-          if ((qp | CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp | CL_QUEUE_ON_DEVICE))
+          if ((qp & CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp & CL_QUEUE_ON_DEVICE))
+            return true;
+          if (from("3.0") && (qp & CL_QUEUE_ON_DEVICE) && !(ddec & CL_DEVICE_QUEUE_SUPPORTED))
             return true;
           break;
 
@@ -190,20 +196,20 @@ bool list_violation(
       }
     }
 
-    if ((curr_qs > 0) && !(qp | CL_QUEUE_ON_DEVICE))
+    if ((curr_qs > 0) && !(qp & CL_QUEUE_ON_DEVICE))
       return true;
     return false;
   }
- 
+
   printf("Wrong list: %s, expected cl_device_partition_property or cl_queue_properties\n", name);
   return true;
 }
 
-// version that checks platform for clCreateContext and clCreateContextFromType(
+// version that checks platform for clCreateContext and clCreateContextFromType
 template<typename T>
 bool list_violation(
-  const char * name, 
-  T param, 
+  const char * name,
+  T param,
   void * user_data)
 {
   // dummy param to separate the case
@@ -232,7 +238,7 @@ bool list_violation(
             return true;
           break;
 
-        case CL_QUEUE_SIZE:
+        case CL_CONTEXT_INTEROP_USER_SYNC:
           pos += 2;
           ++cius_num;
           if (cius_num > 1)
@@ -310,7 +316,7 @@ bool list_violation(const char * name, T param)
             return true;
           break;
 
-        case CL_QUEUE_SIZE:
+        case CL_CONTEXT_INTEROP_USER_SYNC:
           pos += 2;
           ++cius_num;
           if (cius_num > 1)
@@ -322,6 +328,48 @@ bool list_violation(const char * name, T param)
       }
     }
 
+    return false;
+  }
+
+  if (strcmp(name, "cl_queue_properties") == 0)
+  { // clCreateCommandQueueWithProperties - min 2.0
+    if (param == NULL)
+      return false;
+
+    // any order of properties is allowed
+    size_t pos = 0;
+    // and not once ???
+    cl_uint curr_qs = 0;
+    cl_command_queue_properties qp = 0;
+
+    while (param[pos] != 0)
+    {
+      switch (param[pos]) {
+        case CL_QUEUE_PROPERTIES:
+          ++pos;
+          qp = param[pos];
+          ++pos;
+          if (bitfield_violation("cl_command_queue_properties", qp))
+            return true;
+          if ((qp & CL_QUEUE_ON_DEVICE) && !(qp & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
+            return true;
+          if ((qp & CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp & CL_QUEUE_ON_DEVICE))
+            return true;
+          break;
+
+        case CL_QUEUE_SIZE:
+          ++pos;
+          curr_qs = param[pos];
+          ++pos;
+          break;
+
+        default:
+          return true;
+      }
+    }
+
+    if ((curr_qs > 0) && !(qp & CL_QUEUE_ON_DEVICE))
+      return true;
     return false;
   }
 
@@ -389,7 +437,7 @@ bool list_violation(const char * name, T param)
     return false;
   }
 
-  printf("Unknown list: %s\n", name);
+  printf("Bad list: %s\n", name);
   return true;
 }
 
@@ -508,4 +556,52 @@ bool any_object_not_in(T1 * objects, size_t n, T2 in)
     if (object_not_in(objects[i], in))
       return true;
   return false;
+}
+
+template<cl_uint property>
+bool for_all(cl_context context, std::function<bool(return_type<property>)> check)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(context, &nd);
+
+  return_type<property> a;
+  bool res = true;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res && check(a);
+  }
+
+  free(devices);
+  return res;
+}
+
+template<cl_uint property>
+bool for_any(cl_context context, std::function<bool(return_type<property>)> check)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(context, &nd);
+
+  return_type<property> a;
+  bool res = false;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res || check(a);
+  }
+
+  free(devices);
+  return res;
 }
