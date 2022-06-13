@@ -367,6 +367,19 @@ size_t pixel_size(const cl_image_format * image_format)
   return channels * channel_size;
 }
 
+size_t pixel_size(const cl_mem image)
+{
+  cl_image_format format;
+  tdispatch->clGetImageInfo(
+    image,
+    CL_IMAGE_FORMAT,
+    sizeof(cl_image_format),
+    &format,
+    NULL);
+
+  return pixel_size(&format);
+}
+
 // check if the descriptor of image being created is compatible with
 // one of the image from which the current image is being created
 bool is_compatible_image(const cl_image_desc * const image_desc, const cl_image_format * image_format)
@@ -536,7 +549,7 @@ bool struct_violation(
 
 // check correctness of 2D image creation from buffer
 bool struct_violation(
-  cl_version version,
+  cl_version,
   const cl_image_format * const image_format,
   cl_context context,
   const cl_image_desc * const image_desc)
