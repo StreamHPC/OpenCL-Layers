@@ -2973,7 +2973,7 @@
                     </or>
                 </and>
             </if>
-            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than (region[1] * buffer_row_pitch) or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3000,7 +3000,7 @@
                     </or>
                 </and>
             </if>
-            <then>      <log>buffer_slice_pitch is not 0 and is less than region[1] * buffer_row_pitch or not a multiple of buffer_row_pitch</log>
+            <then>      <log>buffer_slice_pitch is not 0 and is less than (region[1] * buffer_row_pitch) or not a multiple of buffer_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3027,7 +3027,7 @@
                     </or>
                 </and>
             </if>
-            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
+            <then>      <log>host_slice_pitch is not 0 and is less than (region[1] * host_row_pitch) and not a multiple of host_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -3054,7 +3054,7 @@
                     </or>
                 </and>
             </if>
-            <then>      <log>host_slice_pitch is not 0 and is less than region[1] * host_row_pitch and not a multiple of host_row_pitch</log>
+            <then>      <log>host_slice_pitch is not 0 and is less than (region[1] * host_row_pitch) and not a multiple of host_row_pitch</log>
                 <name>clEnqueueReadBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -5902,9 +5902,9 @@
             </then>
         </command>
 
-    <!-- 5.3.2 -->
+    <!-- 5.3.2 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetSupportedImageFormats</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -5916,60 +5916,68 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
-                <or>
-                    <not>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_READ_WRITE</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_READ_ONLY</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_WRITE_ONLY</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_KERNEL_READ_AND_WRITE</literal>
-                            </bit_and>
-                        </or>
-                    </not>
-                    <not>
-                        <or>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE1D</literal>
-                            </eq>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>
-                            </eq>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE2D</literal>
-                            </eq>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE3D</literal>
-                            </eq>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>
-                            </eq>
-                            <eq>
-                                <name>image_type</name>                 <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>
-                            </eq>
-                        </or>
-                    </not>
-                    <and>
-                        <eq>
-                            <name>num_entries</name>                    <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <name>image_formats</name>                  <literal>NULL</literal>
-                        </neq>
-                    </and>
-                </or>
+                <not>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_READ_WRITE</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_READ_ONLY</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_WRITE_ONLY</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_KERNEL_READ_AND_WRITE</literal>
+                        </bit_and>
+                    </or>
+                </not>
             </if>
-            <then>
+            <then>      <log>flags are not valid</log>
+                <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <not>
+                    <or>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE1D</literal>
+                        </eq>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>
+                        </eq>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE2D</literal>
+                        </eq>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE3D</literal>
+                        </eq>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>
+                        </eq>
+                        <eq>
+                            <name>image_type</name>                     <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>
+                        </eq>
+                    </or>
+                </not>
+            </if>
+            <then>      <log>image_type is not valid</log>
+                <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>num_entries</name>                        <literal>0</literal>
+                    </eq>
+                    <neq>
+                        <name>image_formats</name>                      <literal>NULL</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>num_entries is 0 and image_formats is not NULL</log>
                 <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -5982,7 +5990,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>image_formats is too short</log>
                 <name>clGetSupportedImageFormats</name>                 <value>CL_INVALID_VALUE</value>
             </then>
         </command>
@@ -6006,7 +6014,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -6014,19 +6022,32 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="image"/>
             </if>
-            <then>
+            <then>      <log>image is not a valid mem object</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>      <log>image is not a valid image object</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="image"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and image are not the same</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -6042,10 +6063,10 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin, region, or ptr is NULL</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>origin</name>                             <literal>3</literal>
@@ -6055,7 +6076,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is too short</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6071,7 +6092,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
@@ -6095,7 +6116,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
@@ -6123,10 +6144,9 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds -->
             <if>
                 <and>
                     <or>
@@ -6142,9 +6162,76 @@
                     </neq>
                 </and>
             </if>
-            <then>
+            <then>      <log>image is a 1D or 2D image but slice_pitch is not 0</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>row_pitch</name>                          <literal>0</literal>
+                    </neq>
+                    <ls>
+                        <name>row_pitch</name>                          <mult>
+                                                                            <name>region[0]</name>
+                                                                            <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                        </mult>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>row_pitch is not 0 and is less than (region[0] * element size in bytes)</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <neq>
+                    <mod>
+                        <name>row_pitch</name>
+                        <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                    </mod>                                              <literal>0</literal>
+                </neq>
+            </if>
+            <then>      <log>row_pitch is not a multiple of element size in bytes</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>slice_pitch</name>                        <literal>0</literal>
+                    </neq>
+                    <ls>
+                        <name>slice_pitch</name>                        <mult>
+                                                                            <name>region[1]</name>
+                                                                            <max>
+                                                                                <name>row_pitch</name>
+                                                                                <mult>
+                                                                                    <name>region[0]</name>
+                                                                                    <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                </mult>
+                                                                            </max>
+                                                                        </mult>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>slice_pitch is not 0 and is less than (region[1] * row_pitch)</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <neq>
+                    <mod>
+                        <name>slice_pitch</name>
+                        <max>
+                            <name>row_pitch</name>
+                            <mult>
+                                <name>region[0]</name>
+                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                            </mult>
+                        </max>
+                    </mod>                                              <literal>0</literal>
+                </neq>
+            </if>
+            <then>      <log>slice_pitch is not a multiple of row_pitch</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds -->
             <if>
                 <and>
                     <eq>
