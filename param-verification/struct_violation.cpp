@@ -521,6 +521,12 @@ size_t buffer_size(cl_mem buffer)
   return size;
 }
 
+////////////////////
+// main functions //
+////////////////////
+
+// the order of function invocations should follow the XML and is important
+// as functions rely on the correctness of objects checked previously
 
 // 5.3.1.1. Image Format Descriptor
 
@@ -545,26 +551,12 @@ bool struct_violation(
   return false;
 }
 
-// check image_format violation and correctness of 2D image creation from buffer or 2D image
+// check correctness of 2D image creation from buffer
 bool struct_violation(
   const cl_image_format * const image_format,
   cl_context context,
   const cl_image_desc * const image_desc)
 {
-  if (enum_violation("cl_channel_order", image_format->image_channel_order))
-    return true;
-  if (enum_violation("cl_channel_type", image_format->image_channel_data_type))
-    return true;
-
-  if (((image_format->image_channel_data_type == CL_UNORM_SHORT_555) ||
-     (image_format->image_channel_data_type == CL_UNORM_SHORT_565) ||
-     (image_format->image_channel_data_type == CL_UNORM_INT_101010)) &&
-    !((image_format->image_channel_order == CL_RGB) || (image_format->image_channel_order == CL_RGBx)))
-    return true;
-  if ((image_format->image_channel_data_type == CL_UNORM_INT_101010_2) &&
-    !(image_format->image_channel_order == CL_RGBA))
-    return true;
-
   // if 2D image is created from the buffer
   if ((image_desc->image_type == CL_MEM_OBJECT_IMAGE2D) &&
     (image_desc->mem_object != NULL) &&
@@ -606,6 +598,14 @@ bool struct_violation(
     }
   }
 
+  return false;
+}
+
+// check correctness of 2D image creation from 2D image
+bool struct_violation(
+  const cl_image_format * const image_format,
+  const cl_image_desc * const image_desc)
+{
   // if 2D image is created from 2D image
   if ((image_desc->image_type == CL_MEM_OBJECT_IMAGE2D) &&
     (image_desc->mem_object != NULL) &&
@@ -618,52 +618,191 @@ bool struct_violation(
   return false;
 }
 
+// check if there are no devices that support image_format in the context
+bool struct_violation(
+  const cl_image_format * const image_format,
+  cl_context context,
+  cl_mem_flags flags,
+  const cl_image_desc * const image_desc)
+{
+  cl_uint num_image_format = 0;
+  tdispatch->clGetSupportedImageFormats(
+    context,
+    flags & (CL_MEM_READ_WRITE | CL_MEM_READ_ONLY | CL_MEM_WRITE_ONLY | CL_MEM_KERNEL_READ_AND_WRITE),
+    image_desc->image_type,
+    0,
+    NULL,
+    &num_image_format);
+  std::vector<cl_image_format> image_formats(num_image_format);
+  tdispatch->clGetSupportedImageFormats(
+    context,
+    flags & (CL_MEM_READ_WRITE | CL_MEM_READ_ONLY | CL_MEM_WRITE_ONLY | CL_MEM_KERNEL_READ_AND_WRITE),
+    image_desc->image_type,
+    num_image_format,
+    image_formats.data(),
+    NULL);
+
+  for (auto a : image_formats) {
+    if ((image_format->image_channel_order == a.image_channel_order) &&
+        (image_format->image_channel_data_type == a.image_channel_data_type))
+      return false;
+  }
+
+  return true;
+}
+
+// check if there are no devices that support image_format in the context
+// for clCreateImage2D and clCreateImage3D
+bool struct_violation(
+  const cl_image_format * const image_format,
+  cl_context context,
+  cl_mem_flags flags,
+  cl_mem_object_type image_type)
+{
+  cl_uint num_image_format = 0;
+  tdispatch->clGetSupportedImageFormats(
+    context,
+    flags & (CL_MEM_READ_WRITE | CL_MEM_READ_ONLY | CL_MEM_WRITE_ONLY | CL_MEM_KERNEL_READ_AND_WRITE),
+    image_type,
+    0,
+    NULL,
+    &num_image_format);
+  std::vector<cl_image_format> image_formats(num_image_format);
+  tdispatch->clGetSupportedImageFormats(
+    context,
+    flags & (CL_MEM_READ_WRITE | CL_MEM_READ_ONLY | CL_MEM_WRITE_ONLY | CL_MEM_KERNEL_READ_AND_WRITE),
+    image_type,
+    num_image_format,
+    image_formats.data(),
+    NULL);
+
+  for (auto a : image_formats) {
+    if ((image_format->image_channel_order == a.image_channel_order) &&
+        (image_format->image_channel_data_type == a.image_channel_data_type))
+      return false;
+  }
+
+  return true;
+}
+
+// check if 2D image does not fit
+bool struct_violation(
+  cl_context context,
+  size_t image_width,
+  size_t image_height)
+{
+  cl_image_desc a;
+  a.image_width = image_width;
+  a.image_height = image_height;
+
+  return !is_2D_image_fits(&a, context);
+}
+
+// check if 3D image does not fit
+bool struct_violation(
+  cl_context context,
+  size_t image_width,
+  size_t image_height,
+  size_t image_depth)
+{
+  cl_image_desc a;
+  a.image_width = image_width;
+  a.image_height = image_height;
+  a.image_depth = image_depth;
+
+  return !is_3D_image_fits(&a, context);
+}
+
 // 5.3.1.2. Image Descriptor
 
-// check memory flags
+// check all besides checked below
 bool struct_violation(
   const cl_image_desc * const image_desc,
-  cl_mem_flags flags)
+  const cl_image_format * image_format, 
+  void * host_ptr)
 {
+  // check image types and sizes (upper limits are checked in next function)
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D)
+    if (image_desc->image_depth == 0)
+      return true;
+
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY)
+    if (image_desc->image_height == 0)
+      return true;
+
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_BUFFER ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
+    if (image_desc->image_width == 0)
+      return true;
+
+  // check array size
+  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
+      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
+    if (image_desc->image_array_size == 0)
+      return true;
+
+  // check image_row_pitch
+  if ((host_ptr == NULL) && (image_desc->image_row_pitch != 0))
+    return true;
+  if ((host_ptr != NULL) && (image_desc->image_row_pitch > 1) && 
+    (image_desc->image_row_pitch < image_desc->image_width * pixel_size(image_format)))
+    return true;
+  if (image_desc->image_row_pitch % pixel_size(image_format) != 0)
+    return true;
+  size_t image_row_pitch = 
+    std::max(image_desc->image_row_pitch, image_desc->image_width * pixel_size(image_format));
+
+  // check image_slice_pitch
+  if ((host_ptr == NULL) && (image_desc->image_slice_pitch != 0))
+    return true;
+  if (host_ptr != NULL)
+    switch (image_desc->image_type) {
+      case CL_MEM_OBJECT_IMAGE3D:
+      case CL_MEM_OBJECT_IMAGE2D_ARRAY:
+        if ((image_desc->image_slice_pitch > 1) && 
+            (image_desc->image_slice_pitch < image_row_pitch * image_desc->image_height))
+          return true;
+        break;
+
+      case CL_MEM_OBJECT_IMAGE1D_ARRAY:
+        if ((image_desc->image_slice_pitch > 1) && 
+            (image_desc->image_slice_pitch < image_row_pitch))
+          return true;
+        break;
+    }
+  if (image_desc->image_slice_pitch % image_row_pitch != 0)
+    return true;
+
   // check image creation from buffer or other image
   switch (image_desc->image_type) {
     case CL_MEM_OBJECT_IMAGE1D_BUFFER:
-    case CL_MEM_OBJECT_IMAGE2D:
-      if (image_desc->mem_object != NULL) {
-        cl_mem_flags old_flags;
-        tdispatch->clGetMemObjectInfo(
-          image_desc->mem_object,
-          CL_MEM_FLAGS,
-          sizeof(cl_mem_flags),
-          &old_flags,
-          NULL);
+      if (image_desc->mem_object != NULL)
+        if (!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_BUFFER) ||
+            (buffer_size(image_desc->mem_object) < image_desc->image_width * pixel_size(image_format)))
+          return true;
+      break;
 
-        if ((old_flags | CL_MEM_WRITE_ONLY) && 
-          ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_READ_ONLY)))
+    case CL_MEM_OBJECT_IMAGE2D:
+      if (image_desc->mem_object != NULL)
+        if ((!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_BUFFER) ||
+            (buffer_size(image_desc->mem_object) < image_row_pitch * image_desc->image_height)) &&
+            (!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_IMAGE2D)))
           return true;
-        if ((old_flags | CL_MEM_READ_ONLY) && 
-          ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_WRITE_ONLY)))
-          return true;
-        if ((flags | CL_MEM_USE_HOST_PTR) || 
-          (flags | CL_MEM_ALLOC_HOST_PTR) ||
-          (flags | CL_MEM_COPY_HOST_PTR))
-          return true;
-        if ((old_flags | CL_MEM_HOST_WRITE_ONLY) && 
-          (flags | CL_MEM_HOST_READ_ONLY))
-          return true;
-        if ((old_flags | CL_MEM_HOST_READ_ONLY) && 
-          (flags | CL_MEM_HOST_WRITE_ONLY))
-          return true;
-        if ((old_flags | CL_MEM_HOST_NO_ACCESS) && 
-          ((flags | CL_MEM_HOST_READ_ONLY) || (flags | CL_MEM_HOST_WRITE_ONLY)))
-          return true;
-      }
       break;
 
     default:
       if (image_desc->mem_object != NULL)
         return true;
   }
+
+  if ((image_desc->num_mip_levels != 0) || (image_desc->num_samples != 0))
+    return true;
 
   return false;
 }
@@ -697,7 +836,52 @@ bool struct_violation(
   }
 }
 
+// check memory flags
+bool struct_violation(
+  const cl_image_desc * const image_desc,
+  cl_mem_flags flags)
+{
+  // check image creation from buffer or other image
+  switch (image_desc->image_type) {
+    case CL_MEM_OBJECT_IMAGE1D_BUFFER:
+    case CL_MEM_OBJECT_IMAGE2D:
+      if (image_desc->mem_object != NULL) {
+        cl_mem_flags old_flags;
+        tdispatch->clGetMemObjectInfo(
+          image_desc->mem_object,
+          CL_MEM_FLAGS,
+          sizeof(cl_mem_flags),
+          &old_flags,
+          NULL);
+
+        if ((old_flags | CL_MEM_WRITE_ONLY) && 
+            ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_READ_ONLY)))
+          return true;
+        if ((old_flags | CL_MEM_READ_ONLY) && 
+            ((flags | CL_MEM_READ_WRITE) || (flags | CL_MEM_WRITE_ONLY)))
+          return true;
+        if ((flags | CL_MEM_USE_HOST_PTR) || 
+            (flags | CL_MEM_ALLOC_HOST_PTR) ||
+            (flags | CL_MEM_COPY_HOST_PTR))
+          return true;
+        if ((old_flags | CL_MEM_HOST_WRITE_ONLY) && 
+            (flags | CL_MEM_HOST_READ_ONLY))
+          return true;
+        if ((old_flags | CL_MEM_HOST_READ_ONLY) && 
+            (flags | CL_MEM_HOST_WRITE_ONLY))
+          return true;
+        if ((old_flags | CL_MEM_HOST_NO_ACCESS) && 
+            ((flags | CL_MEM_HOST_READ_ONLY) || (flags | CL_MEM_HOST_WRITE_ONLY)))
+          return true;
+      }
+  }
+
+  return false;
+}
+
 // check size of host_ptr
+// rely on correctness of image_row_pitch and image_slice_pitch
+// sizes from Table 15 of OpenCL 3.0 specification are used
 bool struct_violation(
   const cl_image_desc * const image_desc, 
   void * host_ptr,
@@ -707,6 +891,45 @@ bool struct_violation(
     size_t image_row_pitch = 
       std::max(image_desc->image_row_pitch, 
         image_desc->image_width * pixel_size(image_format));
+/*    size_t image_line_size = 
+      image_desc->image_width * pixel_size(image_format);
+
+    switch (image_desc->image_type) {
+      case CL_MEM_OBJECT_IMAGE1D:
+      case CL_MEM_OBJECT_IMAGE1D_BUFFER:
+        return array_len_ls(host_ptr, image_line_size);
+
+      case CL_MEM_OBJECT_IMAGE1D_ARRAY:
+        return array_len_ls(host_ptr, 
+          (image_desc->image_array_size - 1) * 
+            std::max(image_desc->image_slice_pitch, image_row_pitch)
+          + image_line_size);
+
+      case CL_MEM_OBJECT_IMAGE2D:
+        return array_len_ls(host_ptr, 
+          (image_desc->image_height - 1) * image_row_pitch
+          + image_line_size);
+
+      case CL_MEM_OBJECT_IMAGE2D_ARRAY:
+        return array_len_ls(host_ptr, 
+          (image_desc->image_array_size - 1) * 
+            std::max(image_desc->image_slice_pitch, 
+              image_desc->image_height * image_row_pitch)
+          + (image_desc->image_height - 1) * image_row_pitch
+          + image_line_size);
+
+      case CL_MEM_OBJECT_IMAGE3D:
+        return array_len_ls(host_ptr, 
+          (image_desc->image_depth - 1) * 
+            std::max(image_desc->image_slice_pitch, 
+              image_row_pitch * image_desc->image_height)
+          + (image_desc->image_height - 1) * image_row_pitch
+          + image_line_size);
+
+      default:
+        return true;
+    }
+*/
 
     switch (image_desc->image_type) {
       case CL_MEM_OBJECT_IMAGE1D:
@@ -720,13 +943,13 @@ bool struct_violation(
 
       case CL_MEM_OBJECT_IMAGE2D:
         return array_len_ls(host_ptr, 
-          image_row_pitch * image_desc->image_height);
+          image_desc->image_height * image_row_pitch);
 
       case CL_MEM_OBJECT_IMAGE2D_ARRAY:
         return array_len_ls(host_ptr, 
           image_desc->image_array_size * 
             std::max(image_desc->image_slice_pitch, 
-              image_row_pitch * image_desc->image_height));
+              image_desc->image_height * image_row_pitch));
 
       case CL_MEM_OBJECT_IMAGE3D:
         return array_len_ls(host_ptr, 
@@ -738,107 +961,6 @@ bool struct_violation(
         return true;
     }
   }
-  return false;
-}
-
-// check all besides checked above
-bool struct_violation(
-  const cl_image_desc * const image_desc, 
-  cl_context,
-  void * host_ptr,
-  const cl_image_format * image_format)
-{
-  // check image types and sizes (upper limits are checked in prev function)
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D)
-    if (image_desc->image_depth == 0)
-      return true;
-
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY)
-    if (image_desc->image_depth == 0)
-      return true;
-
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_BUFFER ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
-    if (image_desc->image_width == 0)
-      return true;
-
-  // check array size
-  if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
-      image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
-    if (image_desc->image_array_size == 0)
-      return true;
-
-  // check image_row_pitch
-  if ((host_ptr == NULL) && (image_desc->image_row_pitch != 0))
-    return true;
-  if ((host_ptr != NULL) && (image_desc->image_row_pitch > 1) && 
-    (image_desc->image_row_pitch < image_desc->image_width * pixel_size(image_format)))
-    return true;
-  if (image_desc->image_row_pitch % pixel_size(image_format) != 0)
-    return true;
-  size_t image_row_pitch = 
-    std::max(image_desc->image_row_pitch, image_desc->image_width * pixel_size(image_format));
-  // it is checked in image_format
-  //if ((image_desc->image_type == CL_MEM_OBJECT_IMAGE2D) &&
-  //  (image_desc->mem_object != NULL) &&
-  //  is_valid_mem_obj(image_desc->mem_object, "buffer") &&
-  //  (image_row_pitch % max_al(context) != 0))
-  //  return true;
-
-  // check image_slice_pitch
-  if ((host_ptr == NULL) && (image_desc->image_slice_pitch != 0))
-    return true;
-  if (host_ptr != NULL)
-    switch (image_desc->image_type) {
-      case CL_MEM_OBJECT_IMAGE3D:
-      case CL_MEM_OBJECT_IMAGE2D_ARRAY:
-        if ((image_desc->image_slice_pitch > 1) && 
-          (image_desc->image_slice_pitch < image_row_pitch * image_desc->image_height))
-          return true;
-        break;
-
-      case CL_MEM_OBJECT_IMAGE1D_ARRAY:
-        if ((image_desc->image_slice_pitch > 1) && 
-          (image_desc->image_slice_pitch < image_row_pitch))
-          return true;
-        break;
-    }
-  if (image_desc->image_slice_pitch % image_row_pitch != 0)
-    return true;
-
-  // check image creation from buffer or other image
-  switch (image_desc->image_type) {
-    case CL_MEM_OBJECT_IMAGE1D_BUFFER:
-      if (image_desc->mem_object != NULL)
-        if (!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_BUFFER) ||
-          (buffer_size(image_desc->mem_object) < image_desc->image_width * pixel_size(image_format)))
-          return true;
-      break;
-
-    case CL_MEM_OBJECT_IMAGE2D:
-      if (image_desc->mem_object != NULL)
-        if ((!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_BUFFER) ||
-          (buffer_size(image_desc->mem_object) < image_row_pitch * image_desc->image_height)) &&
-          (!object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_IMAGE2D)
-          //|| !is_compatible_image(image_desc, image_format)
-          ))
-          return true;
-      break;
-
-    default:
-      if (image_desc->mem_object != NULL)
-        return true;
-  }
-
-  if ((image_desc->num_mip_levels != 0) || (image_desc->num_samples != 0))
-    return true;
-
   return false;
 }
 
@@ -865,7 +987,8 @@ bool struct_violation(
   const void * buffer_create_info,
   cl_mem buffer)
 {
-  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+  const cl_buffer_region * sb = 
+    static_cast<const cl_buffer_region *>(buffer_create_info);
   size_t buffer_size;
   tdispatch->clGetMemObjectInfo(
     buffer,

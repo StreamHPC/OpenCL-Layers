@@ -563,15 +563,13 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
 
     code << "// special case of cl_image_format *\n"
          << "template<>\n"
-         << "size_t literal_list(const char * name, cl_image_format * const param)\n"
+         << "size_t literal_list(const char *, cl_image_format * const param)\n"
          << "{\n"
-         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n"
          << "template<>\n"
-         << "size_t literal_list(const char * name, const cl_image_format * const param)\n"
+         << "size_t literal_list(const char *, const cl_image_format * const param)\n"
          << "{\n"
-         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n\n";
 
@@ -855,6 +853,7 @@ int main(int argc, char* argv[])
          << "#endif\n"
          << "#include <CL/cl.h>\n"
          << "#include <string.h>\n"
+         << "#include <vector>\n"
          << "#include <algorithm>\n"
          << "#include <functional>\n"
          << "#include \"param_verification.hpp\"\n\n\n";

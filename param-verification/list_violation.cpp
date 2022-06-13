@@ -445,7 +445,6 @@ bool list_violation(const char * name, T param)
 //template<typename T1, typename T2>
 //bool object_not_in(T1 object, T2 in);
 
-//template<>
 bool object_not_in(cl_device_id device, cl_context context)
 {
   cl_uint nd;
@@ -461,7 +460,6 @@ bool object_not_in(cl_device_id device, cl_context context)
   return true;
 }
 
-//template<>
 bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 {
   cl_device_id q_device;
@@ -478,7 +476,6 @@ bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 }
 
 // command queue and buffer should belong to the same context
-//template<>
 bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
 {
   cl_context c_context;
@@ -502,7 +499,6 @@ bool object_not_in(cl_command_queue command_queue, cl_mem buffer)
 }
 
 // events and command queue should belong to the same context
-//template<>
 bool object_not_in(cl_event event, cl_command_queue command_queue)
 {
   cl_context e_context;
@@ -526,7 +522,6 @@ bool object_not_in(cl_event event, cl_command_queue command_queue)
 }
 
 // mem objects and command queue should belong to the same context
-//template<>
 bool object_not_in(cl_mem object, cl_command_queue command_queue)
 {
   cl_context m_context;

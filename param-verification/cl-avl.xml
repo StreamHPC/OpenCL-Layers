@@ -2711,7 +2711,7 @@
                 <object_is_invalid name="buffer" type="CL_MEM_OBJECT_BUFFER"/>
             </if>
             <then>      <log>buffer is not a valid buffer object</log>
-                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_COMMAND_QUEUE</value>
+                <name>clEnqueueWriteBuffer</name>                       <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
@@ -4018,7 +4018,7 @@
                 <object_not_in object="command_queue" in="src_buffer"/>
             </if>
             <then>      <log>src_buffer is not a valid buffer object</log>
-                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_is_invalid name="dst_buffer"/>
@@ -4437,9 +4437,9 @@
             </then>
         </command>
 
-    <!-- 5.2.3 -->
+    <!-- 5.2.3 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueFillBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -4454,7 +4454,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
@@ -4462,58 +4462,75 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid buffer object</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_VALUE if offset or offset + size require accessing elements outside the buffer buffer object respectively. -->
             <if>
-                <or>
-                    <eq>
-                        <name>pattern</name>                            <literal>NULL</literal>
-                    </eq>
-                    <not>
-                        <or>
-                            <eq>
-                                <name>pattern_size</name>               <literal>1</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>2</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>4</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>8</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>16</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>32</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>64</literal>
-                            </eq>
-                            <eq>
-                                <name>pattern_size</name>               <literal>128</literal>
-                            </eq>
-                        </or>
-                    </not>
-                </or>
+                <gt>
+                    <add>
+                        <name>offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
             </if>
-            <then>
+            <then>      <log>the region being filled specified by (offset, size) is out of bounds</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>pattern</name>                                <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>pattern is NULL</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>1</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>2</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>4</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>8</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>16</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>32</literal>
+                    </neq>
+                    <neq>
+                        <name>pattern_size</name>                       <literal>64</literal>
+                    </neq>
+                    <neq> <!-- can be not supported on embedded devices -->
+                        <name>pattern_size</name>                       <literal>128</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>pattern_size is not one of { 1, 2, 4, 8, 16, 32, 64, 128 }</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -4521,26 +4538,29 @@
                     <name>pattern</name>                                <name>pattern_size</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>pattern is too short</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <neq>
-                        <mod>
-                            <name>offset</name>
-                            <name>pattern_size</name>
-                        </mod>                                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <mod>
-                            <name>size</name>
-                            <name>pattern_size</name>
-                        </mod>                                          <literal>0</literal>
-                    </neq>
-                </or>
+                <neq>
+                    <mod>
+                        <name>offset</name>
+                        <name>pattern_size</name>
+                    </mod>                                              <literal>0</literal>
+                </neq>
             </if>
-            <then>
+            <then>      <log>offset is not a multiple of pattern_size</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <neq>
+                    <mod>
+                        <name>size</name>
+                        <name>pattern_size</name>
+                    </mod>                                              <literal>0</literal>
+                </neq>
+            </if>
+            <then>      <log>size is not a multiple of pattern_size</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -4594,12 +4614,25 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueFillBuffer</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1. -->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueFillBuffer</name>                        <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
         </command>
 
-    <!-- 5.2.4 -->
+    <!-- 5.2.4 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>void</type>*                                   <name>clEnqueueMapBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>buffer</name></param>
@@ -4615,7 +4648,7 @@
             <if>
                 <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
@@ -4624,37 +4657,61 @@
                     <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
                 </bit_and>
             </if>
-            <then>
+            <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
                 <object_is_invalid name="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid mem object</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <object_not_in object="command_queue" in="buffer"/>
             </if>
-            <then>
+            <then>      <log>buffer is not a valid buffer object</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="buffer"/>
+            </if>
+            <then>      <log>the context associated with command_queue and buffer are not the same</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_VALUE if region being mapped given by (offset, size) is out of bounds. -->
+            <if>
+                <gt>
+                    <add>
+                        <name>offset</name>
+                        <name>size</name>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region being written specified by (offset, size) is out of bounds</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>size</name>                                   <literal>0</literal>
+                </eq>
+            </if>
+            <then>      <log>size is 0</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
             <if>
                 <or>
-                    <eq>
-                        <name>size</name>                               <literal>0</literal>
-                    </eq>
                     <bitfield_violation name="map_flags"/>
                     <eq>
                         <name>map_flags</name>                          <literal>0</literal>
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in map_flags are not valid</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -4673,7 +4730,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>values specified in map_flags are not compatible</log>
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -4733,12 +4790,69 @@
                 <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_OPERATION if buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags or if buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags-->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
+            <if>
+                <and>
+                    <or>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_WRITE_ONLY</literal>   <query object="buffer" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_NO_ACCESS</literal>    <query object="buffer" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                    </or>
+                    <bit_and>
+                        <name>map_flags</name>                          <literal>CL_MAP_READ</literal>
+                    </bit_and>
+                </and>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_WRITE_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_READ is set in map_flags</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <and>
+                    <or>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_READ_ONLY</literal>    <query object="buffer" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                        <bit_and>
+                            <literal>CL_MEM_HOST_NO_ACCESS</literal>    <query object="buffer" property="CL_MEM_FLAGS"/>
+                        </bit_and>
+                    </or>
+                    <or>
+                        <bit_and>
+                            <name>map_flags</name>                      <literal>CL_MAP_WRITE</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>map_flags</name>                      <literal>CL_MAP_WRITE_INVALIDATE_REGION</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>buffer has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS and CL_MAP_WRITE or CL_MAP_WRITE_INVALIDATE_REGION is set in map_flags</log>
+                <name>clEnqueueMapBuffer</name>                         <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
-    <!-- 5.3.1 -->
+    <!-- 5.3.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateImage</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -4762,7 +4876,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -4817,7 +4931,7 @@
                     </bit_and>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -4826,10 +4940,11 @@
                     <name>image_format</name>                           <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_format is NULL</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_format</name>                           <literal>1</literal>
@@ -4838,16 +4953,24 @@
             <then>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
+            </then>-->
+            <if>
+                <struct_violation name="image_format"/>
+            </if>
+            <then>      <log>values specified in image_format are not valid</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
             <if>
                 <eq>
                     <name>image_desc</name>                             <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_desc is NULL</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_desc</name>                             <literal>1</literal>
@@ -4856,92 +4979,112 @@
             <then>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
-            </then>
-            <!-- if values specified in image_format are not valid OR
-            if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
-            if a 2D image is created from a 2D image object and the rules described above are not followed -->
+            </then> -->
             <if>
                 <struct_violation name="image_format" param="context, image_desc"/>
             </if>
-            <then>
+            <then>      <log>a 2D image is created from a buffer but row pitch or base address alignment is invalid</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
-            <!-- if values specified in image_desc are not valid -->
             <if>
-                <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
+                <struct_violation name="image_format" param="image_desc"/>
             </if>
-            <then>
+            <then>      <log>a 2D image is created from a 2D image object but image descriptors are not compatible</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
+            </then>
+            <if>
+                <struct_violation name="image_desc" param="image_format, host_ptr"/>
+            </if>
+            <then>      <log>values specified in image_desc are not valid</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
-            <!-- if image dimensions specified in image_desc exceed the maximum image dimensions described in the Device Queries table for all devices in context.-->
             <if>
                 <struct_violation name="image_desc" param="context"/>
             </if>
-            <then>
+            <then>      <log>image dimensions specified in image_desc exceed the maximum image dimensions for all devices in context</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- if an image is being created from another memory object and flags are not compatible -->
             <if>
                 <struct_violation name="image_desc" param="flags"/>
             </if>
-            <then>
+            <then>      <log>an image is being created from another memory object and flags are not compatible</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- if an image is being created from host_ptr and it is too short -->
-            <if>
+            <if> <!-- not covered by standard-->
                 <struct_violation name="image_desc" param="host_ptr, image_format"/>
             </if>
-            <then>
+            <then>      <log>an image is being created from host_ptr that is too short</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
             <if>
-                <or>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL and CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
                     <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
+                        <not>
                             <bit_and>
                                 <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
                             </bit_and>
+                        </not>
+                        <not>
                             <bit_and>
                                 <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
                             </bit_and>
-                        </or>
+                        </not>
                     </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                        </and>
-                    </and>
-                </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateImage</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
-            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image_format" param="context, flags, image_desc"/>
+            </if>
+            <then>      <log>there are no devices in context that support image_format</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_3_0">
+        <command suffix="CL_API_SUFFIX__VERSION_3_0"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateImageWithProperties</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>const <type>cl_mem_properties</type>*                <name>properties</name></param>
@@ -4954,14 +5097,14 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <list_violation name="properties"/>
             </if>
-            <then>
+            <then>      <log>a property name in properties is not a supported property name, if the value specified for a supported property name is not valid, or if the same property name is specified more than once</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PROPERTY</value>
             </then>
@@ -4973,7 +5116,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5028,7 +5171,7 @@
                     </bit_and>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5037,10 +5180,11 @@
                     <name>image_format</name>                           <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_format is NULL</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_format</name>                           <literal>1</literal>
@@ -5049,16 +5193,24 @@
             <then>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
+            </then>-->
+            <if>
+                <struct_violation name="image_format"/>
+            </if>
+            <then>      <log>values specified in image_format are not valid</log>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
             <if>
                 <eq>
                     <name>image_desc</name>                             <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_desc is NULL</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_desc</name>                             <literal>1</literal>
@@ -5067,92 +5219,112 @@
             <then>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
-            </then>
-            <!-- if values specified in image_format are not valid OR
-            if a 2D image is created from a buffer and the row pitch and base address alignment does not follow the rules described for creating a 2D image from a buffer OR
-            if a 2D image is created from a 2D image object and the rules described above are not followed -->
+            </then> -->
             <if>
                 <struct_violation name="image_format" param="context, image_desc"/>
             </if>
-            <then>
+            <then>      <log>a 2D image is created from a buffer but row pitch or base address alignment is invalid</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
-            <!-- if values specified in image_desc are not valid -->
             <if>
-                <struct_violation name="image_desc" param="context, host_ptr, image_format"/>
+                <struct_violation name="image_format" param="image_desc"/>
             </if>
-            <then>
+            <then>      <log>a 2D image is created from a 2D image object but image descriptors are not compatible</log>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
+            </then>
+            <if>
+                <struct_violation name="image_desc" param="image_format, host_ptr"/>
+            </if>
+            <then>      <log>values specified in image_desc are not valid</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_DESCRIPTOR</value>
             </then>
-            <!-- if image dimensions specified in image_desc exceed the maximum image dimensions described in the Device Queries table for all devices in context.-->
             <if>
                 <struct_violation name="image_desc" param="context"/>
             </if>
-            <then>
+            <then>      <log>image dimensions specified in image_desc exceed the maximum image dimensions for all devices in context</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- if an image is being created from another memory object and flags are not compatible -->
             <if>
                 <struct_violation name="image_desc" param="flags"/>
             </if>
-            <then>
+            <then>      <log>an image is being created from another memory object and flags are not compatible</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- if an image is being created from host_ptr and it is too short -->
-            <if>
+            <if> <!-- not covered by standard-->
                 <struct_violation name="image_desc" param="host_ptr, image_format"/>
             </if>
-            <then>
+            <then>      <log>an image is being created from host_ptr that is too short</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
             <if>
-                <or>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL and CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
                     <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
+                        <not>
                             <bit_and>
                                 <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
                             </bit_and>
+                        </not>
+                        <not>
                             <bit_and>
                                 <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
                             </bit_and>
-                        </or>
+                        </not>
                     </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                        </and>
-                    </and>
-                </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateImageWithProperties</name>                <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
-            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image_format" param="context, flags, image_desc"/>
+            </if>
+            <then>      <log>there are no devices in context that support image_format</log>
+                <name>clCreateImageWithProperties</name>                <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateImage2D</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -5166,14 +5338,14 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if> <!-- 0 is valid here-->
                 <bitfield_violation name="flags"/>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5219,7 +5391,7 @@
                     </mutex_violation>
                 </or>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5228,10 +5400,11 @@
                     <name>image_format</name>                           <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_format is NULL</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_format</name>                           <literal>1</literal>
@@ -5240,11 +5413,11 @@
             <then>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
-            </then>
+            </then>-->
             <if>
                 <struct_violation name="image_format"/>
             </if>
-            <then>
+            <then>      <log>values specified in image_format are not valid</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
@@ -5256,108 +5429,151 @@
                     <eq>
                         <name>image_height</name>                       <literal>0</literal>
                     </eq>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <gt>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </gt>
-                        <ls>
-                            <name>image_row_pitch</name>                <mult>
+                </or>
+            </if>
+            <then>      <log>image_width or image_height are 0</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <struct_violation name="context" param="image_width, image_height"/>
+            </if>
+            <then>      <log>image_width and image_height exceed the maximum values for all devices in context</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>image_row_pitch</name>                    <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL but image_row_pitch is not 0</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <gt>
+                        <name>image_row_pitch</name>                    <literal>0</literal>
+                    </gt>
+                    <ls>
+                        <name>image_row_pitch</name>                    <mult>
                                                                             <name>image_width</name>
                                                                             <literal_list>image_format</literal_list>
                                                                         </mult>
-                        </ls>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <!--<neq>-->
-                        <!--    <name>image_row_pitch</name>                <literal>0</literal>-->
-                        <!--</neq>-->
-                        <neq>
-                            <mod>
-                                <name>image_row_pitch</name>
-                                <literal_list>image_format</literal_list>
-                            </mod>                                      <literal>0</literal>
-                        </neq>
-                    </and>
-                </or>
+                    </ls>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is not NULL and image_row_pitch is in (0, image_width * size of image element in bytes) range</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image_width or image_height are 0 or if they exceed the maximum values specified in CL_DEVICE_IMAGE2D_MAX_WIDTH or CL_DEVICE_IMAGE2D_MAX_HEIGHT respectively for all devices in context or if values specified by image_row_pitch do not follow rules described in the argument description above.
             <if>
-                <each_of array="context" elements="cl_device">
-                    <or>
-                        <gt>
-                            <name>image_width</name>                    <query object="cl_device" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
-                        </gt>
-                        <gt>
-                            <name>image_height</name>                   <query object="cl_device" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
-                        </gt>
-                    </or>
-                </each_of>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <neq>
+                        <mod>
+                            <name>image_row_pitch</name>
+                            <literal_list>image_format</literal_list>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is not NULL and image_row_pitch is not a multiple of the image element size in bytes</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
-            </then>-->
+            </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                        </and>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is NULL and CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
                 <name>clCreateImage2D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
-            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <and>
+                        <not>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
+                            </bit_and>
+                        </not>
+                        <not>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
+                            </bit_and>
+                        </not>
+                    </and>
+                </and>
+            </if>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>host_ptr</name>                               <mult>
+                                                                            <name>image_height</name>
+                                                                            <max>
+                                                                                <name>image_row_pitch</name>
+                                                                                <mult>
+                                                                                    <name>image_width</name>
+                                                                                    <literal_list>image_format</literal_list>
+                                                                                </mult>
+                                                                            </max>
+                                                                        </mult>
+                </array_len_ls>
+            </if>
+            <then>      <log>an image is being created from host_ptr that is too short</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image_format" param="context, flags, CL_MEM_OBJECT_IMAGE2D"/>
+            </if>
+            <then>      <log>there are no devices in context that support image_format</log>
+                <name>clCreateImage2D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreateImage3D</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -5373,14 +5589,14 @@
             <if>
                 <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
             <if> <!-- 0 is valid here-->
                 <bitfield_violation name="flags"/>
             </if>
-            <then>
+            <then>      <log>values specified in flags are not valid</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5425,7 +5641,8 @@
                         </bit_and>
                     </mutex_violation>
                 </or>
-            </if>    <then>
+            </if>
+            <then>      <log>values specified in flags are not compatible</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -5434,10 +5651,11 @@
                     <name>image_format</name>                           <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>image_format is NULL</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
+            <!-- 1 element only needed
             <if>
                 <array_len_ls>
                     <name>image_format</name>                           <literal>1</literal>
@@ -5446,11 +5664,11 @@
             <then>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
-            </then>
+            </then>-->
             <if>
                 <struct_violation name="image_format"/>
             </if>
-            <then>
+            <then>      <log>values specified in image_format are not valid</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_FORMAT_DESCRIPTOR</value>
             </then>
@@ -5462,174 +5680,226 @@
                     <eq>
                         <name>image_height</name>                       <literal>0</literal>
                     </eq>
+                </or>
+            </if>
+            <then>      <log>image_width or image_height are 0</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <ls>
+                    <name>image_depth</name>                            <literal>2</literal>
+                </ls>
+            </if>
+            <then>      <log>image_depth is not &gt; 1</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <struct_violation name="context" param="image_width, image_height, image_depth"/>
+            </if>
+            <then>      <log>image_width, image_height, and image_depth exceed the maximum values for all devices in context</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>image_row_pitch</name>                    <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL but image_row_pitch is not 0</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <gt>
+                        <name>image_row_pitch</name>                    <literal>0</literal>
+                    </gt>
                     <ls>
-                        <name>image_depth</name>                        <literal>2</literal>
-                    </ls>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <gt>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </gt>
-                        <ls>
-                            <name>image_row_pitch</name>                <mult>
+                        <name>image_row_pitch</name>                    <mult>
                                                                             <name>image_width</name>
                                                                             <literal_list>image_format</literal_list>
                                                                         </mult>
-                        </ls>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <!--<neq>-->
-                        <!--    <name>image_row_pitch</name>                <literal>0</literal>-->
-                        <!--</neq>-->
-                        <neq>
-                            <mod>
-                                <name>image_row_pitch</name>
-                                <literal_list>image_format</literal_list>
-                            </mod>                                      <literal>0</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>image_slice_pitch</name>              <literal>0</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <neq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </neq>
-                        <gt>
-                            <name>image_slice_pitch</name>              <literal>0</literal>
-                        </gt>
-                        <ls>
-                            <name>image_slice_pitch</name>              <mult>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>host_ptr is not NULL and image_row_pitch is in (0, image_width * size of image element in bytes) range</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <neq>
+                        <mod>
+                            <name>image_row_pitch</name>
+                            <literal_list>image_format</literal_list>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>host_ptr is not NULL and image_row_pitch is not a multiple of the image element size in bytes</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>image_slice_pitch</name>                  <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>host_ptr is NULL but image_slice_pitch is not 0</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <gt>
+                        <name>image_slice_pitch</name>                  <literal>0</literal>
+                    </gt>
+                    <ls>
+                        <name>image_slice_pitch</name>                  <mult>
                                                                             <name>image_height</name>
-                                                                            <name>image_row_pitch</name>
+                                                                            <max>
+                                                                                <name>image_row_pitch</name>
+                                                                                <mult>
+                                                                                    <name>image_width</name>
+                                                                                    <literal_list>image_format</literal_list>
+                                                                                </mult>
+                                                                            </max>
                                                                         </mult>
-                        </ls>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </eq>
-                        <gt>
-                            <name>image_slice_pitch</name>              <literal>0</literal>
-                        </gt>
-                        <ls>
-                            <name>image_slice_pitch</name>              <mult>
-                                                                            <name>image_height</name>
-                                                                            <mult>
-                                                                                <name>image_width</name>
-                                                                                <literal_list>image_format</literal_list>
-                                                                            </mult>
-                                                                        </mult>
-                        </ls>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <!--<neq>-->
-                        <!--    <name>image_slice_pitch</name>              <literal>0</literal>-->
-                        <!--</neq>-->
-                        <neq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </neq>
-                        <neq>
-                            <mod>
-                                <name>image_slice_pitch</name>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>host_ptr is not NULL and image_slice_pitch is in (0, image_height * image_row_pitch) range</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <neq>
+                        <mod>
+                            <name>image_slice_pitch</name>
+                            <max>
                                 <name>image_row_pitch</name>
-                            </mod>                                      <literal>0</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <!--<neq>-->
-                        <!--    <name>image_slice_pitch</name>              <literal>0</literal>-->
-                        <!--</neq>-->
-                        <eq>
-                            <name>image_row_pitch</name>                <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <mod>
-                                <name>image_slice_pitch</name>
                                 <mult>
                                     <name>image_width</name>
                                     <literal_list>image_format</literal_list>
                                 </mult>
-                            </mod>                                      <literal>0</literal>
-                        </neq>
-                    </and>
-                </or>
+                            </max>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is not NULL and image_slice_pitch is not a multiple of the image_row_pitch</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image_width or image_height are 0 or if image_depth ≤ 1, or if they exceed the maximum values specified in CL_DEVICE_IMAGE3D_MAX_WIDTH, CL_DEVICE_IMAGE3D_MAX_HEIGHT or CL_DEVICE_IMAGE3D_MAX_DEPTH respectively for all devices in context, or if values specified by image_row_pitch and image_slice_pitch do not follow rules described in the argument description above. -->
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </eq>
-                        <or>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
-                            </bit_and>
-                            <bit_and>
-                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
-                            </bit_and>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>host_ptr</name>                       <literal>NULL</literal>
-                        </neq>
-                        <and>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_USE_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                            <not>
-                                <bit_and>
-                                    <name>flags</name>                  <literal>CL_MEM_COPY_HOST_PTR</literal>
-                                </bit_and>
-                            </not>
-                        </and>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </eq>
+                    <or>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_USE_HOST_PTR</literal>
+                        </bit_and>
+                        <bit_and>
+                            <name>flags</name>                          <literal>CL_MEM_COPY_HOST_PTR</literal>
+                        </bit_and>
+                    </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>host_ptr is NULL and CL_MEM_USE_HOST_PTR or CL_MEM_COPY_HOST_PTR are set in flags</log>
                 <name>clCreateImage3D</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if there are no devices in context that support image_format. -->
-            <!-- CL_INVALID_OPERATION if there are no devices in context that support images (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE). -->
+            <if>
+                <and>
+                    <neq>
+                        <name>host_ptr</name>                           <literal>NULL</literal>
+                    </neq>
+                    <and>
+                        <not>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_USE_HOST_PTR</literal>
+                            </bit_and>
+                        </not>
+                        <not>
+                            <bit_and>
+                                <name>flags</name>                      <literal>CL_MEM_COPY_HOST_PTR</literal>
+                            </bit_and>
+                        </not>
+                    </and>
+                </and>
+            </if>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>host_ptr</name>                               <mult>
+                                                                            <name>image_depth</name>
+                                                                            <max>
+                                                                                <name>image_slice_pitch</name>
+                                                                                <mult>
+                                                                                    <name>image_height</name>
+                                                                                    <max>
+                                                                                        <name>image_row_pitch</name>
+                                                                                        <mult>
+                                                                                            <name>image_width</name>
+                                                                                            <literal_list>image_format</literal_list>
+                                                                                        </mult>
+                                                                                    </max>
+                                                                                </mult>
+                                                                            </max>
+                                                                        </mult>
+                </array_len_ls>
+            </if>
+            <then>      <log>an image is being created from host_ptr that is too short</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
+            </then>
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image_format" param="context, flags, CL_MEM_OBJECT_IMAGE3D"/>
+            </if>
+            <then>      <log>there are no devices in context that support image_format</log>
+                <name>clCreateImage3D</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
+            </then>
         </command>
 
     <!-- 5.3.2 -->
