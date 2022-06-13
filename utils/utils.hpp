@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <CL/cl.h>
 
 namespace ocl_layer_utils {
 
@@ -78,4 +79,5 @@ struct stream_deleter {
 
 using stream_ptr = std::unique_ptr<std::ostream, detail::stream_deleter>;
 
+cl_version parse_cl_version_string(const char* version_str, cl_version* parsed_version);
 } // namespace ocl_layer_utils

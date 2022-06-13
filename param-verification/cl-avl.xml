@@ -1450,7 +1450,7 @@
 
             <if>
                 <and>
-                    <from version="1.1"/>
+                    <!-- TODO: This check should be somewhere else <from version="1.1"/> -->
                     <list_violation name="properties"/>
                 </and>
             </if>
@@ -1547,7 +1547,7 @@
 
             <if>
                 <and>
-                    <from version="1.1"/>
+                    <!-- TODO: we cannot always query this version <from version="1.2"/> -->
                     <list_violation name="properties"/>
                 </and>
             </if>

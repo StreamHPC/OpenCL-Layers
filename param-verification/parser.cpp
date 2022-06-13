@@ -11,6 +11,7 @@
 
 using namespace rapidxml;
 
+bool generate_get_version;
 std::map<std::string, std::string> func_params;
 
 // prototypes
@@ -21,6 +22,17 @@ std::string parse_violation(xml_node<> const * const violation);
 std::vector<std::string> parse_list(xml_node<> const * const node);
 
 // realizations
+
+// Render a call to 'from' given a version string like `1.2`.
+std::string render_from(const char * const version_str, bool call_get_version) {
+    std::stringstream ss;
+    ss << version_str;
+    std::string major;
+    std::string minor;
+    std::getline(ss, major, '.');
+    std::getline(ss, minor);
+    return std::string(call_get_version ? "(get_version()" : "(version") + " >= CL_MAKE_VERSION(" + major + ", " + minor + ", 0))";
+}
 
 std::string parse_expression(xml_node<> const * const node)
 {
@@ -35,7 +47,8 @@ std::string parse_expression(xml_node<> const * const node)
     }
     else if (strcmp(name, "literal_list") == 0) {
         res = node->value();
-        res = "literal_list(\"" + func_params[res] + "\", " + res + ")";
+        res = "literal_list(get_version(), \"" + func_params[res] + "\", " + res + ")";
+        generate_get_version = true;
     }
     else if (strcmp(name, "sizeof") == 0) {
         res = "sizeof(" + std::string(node->value()) + ")";
@@ -218,33 +231,37 @@ std::string parse_violation(xml_node<> const * const violation)
         {
             std::string tmp = violation->first_attribute("name")->value();
 
-            test = "(enum_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
+            test = "(enum_violation(get_version(), \"" + func_params[tmp] + "\", " + tmp + "))";
+            generate_get_version = true;
         }
         else if (strcmp(name, "bitfield_violation") == 0)
         {
             std::string tmp = violation->first_attribute("name")->value();
 
-            test = "(bitfield_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
+            test = "(bitfield_violation(get_version(), \"" + func_params[tmp] + "\", " + tmp + "))";
+            generate_get_version = true;
         }
         else if (strcmp(name, "list_violation") == 0)
         {
             std::string tmp = violation->first_attribute("name")->value();
 
             if (violation->first_attribute("param"))
-                test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + ", "
+                test = "(list_violation(get_version(), \"" + func_params[tmp] + "\", " + tmp + ", "
                     + violation->first_attribute("param")->value() + "))";
             else
-                test = "(list_violation(\"" + func_params[tmp] + "\", " + tmp + "))";
+                test = "(list_violation(get_version(), \"" + func_params[tmp] + "\", " + tmp + "))";
+            generate_get_version = true;
         }
         else if (strcmp(name, "struct_violation") == 0)
         {
             std::string tmp = violation->first_attribute("name")->value();
 
             if (violation->first_attribute("param"))
-                test = "(struct_violation(" + tmp + ", "
+                test = "(struct_violation(get_version(), " + tmp + ", "
                     + violation->first_attribute("param")->value() + "))";
             else
-                test = "(struct_violation(" + tmp + "))";
+                test = "(struct_violation(get_version(), " + tmp + "))";
+            generate_get_version = true;
         }
         else if (strcmp(name, "object_is_invalid") == 0)
         {
@@ -334,7 +351,8 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "from") == 0)
         {
-            test = "(from(\"" + std::string(violation->first_attribute("version")->value()) + "\"))";
+            test = render_from(violation->first_attribute("version")->value(), true);
+            generate_get_version = true;
         }
 /*        else if (strcmp(name, "name") == 0)
         {
@@ -356,7 +374,7 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
     ///////////////////////////////////////////////////////////////////////
 
     code << "template<typename T>\n"
-         << "bool enum_violation(const char * name, T param)\n"
+         << "bool enum_violation(cl_version version, const char * name, T param)\n"
          << "{\n";
 
     // Iterate over the versions
@@ -364,7 +382,7 @@ void parse_enums(std::stringstream& code, xml_node<> *& root_node)
         version_node != nullptr;
         version_node = version_node->next_sibling("feature"))
     {
-        code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
+        code << "  if " << render_from(version_node->first_attribute("number")->value(), false) << " {\n";
 
         std::vector<std::string> enums_list =
             {"cl_platform_info",
@@ -433,7 +451,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
     code << "// function checks if there are set bits in the bitfield outside of defined\n"
          << "// 0 is then always valid param\n"
          << "template<typename T>\n"
-         << "bool bitfield_violation(const char * name, T param)\n"
+         << "bool bitfield_violation(cl_version version, const char * name, T param)\n"
          << "{\n"
          << "  T mask = 0;\n\n";
 
@@ -442,7 +460,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
         version_node != nullptr;
         version_node = version_node->next_sibling("feature"))
     {
-        code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
+        code << "  if " << render_from(version_node->first_attribute("number")->value(), false) << " {\n";
 
         std::vector<std::string> bitfields_list =
             {"cl_device_type",
@@ -492,7 +510,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
     ///////////////////////////////////////////////////////////////////////
 
     code << "template<typename T>\n"
-         << "size_t literal_list(const char * name, T param)\n"
+         << "size_t literal_list(cl_version version, const char * name, T param)\n"
          << "{\n";
 
     // Iterate over the versions
@@ -500,7 +518,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
         version_node != nullptr;
         version_node = version_node->next_sibling("feature"))
     {
-        code << "  if (from(\"" << version_node->first_attribute("number")->value() << "\")) {\n";
+        code << "  if " << render_from(version_node->first_attribute("number")->value(), false) << " {\n";
 
         std::vector<std::string> enums_list =
             {"cl_platform_info",
@@ -563,13 +581,17 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
 
     code << "// special case of cl_image_format *\n"
          << "template<>\n"
-         << "size_t literal_list(const char *, cl_image_format * const param)\n"
+         << "size_t literal_list(cl_version version, const char * name, cl_image_format * const param)\n"
          << "{\n"
+         << "  (void)version;\n"
+         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n"
          << "template<>\n"
-         << "size_t literal_list(const char *, const cl_image_format * const param)\n"
+         << "size_t literal_list(cl_version version, const char * name, const cl_image_format * const param)\n"
          << "{\n"
+         << "  (void)version;\n"
+         << "  (void)name;\n"
          << "  return pixel_size(param);\n"
          << "}\n\n";
 
@@ -640,8 +662,9 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "template<cl_uint property>\n"
          << "return_type<property> query(cl_platform_id platform)\n"
          << "{\n"
+         << "  cl_version version = get_object_version(platform);\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_platform_info\", property)) {\n"
+         << "  if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
          << "    tdispatch->clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer.\" << std::endl;\n"
@@ -653,10 +676,11 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "template<cl_uint property>\n"
          << "return_type<property> query(cl_device_id device)\n"
          << "{\n"
+         << "  cl_version version = get_object_version(device);\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_device_info\", property)) {\n"
+         << "  if (!enum_violation(version, \"cl_device_info\", property)) {\n"
          << "    tdispatch->clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_platform_info\", property)) {\n"
+         << "  } else if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
          << "    cl_platform_id p;\n"
          << "    tdispatch->clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(cl_platform_id), &p, NULL);\n"
          << "    tdispatch->clGetPlatformInfo(p, property, sizeof(a), &a, NULL);\n"
@@ -670,8 +694,9 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "template<cl_uint property>\n"
          << "return_type<property> query(cl_context context)\n"
          << "{\n"
+         << "  cl_version version = get_object_version(context);\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_context_info\", property)) {\n"
+         << "  if (!enum_violation(version, \"cl_context_info\", property)) {\n"
          << "    tdispatch->clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid context query in query(cl_context). This is a bug in the param_verification layer.\" << std::endl;\n"
@@ -683,10 +708,11 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "template<cl_uint property>\n"
          << "return_type<property> query(cl_command_queue queue)\n"
          << "{\n"
+         << "  cl_version version = get_object_version(queue);\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_command_queue_info\", property)) {\n"
+         << "  if (!enum_violation(version, \"cl_command_queue_info\", property)) {\n"
          << "    tdispatch->clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_device_info\", property)) {\n"
+         << "  } else if (!enum_violation(version, \"cl_device_info\", property)) {\n"
          << "    cl_device_id d;\n"
          << "    tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
          << "    tdispatch->clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
@@ -700,12 +726,13 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
     code << "template<cl_uint property>\n"
          << "return_type<property> query(cl_mem object)\n"
          << "{\n"
+         << "  cl_version version = get_object_version(object);\n"
          << "  return_type<property> a;\n"
-         << "  if (!enum_violation(\"cl_mem_info\", property)) {\n"
+         << "  if (!enum_violation(version, \"cl_mem_info\", property)) {\n"
          << "    tdispatch->clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_image_info\", property)) {\n"
+         << "  } else if (!enum_violation(version, \"cl_image_info\", property)) {\n"
          << "    tdispatch->clGetImageInfo(object, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(\"cl_pipe_info\", property)) {\n"
+         << "  } else if (!enum_violation(version, \"cl_pipe_info\", property)) {\n"
          << "    tdispatch->clGetPipeInfo(object, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer.\" << std::endl;\n"
@@ -713,6 +740,22 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "  }\n"
          << "  return a;\n"
          << "}\n\n";
+}
+
+void render_fetch_version(std::stringstream& code, const std::string& handle, const std::string& name)
+{
+    // Logic replicated from https://github.com/KhronosGroup/OpenCL-ICD-Loader/blob/main/scripts/icd_dispatch_generated.c.mako#L136
+    code << "  auto get_version = [=] {\n";
+    if (name == "clCreateContext") {
+        code << "    return get_object_version(devices && num_devices > 0 ? devices[0] : nullptr)\n;";
+    } else if (name == "clWaitForEvents") {
+        code << "    return get_object_version(event_list && num_events > 0 ? event_list[0] : nullptr)\n;";
+    } else if (name == "clCreateContextFromType") {
+        code << "    return get_object_version(get_context_properties_platform(properties));\n";
+    } else if (name != "clUnloadCompiler" && name != "clGetPlatformIDs") {
+        code << "    return get_object_version(" << handle << ");\n";
+    }
+    code << "  };\n";
 }
 
 void parse_commands(std::stringstream& code, xml_node<> *& root_node)
@@ -750,6 +793,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 //printf("I have visited %s\n", proto.c_str());
 //            code << proto;
 
+            std::string handle;
+
             int n = 0;
             func_params.clear();
             for (xml_node<> * param_node = command_node->first_node("param");
@@ -765,6 +810,10 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                         std::pair<std::string, std::string>(
                             param_node->first_node("name")->value(),
                             param_node->first_node("type")->value()));
+
+                if (n == 0) {
+                    handle = param_node->first_node("name")->value();
+                }
 
                 // read all the contents as text omitting tags - works for 1-level tags only
                 node = param_node->first_node();
@@ -788,19 +837,22 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
 
             code << proto << "{\n";
 
+            std::stringstream body;
+            generate_get_version = false;
+
             for (xml_node<> * violation_node = command_node->first_node("if"),
                             * result_node = command_node->first_node("then");
                 (violation_node != nullptr) && (result_node != nullptr);
                 violation_node = violation_node->next_sibling("if"),
                 result_node = result_node->next_sibling("then"))
             {
-                code << "  if " << parse_violation(violation_node->first_node()) << " {\n";
+                body << "  if " << parse_violation(violation_node->first_node()) << " {\n";
 
                 for (xml_node<> * log_node = result_node->first_node("log");
                     log_node != nullptr;
                     log_node = log_node->next_sibling("log"))
                 {
-                    code << "    *log_stream << \"" << name << ": \"\n"
+                    body << "    *log_stream << \"" << name << ": \"\n"
                          << "      \"" << log_node->value() << "\" << std::endl;\n\n";
                 }
 
@@ -817,15 +869,21 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     }
                     else
                     {
-                        code << "    if (" << name_node->value() << " != NULL)\n"
+                        body << "    if (" << name_node->value() << " != NULL)\n"
                              << "      *" << name_node->value() << " = " << value_node->value() << ";\n";
                     }
                 }
                 //printf("%s %s", name, ret.c_str());
-                code << ret << "  }\n\n";
+                body << ret << "  }\n\n";
             }
 
-            code << "  return " << invoke << "}\n\n";
+            body << "  return " << invoke << "}\n\n";
+
+            if (generate_get_version) {
+              render_fetch_version(code, handle, name);
+            }
+
+            code << body.rdbuf();
         }
 
     }
@@ -878,12 +936,6 @@ int main(int argc, char* argv[])
     parse_queries(code, root_node);
 
     // dummy funcs
-    code << "bool from(const char * version)\n"
-         << "{\n"
-         << "  (void)version;\n"
-         << "  return true;\n"
-         << "}\n\n";
-
     code << "template<typename T>\n"
          << "bool array_len_ls(T * ptr, size_t size)\n"
          << "{\n"

@@ -1,6 +1,7 @@
 // version that checks number of subdevices for clCreateSubDevices
 template<typename T>
 bool list_violation(
+  cl_version version,
   const char * name,
   T param,
   cl_device_id device,
@@ -61,7 +62,7 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation("cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -78,6 +79,7 @@ bool list_violation(
 // and max size of device queue and support for for clCreateCommandQueueWithProperties
 template<typename T>
 bool list_violation(
+  cl_version version,
   const char * name,
   T param,
   cl_device_id device)
@@ -133,7 +135,7 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation("cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -158,7 +160,7 @@ bool list_violation(
       NULL);
     cl_uint curr_qs = 0;
     cl_device_device_enqueue_capabilities ddec = 0;
-    if (from("3.0"))
+    if (version >= CL_MAKE_VERSION(3, 0, 0))
       tdispatch->clGetDeviceInfo(device,
         CL_DEVICE_DEVICE_ENQUEUE_CAPABILITIES,
         sizeof(cl_device_device_enqueue_capabilities),
@@ -173,13 +175,13 @@ bool list_violation(
           ++pos;
           qp = param[pos];
           ++pos;
-          if (bitfield_violation("cl_command_queue_properties", qp))
+          if (bitfield_violation(version, "cl_command_queue_properties", qp))
             return true;
           if ((qp & CL_QUEUE_ON_DEVICE) && !(qp & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
             return true;
           if ((qp & CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp & CL_QUEUE_ON_DEVICE))
             return true;
-          if (from("3.0") && (qp & CL_QUEUE_ON_DEVICE) && !(ddec & CL_DEVICE_QUEUE_SUPPORTED))
+          if ((version >= CL_MAKE_VERSION(3, 0, 0)) && (qp & CL_QUEUE_ON_DEVICE) && !(ddec & CL_DEVICE_QUEUE_SUPPORTED))
             return true;
           break;
 
@@ -208,10 +210,12 @@ bool list_violation(
 // version that checks platform for clCreateContext and clCreateContextFromType
 template<typename T>
 bool list_violation(
+  cl_version version,
   const char * name,
   T param,
   void * user_data)
 {
+  (void)version;
   // dummy param to separate the case
   (void)user_data;
 
@@ -259,7 +263,7 @@ bool list_violation(
 
 // base version
 template<typename T>
-bool list_violation(const char * name, T param)
+bool list_violation(cl_version version, const char * name, T param)
 {
   if (strcmp(name, "cl_device_partition_property") == 0)
   { // clCreateSubDevices
@@ -286,7 +290,7 @@ bool list_violation(const char * name, T param)
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation("cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -349,7 +353,7 @@ bool list_violation(const char * name, T param)
           ++pos;
           qp = param[pos];
           ++pos;
-          if (bitfield_violation("cl_command_queue_properties", qp))
+          if (bitfield_violation(version, "cl_command_queue_properties", qp))
             return true;
           if ((qp & CL_QUEUE_ON_DEVICE) && !(qp & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
             return true;
@@ -411,7 +415,7 @@ bool list_violation(const char * name, T param)
           if (sam_num > 1)
             return true;
 
-          if (enum_violation("cl_addressing_mode", param[pos]))
+          if (enum_violation(version, "cl_addressing_mode", param[pos]))
             return true;
 
           ++pos;
@@ -423,7 +427,7 @@ bool list_violation(const char * name, T param)
           if (sfm_num > 1)
             return true;
 
-          if (enum_violation("cl_filter_mode", param[pos]))
+          if (enum_violation(version, "cl_filter_mode", param[pos]))
             return true;
 
           ++pos;

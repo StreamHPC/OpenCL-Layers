@@ -4,6 +4,7 @@ function (add_layer_test_exe NAME SOURCE)
         ${NAME}
         PRIVATE
             LayersCommon
+            LayersUtils
             OpenCL::OpenCL
     )
 
