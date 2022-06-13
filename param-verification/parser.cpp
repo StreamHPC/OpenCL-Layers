@@ -328,6 +328,10 @@ std::string parse_violation(xml_node<> const * const violation)
                 + parse_violation(violation->first_node())
                 + "); })";
         }
+        else if (strcmp(name, "check_copy_overlap") == 0)
+        {
+            test = "(check_copy_overlap(" + std::string(violation->first_attribute("param")->value()) + "))";
+        }
         else if (strcmp(name, "from") == 0)
         {
             test = "(from(\"" + std::string(violation->first_attribute("version")->value()) + "\"))";

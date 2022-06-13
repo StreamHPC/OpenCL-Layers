@@ -605,3 +605,52 @@ bool for_any(cl_context context, std::function<bool(return_type<property>)> chec
   free(devices);
   return res;
 }
+
+// adopted from Appendix D of OpenCL 3.0 standard
+bool check_copy_overlap(
+  const size_t src_origin[],
+  const size_t dst_origin[],
+  const size_t region[],
+  const size_t row_pitch,
+  const size_t slice_pitch)
+{
+  const size_t real_row_pitch = row_pitch > 0 ? row_pitch : region[0];
+  const size_t real_slice_pitch = slice_pitch > 0 ? slice_pitch : region[1] * real_row_pitch;
+
+  const size_t slice_size = (region[1] - 1) * real_row_pitch + region[0];
+  const size_t block_size = (region[2] - 1) * real_slice_pitch + slice_size;
+  const size_t src_start = src_origin[2] * real_slice_pitch + src_origin[1] * real_row_pitch + src_origin[0];
+  const size_t src_end = src_start + block_size;
+  const size_t dst_start = dst_origin[2] * real_slice_pitch + dst_origin[1] * real_row_pitch + dst_origin[0];
+  const size_t dst_end = dst_start + block_size;
+
+  // No overlap if dst ends before src starts or if src ends before dst starts.
+  if ( (dst_end <= src_start) || (src_end <= dst_start) ) {
+    return false;
+  }
+
+  // No overlap if region[0] for dst or src fits in the gap between region[0] and row_pitch.
+  {
+    const size_t src_dx = src_origin[0] % real_row_pitch;
+    const size_t dst_dx = dst_origin[0] % real_row_pitch;
+    if ( ((dst_dx >= src_dx + region[0]) && (dst_dx + region[0] <= src_dx + real_row_pitch)) ||
+      ((src_dx >= dst_dx + region[0]) && (src_dx + region[0] <= dst_dx + real_row_pitch)) )
+    {
+      return false;
+    }
+}
+
+  // No overlap if region[1] for dst or src fits in the gap between region[1] and slice_pitch.
+  {
+    const size_t src_dy = (src_origin[1] * real_row_pitch + src_origin[0]) % real_slice_pitch;
+    const size_t dst_dy = (dst_origin[1] * real_row_pitch + dst_origin[0]) % real_slice_pitch;
+    if ( ((dst_dy >= src_dy + slice_size) && (dst_dy + slice_size <= src_dy + real_slice_pitch)) ||
+      ((src_dy >= dst_dy + slice_size) && (src_dy + slice_size <= dst_dy + real_slice_pitch)) )
+    {
+      return false;
+    }
+  }
+
+  // Otherwise src and dst overlap.
+  return true;
+}
