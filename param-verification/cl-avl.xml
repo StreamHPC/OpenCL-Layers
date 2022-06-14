@@ -2422,7 +2422,7 @@
             <if>
                 <and>
                     <bit_and>
-                        <literal>CL_MEM_HOST_READ_ONLY</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                        <literal>CL_MEM_HOST_READ_ONLY</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
                     </bit_and>
                     <bit_and>
                         <name>flags</flags>                             <literal>CL_MEM_HOST_WRITE_ONLY</literal>
@@ -2436,7 +2436,7 @@
             <if>
                 <and>
                     <bit_and>
-                        <literal>CL_MEM_HOST_NO_ACCESS</literal>       <query object="buffer" property="CL_MEM_FLAGS"/>
+                        <literal>CL_MEM_HOST_NO_ACCESS</literal>        <query object="buffer" property="CL_MEM_FLAGS"/>
                     </bit_and>
                     <or>
                         <bit_and>
@@ -3088,7 +3088,7 @@
                         </mult>
                         <name>buffer_origin[0]</name>
                         <name>region[0]</name>
-                    </add>                                               <query object="buffer" property="CL_MEM_SIZE"/>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
                 </gt>
             </if>
             <then>      <log>the region being read specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds</log>
@@ -3482,7 +3482,7 @@
                         </mult>
                         <name>buffer_origin[0]</name>
                         <name>region[0]</name>
-                    </add>                                               <query object="buffer" property="CL_MEM_SIZE"/>
+                    </add>                                              <query object="buffer" property="CL_MEM_SIZE"/>
                 </gt>
             </if>
             <then>      <log>the region being written specified by (buffer_origin, region, buffer_row_pitch, buffer_slice_pitch) is out of bounds</log>
@@ -3785,13 +3785,13 @@
                     <or>
                         <and>
                             <ls>
-                                <name>src_offset</name>                  <add>
+                                <name>src_offset</name>                 <add>
                                                                             <name>dst_offset</name>
                                                                             <literal>1</literal>
                                                                         </add>
                             </ls>
                             <ls>
-                                <name>dst_offset</name>                  <add>
+                                <name>dst_offset</name>                 <add>
                                                                             <name>src_offset</name>
                                                                             <name>size</name>
                                                                         </add>
@@ -3799,13 +3799,13 @@
                         </and>
                         <and>
                             <ls>
-                                <name>dst_offset</name>                  <add>
+                                <name>dst_offset</name>                 <add>
                                                                             <name>src_offset</name>
                                                                             <literal>1</literal>
                                                                         </add>
                             </ls>
                             <ls>
-                                <name>src_offset</name>                  <add>
+                                <name>src_offset</name>                 <add>
                                                                             <name>dst_offset</name>
                                                                             <name>size</name>
                                                                         </add>
@@ -4197,7 +4197,7 @@
                 </and>
             </if>
             <then>      <log>dst_slice_pitch is not 0 and is less than region[1] * dst_row_pitch or not a multiple of dst_row_pitch</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_VALUE</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if>
                 <and>
@@ -4307,7 +4307,7 @@
                         </mult>
                         <name>src_origin[0]</name>
                         <name>region[0]</name>
-                    </add>                                               <query object="src_buffer" property="CL_MEM_SIZE"/>
+                    </add>                                              <query object="src_buffer" property="CL_MEM_SIZE"/>
                 </gt>
             </if>
             <then>      <log>the region being read specified by (src_origin, region, src_row_pitch, src_slice_pitch) is out of bounds</log>
@@ -4344,7 +4344,7 @@
                         </mult>
                         <name>dst_origin[0]</name>
                         <name>region[0]</name>
-                    </add>                                               <query object="dst_buffer" property="CL_MEM_SIZE"/>
+                    </add>                                              <query object="dst_buffer" property="CL_MEM_SIZE"/>
                 </gt>
             </if>
             <then>      <log>the region being read specified by (dst_origin, region, dst_row_pitch, dst_slice_pitch) is out of bounds</log>
@@ -4361,7 +4361,7 @@
                 </and>
             </if>
             <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <and>
@@ -4374,7 +4374,7 @@
                 </and>
             </if>
             <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <and>
@@ -4387,19 +4387,19 @@
                 </and>
             </if>
             <then>      <log>event_wait_list is too short</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
             </if>
             <then>      <log>event objects in event_wait_list are not valid events</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_EVENT_WAIT_LIST</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
             <if>
                 <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
             </if>
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
-                <name>clEnqueueCopyBufferRect</name>                   <value>CL_INVALID_CONTEXT</value>
+                <name>clEnqueueCopyBufferRect</name>                    <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
                 <and>
@@ -6767,10 +6767,10 @@
             <if>
                 <and>
                     <neq>
-                        <name>input_slice_pitch</name>                   <literal>0</literal>
+                        <name>input_slice_pitch</name>                  <literal>0</literal>
                     </neq>
                     <ls>
-                        <name>input_slice_pitch</name>                   <mult>
+                        <name>input_slice_pitch</name>                  <mult>
                                                                             <name>region[1]</name>
                                                                             <max>
                                                                                 <name>input_row_pitch</name>
@@ -7967,12 +7967,6 @@
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
-                <struct_violation name="src_image" param="command_queue"/>
-            </if>
-            <then>      <log>image format (image channel order and data type) for src_image and dst_image are not supported by device associated with queue</log>
-                <name>clEnqueueCopyImage</name>                         <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
-            </then>
-            <if>
                 <eq>
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
                 </eq>
@@ -7981,12 +7975,10 @@
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_OPERATION</value>
             </then>
             <if>
-                <eq>
-                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
-                </eq>
+                <struct_violation name="src_image" param="command_queue"/>
             </if>
-            <then>      <log>the device associated with command_queue does not support images</log>
-                <name>clEnqueueCopyImage</name>                         <value>CL_MEM_COPY_OVERLAP</value>
+            <then>      <log>image format (image channel order and data type) for src_image and dst_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImage</name>                         <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
             </then>
             <if>
                 <and>
@@ -8558,6 +8550,14 @@
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
+                <eq>
+                    <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
+                </eq>
+            </if>
+            <then>      <log>the device associated with command_queue does not support images</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
                 <struct_violation name="image" param="command_queue"/>
             </if>
             <then>      <log>image format (image channel order and data type) for image are not supported by device associated with queue</log>
@@ -8565,7 +8565,7 @@
             </then>
         </command>
 
-    <!-- 5.3.5 -->
+    <!-- 5.3.5 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueCopyImageToBuffer</name></proto>
@@ -9621,9 +9621,9 @@
             </then>
         </command>
 
-    <!-- 5.3.6 -->
+    <!-- 5.3.6 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>void</type>*                                   <name>clEnqueueMapImage</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>image</name></param>
@@ -9653,6 +9653,13 @@
             <then>      <log>command_queue is not a host command-queue</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>      <log>image is not a valid mem object</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
                 <and>
@@ -9720,7 +9727,7 @@
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>origin</name>                             <literal>3</literal>
@@ -9747,7 +9754,7 @@
                     </eq>
                 </or>
             </if>
-            <then>      <log>the values in region cannot be 0</log>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -9770,7 +9777,7 @@
                     </neq>
                 </or>
             </if>
-            <then>      <log>values in origin and region do not follow rules for 2D image or 1D image array object</log>
+            <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -9798,11 +9805,278 @@
                     </neq>
                 </or>
             </if>
-            <then>      <log>values in origin and region do not follow rules for 1D image or 1D image buffer object</log>
+            <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if region being mapped given by (origin, origin + region) is out of bounds -->
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 3D image</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 2D image array</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 2D image</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 1D image array</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_IMAGE_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 1D image</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being mapped specified by origin and region is out of bounds for 1D image buffer</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_DEPTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, depth) for 3D image are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, array size) for 2D image array are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height) for 2D image are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, array size) for 1D image array are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image buffer are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
             <if>
                 <eq>
                     <name>image_row_pitch</name>                        <literal>NULL</literal>
@@ -9818,7 +10092,7 @@
                         <and>
                             <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
                             <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
-                            <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                            <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
                         </and>
                     </not>
                     <eq>
@@ -9886,8 +10160,6 @@
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue.-->
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue-->
             <if>
                 <eq>
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
@@ -9896,6 +10168,13 @@
             <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image" param="command_queue"/>
+            </if>
+            <then>      <log>image format (image channel order and data type) for image are not supported by device associated with queue</log>
+                <name>clEnqueueMapImage</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
             </then>
             <if>
                 <and>
@@ -9940,10 +10219,11 @@
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
             </then>
-            <!-- CL_INVALID_OPERATION if mapping would lead to overlapping regions being mapped for writing -->
+            <!-- not possible without state to store mapped regions
+            CL_INVALID_OPERATION if mapping would lead to overlapping regions being mapped for writing -->
         </command>
 
-    <!-- 5.3.7 -->
+    <!-- 5.3.7 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetImageInfo</name></proto>
@@ -9953,6 +10233,25 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>      <log>image is not a valid mem object</log>
+                <name>clGetImageInfo</name>                             <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <and>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
+                </and>
+            </if>
+            <then>      <log>image is not a valid image object</log>
+                <name>clGetImageInfo</name>                             <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -9988,24 +10287,11 @@
             <then>      <log>param_value is too short</log>
                 <name>clGetImageInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
-                <and>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D"/>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
-                    <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
-                </and>
-            </if>
-            <then>      <log>image is not a valid image object</log>
-                <name>clGetImageInfo</name>                             <value>CL_INVALID_MEM_OBJECT</value>
-            </then>
         </command>
 
-    <!-- 5.4.1 -->
+    <!-- 5.4.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_mem</type>                                  <name>clCreatePipe</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_mem_flags</type>                            <name>flags</name></param>
@@ -10021,19 +10307,35 @@
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_OPERATION if no devices in context support pipes -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_MAX_PIPE_ARGS">
+                    <eq>
+                        <name>query</name>                              <literal>0</literal>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices in context support pipes</log>
+                <name>clCreatePipe</name>                               <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
             <if>
                 <not>
                     <or>
                         <eq>
                             <name>flags</name>                          <literal>0</literal>
                         </eq>
-                        <bit_and>
+                        <eq>
                             <name>flags</name>                          <literal>CL_MEM_READ_WRITE</literal>
-                        </bit_and>
-                        <bit_and>
+                        </eq>
+                        <eq>
                             <name>flags</name>                          <literal>CL_MEM_HOST_NO_ACCESS</literal>
-                        </bit_and>
+                        </eq>
+                        <eq>
+                            <name>flags</name>                          <add>
+                                                                            <literal>CL_MEM_READ_WRITE</literal>
+                                                                            <literal>CL_MEM_HOST_NO_ACCESS</literal>
+                                                                        </add>
+                        </eq>
                     </or>
                 </not>
             </if>
@@ -10064,12 +10366,17 @@
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PIPE_SIZE</value>
             </then>
-            <!--<if>
+            <if>
+                <for_all in="context" query="CL_DEVICE_PIPE_MAX_PACKET_SIZE">
+                    <gt>
+                        <name>pipe_packet_size</name>                   <name>query</name>
+                    </gt>
+                </for_all>
             </if>
-            <then>      <log>the pipe_packet_size exceeds CL_DEVICE_PIPE_MAX_PACKET_SIZE value specified in the Device Queries table for all devices in context</log>
+            <then>      <log>the pipe_packet_size exceeds CL_DEVICE_PIPE_MAX_PACKET_SIZE value for all devices in context</log>
                 <name>clCreatePipe</name>                               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_PIPE_SIZE</value>
-            </then>-->
+            </then>
         </command>
 
     <!-- 5.4.2 --> <!--DONE-->
@@ -10082,6 +10389,12 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="pipe"/>
+            </if>
+            <then>      <log>pipe is not a valid mem object</log>
+                <name>clGetPipeInfo</name>                              <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
             <if>
                 <object_is_invalid name="pipe" type="CL_MEM_OBJECT_PIPE"/>
             </if>
@@ -10133,15 +10446,6 @@
 
             <if>
                 <object_is_invalid name="memobj"/>
-                <!--<and>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_BUFFER"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE3D"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE2D"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE2D_ARRAY"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
-                    <object_is_invalid name="memobj" type="CL_MEM_OBJECT_IMAGE1D_ARRAY"/>
-                </and>-->
             </if>
             <then>      <log>memobj is not a valid memory object</log>
                 <name>clRetainMemObject</name>                          <value>CL_INVALID_MEM_OBJECT</value>
@@ -10221,7 +10525,7 @@
             <then>      <log>memobj is a pipe object</log>
                 <name>clEnqueueUnmapMemObject</name>                    <value>CL_INVALID_MEM_OBJECT</value>
             </then>
-            <!-- not possible without state
+            <!-- not possible without state to store mapped pointers
             CL_INVALID_VALUE if mapped_ptr is not a valid pointer returned by clEnqueueMapBuffer or clEnqueueMapImage for memobj -->
             <if>
                 <and>
@@ -10468,7 +10772,16 @@
             <then>      <log>context is not a valid context</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
-            <!-- no devices in context support SVM -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_SVM_CAPABILITIES">
+                    <eq>
+                        <name>query</name>                              <literal>0</literal>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices in context support SVM</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
             <if> <!-- spec is not clear whether 0 is a valid value-->
                 <or>
                     <bitfield_violation name="flags"/>
@@ -10512,6 +10825,40 @@
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
             <if>
+                <and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_SVM_FINE_GRAIN_BUFFER</literal>
+                    </bit_and>
+                    <for_any in="context" query="CL_DEVICE_SVM_CAPABILITIES">
+                        <not>
+                            <bit_and>
+                                <name>query</name>                      <literal>CL_MEM_SVM_FINE_GRAIN_BUFFER</literal>
+                            </bit_and>
+                        </not>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>CL_MEM_SVM_FINE_GRAIN_BUFFER is specified in flags but not supported by at least one device in context</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <if>
+                <and>
+                    <bit_and>
+                        <name>flags</name>                              <literal>CL_MEM_SVM_ATOMICS</literal>
+                    </bit_and>
+                    <for_any in="context" query="CL_DEVICE_SVM_CAPABILITIES">
+                        <not>
+                            <bit_and>
+                                <name>query</name>                      <literal>CL_MEM_SVM_ATOMICS</literal>
+                            </bit_and>
+                        </not>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>CL_MEM_SVM_ATOMICS is specified in flags but not supported by at least one device in context</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <if>
                 <eq>
                     <name>size</name>                                   <literal>0</literal>
                 </eq>
@@ -10519,9 +10866,18 @@
             <then>      <log>size is 0</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
-            <!-- size is &gt; CL_DEVICE_MAX_MEM_ALLOC_SIZE value for any device in context-->
             <if>
-                <and> <!-- alignment is the minimum alignment in bytes that is required for the newly created buffers memory region. It must be a power of two up to the largest data type supported by the OpenCL device. For the full profile, the largest data type is long16. For the embedded profile, it is long16 if the device supports 64-bit integers; otherwise it is int16. If alignment is 0, a default alignment will be used that is equal to the size of largest data type supported by the OpenCL implementation-->
+                <for_any in="context" query="CL_DEVICE_MAX_MEM_ALLOC_SIZE">
+                    <gt>
+                        <name>size</name>                               <name>query</name>
+                    </gt>
+                </for_any>
+            </if>
+            <then>      <log>size is &gt; CL_DEVICE_MAX_MEM_ALLOC_SIZE value for some device in context</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
+            <if> <!-- alignment is the minimum alignment in bytes that is required for the newly created buffers memory region. It must be a power of two up to the largest data type supported by the OpenCL device. For the full profile, the largest data type is long16. For the embedded profile, it is long16 if the device supports 64-bit integers; otherwise it is int16. If alignment is 0, a default alignment will be used that is equal to the size of largest data type supported by the OpenCL implementation-->
+                <and>
                     <neq>
                         <name>alignment</name>                          <literal>0</literal>
                     </neq>
@@ -10557,7 +10913,7 @@
             <!-- the OpenCL implementation cannot support the specified alignment for at least one device in context -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>void</type>                                    <name>clSVMFree</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>void</type>*                                   <name>svm_pointer</name></param>
@@ -10567,12 +10923,20 @@
             </if>
             <then>      <log>context is not a valid context</log>
             </then>
-            <!-- no devices in context support SVM -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_SVM_CAPABILITIES">
+                    <eq>
+                        <name>query</name>                              <literal>0</literal>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices in context support SVM</log>
+            </then>
             <!-- with state can check that svm_pointer is the value returned by a call to clSVMAlloc -->
             <!-- and that context is a valid OpenCL context used to create the SVM buffer -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMFree</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_svm_pointers</name></param>
@@ -10598,11 +10962,9 @@
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_OPERATION</value>
@@ -10633,7 +10995,7 @@
             <then>      <log>svm_pointers is NULL and num_svm_pointers is not 0</log>
                 <name>clEnqueueSVMFree</name>                           <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
+            <if> <!-- not covered by standard-->
                 <and>
                     <neq>
                         <name>svm_pointers</name>                       <literal>NULL</literal>
@@ -10700,7 +11062,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMMemcpy</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_bool</type>                                 <name>blocking_copy</name></param>
@@ -10726,11 +11088,9 @@
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_OPERATION</value>
@@ -10799,10 +11159,15 @@
             <then>      <log>dst_ptr or src_ptr is NULL</log>
                 <name>clEnqueueSVMMemcpy</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_MEM_COPY_OVERLAP if the values specified for dst_ptr, src_ptr and size result in an overlapping copy-->
+            <if>
+                <check_copy_overlap param="dst_ptr, src_ptr, size"/>
+            </if>
+            <then>      <log>the values specified for dst_ptr, src_ptr and size result in an overlapping copy</log>
+                <name>clEnqueueSVMMemcpy</name>                         <value>CL_MEM_COPY_OVERLAP</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMMemFill</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>void</type>*                                   <name>svm_ptr</name></param>
@@ -10828,11 +11193,9 @@
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_OPERATION</value>
@@ -10946,7 +11309,12 @@
             <then>      <log>size is not a multiple of pattern_size</log>
                 <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if svm_ptr is not aligned to pattern_size bytes -->
+            <if>
+                <not_aligned pointer="svm_ptr" align="pattern_size"/>
+            </if>
+            <then>      <log>svm_ptr is not aligned to pattern_size bytes</log>
+                <name>clEnqueueSVMMemFill</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
@@ -10975,11 +11343,9 @@
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMMap</name>                            <value>CL_INVALID_OPERATION</value>
@@ -11105,11 +11471,9 @@
                 <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMUnmap</name>                          <value>CL_INVALID_OPERATION</value>
@@ -11175,7 +11539,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueSVMMigrateMem</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_svm_pointers</name></param>
@@ -11201,11 +11565,9 @@
                 <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
-                <not>
-                    <bit_and>
-                        <literal>CL_DEVICE_SVM_COARSE_GRAIN_BUFFER</literal>    <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
-                    </bit_and>
-                </not>
+                <eq>
+                    <literal>0</literal>                                <query object="command_queue" property="CL_DEVICE_SVM_CAPABILITIES"/>
+                </eq>
             </if>
             <then>      <log>the device associated with command queue does not support SVM</log>
                 <name>clEnqueueSVMMigrateMem</name>                     <value>CL_INVALID_OPERATION</value>
@@ -11278,9 +11640,9 @@
             CL_INVALID_VALUE if sizes[i] is non-zero and range [svm_pointers[i], svm_pointers[i]+sizes[i]) is not contained within an existing clSVMAlloc allocation -->
         </command>
 
-    <!-- 5.7.1 -->
+    <!-- 5.7.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_sampler</type>                              <name>clCreateSamplerWithProperties</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>const <type>cl_sampler_properties</type>*            <name>sampler_properties</name></param>
@@ -11300,10 +11662,20 @@
                 <name>clCreateSamplerWithProperties</name>              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_OPERATION if images are not supported by any device associated with context (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE)-->
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateSamplerWithProperties</name>              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED"> <!--DONE-->
             <proto><type>cl_sampler</type>                              <name>clCreateSampler</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_bool</type>                                 <name>normalized_coords</name></param>
@@ -11332,8 +11704,18 @@
                 <name>clCreateSampler</name>                            <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if a combination of addressing_mode, filter_mode, normalized_coords are not valid -->
-            <!-- CL_INVALID_OPERATION if images are not supported by any device associated with context (i.e. CL_DEVICE_IMAGE_SUPPORT specified in the Device Queries table is CL_FALSE)-->
+            <!-- CL_INVALID_VALUE if a combination of addressing_mode, filter_mode, normalized_coords are not valid - there are no such combinations yet -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_IMAGE_SUPPORT">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>there are no devices in context that support images</log>
+                <name>clCreateSampler</name>                            <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->

@@ -653,3 +653,32 @@ bool check_copy_overlap(
   // Otherwise src and dst overlap.
   return true;
 }
+
+// check overlap for clEnqueueSVMMemcpy
+bool check_copy_overlap(
+  void * dst_ptr,
+  const void * src_ptr,
+  size_t size)
+{
+  uint8_t * dst = static_cast<uint8_t *>(dst_ptr);
+  void * temp = const_cast<void *>(src_ptr);
+  uint8_t * src = static_cast<uint8_t *>(temp);
+
+  if ((src < dst + 1) && (dst < src + size))
+    return true;
+  if ((dst < src + 1) && (src < dst + size))
+    return true;
+
+  return false;
+}
+
+// check if ptr is not aligned to align
+bool not_aligned(
+  void * ptr,
+  size_t align)
+{
+  if (std::align(align, align, ptr, align) == nullptr)
+    return true;
+  
+  return false;
+}

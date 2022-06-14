@@ -668,7 +668,9 @@ bool struct_violation(
         sizeof(void *),
         &host_ptr,
         NULL);
-      if ((uintptr_t)host_ptr % max_base_al(context) != 0)
+      //if ((uintptr_t)host_ptr % max_base_al(context) != 0)
+      size_t space = max_base_al(context);
+      if (std::align(space, space, host_ptr, space) == nullptr)
         return true;
     }
   }

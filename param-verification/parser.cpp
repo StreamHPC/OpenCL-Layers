@@ -263,6 +263,11 @@ std::string parse_violation(xml_node<> const * const violation)
                 test = "(struct_violation(get_version(), " + tmp + "))";
             generate_get_version = true;
         }
+        else if (strcmp(name, "not_aligned") == 0)
+        {
+            test = "(not_aligned(" + std::string(violation->first_attribute("pointer")->value()) 
+                + ", " + violation->first_attribute("align")->value() + "))";
+        }
         else if (strcmp(name, "object_is_invalid") == 0)
         {
             std::string tmp = violation->first_attribute("name")->value();
@@ -337,13 +342,15 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "for_any") == 0)
         {
-            test = "(for_any("
+            test = "(for_any<"
+                + std::string(violation->first_attribute("query")->value())
+                + ">("
                 + std::string(violation->first_attribute("in")->value())
                 + ", [=](return_type<"
                 + std::string(violation->first_attribute("query")->value())
                 + "> query){ return static_cast<bool>("
                 + parse_violation(violation->first_node())
-                + "); })";
+                + "); }))";
         }
         else if (strcmp(name, "check_copy_overlap") == 0)
         {
@@ -911,6 +918,7 @@ int main(int argc, char* argv[])
          << "#endif\n"
          << "#include <CL/cl.h>\n"
          << "#include <string.h>\n"
+         << "#include <memory>\n"
          << "#include <vector>\n"
          << "#include <algorithm>\n"
          << "#include <functional>\n"
