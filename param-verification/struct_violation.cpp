@@ -1101,3 +1101,22 @@ bool struct_violation(
 
   return res;
 }
+
+// check if two images have the same format
+bool struct_violation(
+  cl_version,
+  cl_mem image1,
+  cl_mem image2)
+{
+    cl_image_format imf1;
+    tdispatch->clGetImageInfo(image1, CL_IMAGE_FORMAT, sizeof(imf1), &imf1, NULL);
+
+    cl_image_format imf2;
+    tdispatch->clGetImageInfo(image2, CL_IMAGE_FORMAT, sizeof(imf2), &imf2, NULL);
+
+    if ((imf1.image_channel_order == imf2.image_channel_order) &&
+          (imf1.image_channel_data_type == imf2.image_channel_data_type))
+      return false;
+    
+    return true;
+}
