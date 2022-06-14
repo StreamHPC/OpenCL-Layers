@@ -523,6 +523,84 @@ size_t buffer_size(cl_mem buffer)
 // the order of function invocations should follow the XML and is important
 // as functions rely on the correctness of objects checked previously
 
+// 5.2.1
+
+// check validity of structure
+bool struct_violation(
+  cl_version,
+  const void * buffer_create_info,
+  cl_buffer_create_type buffer_create_type)
+{
+  (void)buffer_create_info;
+
+  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
+    //const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+    // no possible violations
+    return false;
+  }
+
+  return true;
+}
+
+// check if out-of-bounds
+bool struct_violation(
+  cl_version,
+  const void * buffer_create_info,
+  cl_mem buffer)
+{
+  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+  size_t buffer_size;
+  tdispatch->clGetMemObjectInfo(
+    buffer,
+    CL_MEM_SIZE,
+    sizeof(size_t),
+    &buffer_size,
+    NULL);
+  if (sb->origin + sb->size > buffer_size)
+    return true;
+
+  return false;
+}
+
+// check if size = 0
+bool struct_violation(
+  cl_version,
+  const void * buffer_create_info)
+{
+  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+  if (sb->size == 0)
+    return true;
+
+  return false;
+}
+
+// check if there are no devices in context associated with buffer
+// for which the origin field of the cl_buffer_region structure
+// passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value
+bool struct_violation(
+  cl_version,
+  const void * buffer_create_info,
+  cl_buffer_create_type buffer_create_type,
+  cl_mem buffer)
+{
+  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
+    cl_context context;
+    tdispatch->clGetMemObjectInfo(
+      buffer,
+      CL_MEM_CONTEXT,
+      sizeof(cl_context),
+      &context,
+      NULL);
+
+    const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
+    return for_all<CL_DEVICE_MEM_BASE_ADDR_ALIGN>(context, [sb](cl_uint align) {
+      return (sb->origin % align != 0);
+    });
+  }
+
+  return true;
+}
+
 // 5.3.1.1. Image Format Descriptor
 
 // check image_format violation
@@ -970,80 +1048,56 @@ bool struct_violation(
   return false;
 }
 
-// 5.2.1
+// 5.3.3
 
-// check validity of structure
+// check if image format for image is not supported by device associated with queue
 bool struct_violation(
   cl_version,
-  const void * buffer_create_info,
-  cl_buffer_create_type buffer_create_type)
+  cl_mem image,
+  cl_command_queue queue
+)
 {
-  (void)buffer_create_info;
+  cl_int errcode_ret;
+  bool res = true;
 
-  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
-    //const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
-    // no possible violations
-    return false;
+  cl_device_id d;
+  tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);
+
+  cl_platform_id pl;
+  tdispatch->clGetDeviceInfo(d, CL_DEVICE_PLATFORM, sizeof(pl), &pl, NULL);
+
+  cl_context_properties pr[] = {CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(pl), 0};
+  cl_context c = tdispatch->clCreateContext(pr, 1, &d, NULL, NULL, &errcode_ret);
+
+  if (c != NULL)
+  {
+    cl_mem_flags fl = 0;
+    tdispatch->clGetMemObjectInfo(image, CL_MEM_FLAGS, sizeof(fl), &fl, NULL);
+    fl &= (CL_MEM_READ_WRITE | CL_MEM_READ_ONLY | CL_MEM_WRITE_ONLY | CL_MEM_KERNEL_READ_AND_WRITE);
+    
+    cl_mem_object_type it = 0;
+    tdispatch->clGetMemObjectInfo(image, CL_MEM_TYPE, sizeof(it), &it, NULL);
+    
+    cl_image_format imf;
+    tdispatch->clGetImageInfo(image, CL_IMAGE_FORMAT, sizeof(imf), &imf, NULL);
+
+    cl_uint n = 0;
+    tdispatch->clGetSupportedImageFormats(c, fl, it, 0, NULL, &n);
+
+    std::vector<cl_image_format> image_formats(n);
+    tdispatch->clGetSupportedImageFormats(c, fl, it, n, image_formats.data(), NULL);
+
+    for (auto a : image_formats) {
+      if ((imf.image_channel_order == a.image_channel_order) &&
+          (imf.image_channel_data_type == a.image_channel_data_type))
+      {
+        res = false;
+        break;
+      }
+    }
+
+    tdispatch->clReleaseContext(c);
   }
 
-  return true;
-}
-
-// check if out-of-bounds
-bool struct_violation(
-  cl_version,
-  const void * buffer_create_info,
-  cl_mem buffer)
-{
-  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
-  size_t buffer_size;
-  tdispatch->clGetMemObjectInfo(
-    buffer,
-    CL_MEM_SIZE,
-    sizeof(size_t),
-    &buffer_size,
-    NULL);
-  if (sb->origin + sb->size > buffer_size)
-    return true;
-
-  return false;
-}
-
-// check if size = 0
-bool struct_violation(
-  cl_version,
-  const void * buffer_create_info)
-{
-  const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
-  if (sb->size == 0)
-    return true;
-
-  return false;
-}
-
-// check if there are no devices in context associated with buffer
-// for which the origin field of the cl_buffer_region structure
-// passed in buffer_create_info is aligned to the CL_DEVICE_MEM_BASE_ADDR_ALIGN value
-bool struct_violation(
-  cl_version,
-  const void * buffer_create_info,
-  cl_buffer_create_type buffer_create_type,
-  cl_mem buffer)
-{
-  if (buffer_create_type == CL_BUFFER_CREATE_TYPE_REGION) {
-    cl_context context;
-    tdispatch->clGetMemObjectInfo(
-      buffer,
-      CL_MEM_CONTEXT,
-      sizeof(cl_context),
-      &context,
-      NULL);
-
-    const cl_buffer_region * sb = static_cast<const cl_buffer_region *>(buffer_create_info);
-    return for_all<CL_DEVICE_MEM_BASE_ADDR_ALIGN>(context, [sb](cl_uint align) {
-      return (sb->origin % align != 0);
-    });
-  }
-
-  return true;
+  return res;
 }

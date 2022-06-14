@@ -5997,7 +5997,7 @@
 
     <!-- 5.3.3 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueReadImage</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>image</name></param>
@@ -6058,12 +6058,9 @@
                     <eq>
                         <name>region</name>                             <literal>NULL</literal>
                     </eq>
-                    <eq>
-                        <name>ptr</name>                                <literal>NULL</literal>
-                    </eq>
                 </or>
             </if>
-            <then>      <log>origin, region, or ptr is NULL</log>
+            <then>      <log>origin or region is NULL</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -6127,7 +6124,7 @@
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
                         </neq>
                     </and>
                     <neq>
@@ -6144,7 +6141,7 @@
                     </neq>
                 </or>
             </if>
-            <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
+            <then>      <log>wrong origin or region values for 1D image or 1D buffer</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6181,17 +6178,6 @@
             <then>      <log>row_pitch is not 0 and is less than (region[0] * element size in bytes)</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- not covered by standard-->
-                <neq>
-                    <mod>
-                        <name>row_pitch</name>
-                        <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
-                    </mod>                                              <literal>0</literal>
-                </neq>
-            </if>
-            <then>      <log>row_pitch is not a multiple of element size in bytes</log>
-                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
-            </then>
             <if>
                 <and>
                     <neq>
@@ -6214,24 +6200,315 @@
             <then>      <log>slice_pitch is not 0 and is less than (region[1] * row_pitch)</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- not covered by standard-->
-                <neq>
-                    <mod>
-                        <name>slice_pitch</name>
-                        <max>
-                            <name>row_pitch</name>
-                            <mult>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
                                 <name>region[0]</name>
-                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
-                            </mult>
-                        </max>
-                    </mod>                                              <literal>0</literal>
-                </neq>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
             </if>
-            <then>      <log>slice_pitch is not a multiple of row_pitch</log>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 3D image</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds -->
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 2D image array</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 2D image</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image array</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_IMAGE_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image buffer</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_DEPTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, depth) for 3D image are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, array size) for 2D image array are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height) for 2D image are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, array size) for 1D image array are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image buffer are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>ptr</name>                                    <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>ptr is NULL</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>ptr</name>                                    <add>
+                                                                            <mult>
+                                                                                <add>
+                                                                                    <name>region[2]</name>
+                                                                                    <literal>-1</literal>
+                                                                                </add>
+                                                                                <max>
+                                                                                    <name>slice_pitch</name>
+                                                                                    <mult>
+                                                                                        <name>region[1]</name>
+                                                                                        <max>
+                                                                                            <name>row_pitch</name>
+                                                                                            <mult>
+                                                                                                <name>region[0]</name>
+                                                                                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                            </mult>
+                                                                                        </max>
+                                                                                    </mult>
+                                                                                </max>
+                                                                            </mult>
+                                                                            <mult>
+                                                                                <add>
+                                                                                    <name>region[1]</name>
+                                                                                    <literal>-1</literal>
+                                                                                </add>
+                                                                                <max>
+                                                                                    <name>row_pitch</name>
+                                                                                    <mult>
+                                                                                        <name>region[0]</name>
+                                                                                        <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                    </mult>
+                                                                                </max>
+                                                                            </mult>
+                                                                            <mult>
+                                                                                <name>region[0]</name>
+                                                                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                            </mult>
+                                                                        </add>
+                </array_len_ls>
+            </if>
+            <then>      <log>ptr is too short</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
             <if>
                 <and>
                     <eq>
@@ -6283,8 +6560,6 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
             <if>
                 <eq>
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
@@ -6292,6 +6567,12 @@
             </if>
             <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image" param="command_queue"/>
+            </if>
+            <then>      <log>image format (image channel order and data type) for image are not supported by device associated with queue</log>
+                <name>clEnqueueReadImage</name>                         <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
             </then>
             <if>
                 <or>
@@ -6308,7 +6589,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueWriteImage</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>image</name></param>
@@ -6352,7 +6633,7 @@
             <if>
                 <object_not_in object="command_queue" in="image"/>
             </if>
-            <then>
+            <then>      <log>the context associated with command_queue and image are not the same</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
@@ -6363,15 +6644,12 @@
                     <eq>
                         <name>region</name>                             <literal>NULL</literal>
                     </eq>
-                    <eq>
-                        <name>ptr</name>                                <literal>NULL</literal>
-                    </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is NULL</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>origin</name>                             <literal>3</literal>
@@ -6381,7 +6659,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is too short</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6397,7 +6675,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
@@ -6421,7 +6699,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
@@ -6449,10 +6727,9 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 1D image or 1D buffer</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being read or written specified by origin and region is out of bounds-->
             <if>
                 <and>
                     <or>
@@ -6468,7 +6745,354 @@
                     </neq>
                 </and>
             </if>
-            <then>
+            <then>      <log>image is a 1D or 2D image but slice_pitch is not 0</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>input_row_pitch</name>                    <literal>0</literal>
+                    </neq>
+                    <ls>
+                        <name>input_row_pitch</name>                    <mult>
+                                                                            <name>region[0]</name>
+                                                                            <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                        </mult>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>input_row_pitch is not 0 and is less than (region[0] * element size in bytes)</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>input_slice_pitch</name>                   <literal>0</literal>
+                    </neq>
+                    <ls>
+                        <name>input_slice_pitch</name>                   <mult>
+                                                                            <name>region[1]</name>
+                                                                            <max>
+                                                                                <name>input_row_pitch</name>
+                                                                                <mult>
+                                                                                    <name>region[0]</name>
+                                                                                    <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                </mult>
+                                                                            </max>
+                                                                        </mult>
+                    </ls>
+                </and>
+            </if>
+            <then>      <log>input_slice_pitch is not 0 and is less than (region[1] * input_row_pitch)</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 3D image</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 2D image array</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 2D image</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 1D image array</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_IMAGE_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 1D image</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being written specified by origin and region is out of bounds for 1D image buffer</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_DEPTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, depth) for 3D image are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, array size) for 2D image array are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height) for 2D image are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, array size) for 1D image array are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="command_queue" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image buffer are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>ptr</name>                                    <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>ptr is NULL</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <array_len_ls>
+                    <name>ptr</name>                                    <add>
+                                                                            <mult>
+                                                                                <add>
+                                                                                    <name>region[2]</name>
+                                                                                    <literal>-1</literal>
+                                                                                </add>
+                                                                                <max>
+                                                                                    <name>input_slice_pitch</name>
+                                                                                    <mult>
+                                                                                        <name>region[1]</name>
+                                                                                        <max>
+                                                                                            <name>input_row_pitch</name>
+                                                                                            <mult>
+                                                                                                <name>region[0]</name>
+                                                                                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                            </mult>
+                                                                                        </max>
+                                                                                    </mult>
+                                                                                </max>
+                                                                            </mult>
+                                                                            <mult>
+                                                                                <add>
+                                                                                    <name>region[1]</name>
+                                                                                    <literal>-1</literal>
+                                                                                </add>
+                                                                                <max>
+                                                                                    <name>input_row_pitch</name>
+                                                                                    <mult>
+                                                                                        <name>region[0]</name>
+                                                                                        <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                                    </mult>
+                                                                                </max>
+                                                                            </mult>
+                                                                            <mult>
+                                                                                <name>region[0]</name>
+                                                                                <query object="image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                                                                            </mult>
+                                                                        </add>
+                </array_len_ls>
+            </if>
+            <then>      <log>ptr is too short</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -6522,15 +7146,19 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
             <if>
                 <eq>
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
                 </eq>
             </if>
-            <then>
+            <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="image" param="command_queue"/>
+            </if>
+            <then>      <log>image format (image channel order and data type) for image are not supported by device associated with queue</log>
+                <name>clEnqueueWriteImage</name>                        <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
             </then>
             <if>
                 <or>
@@ -6542,7 +7170,7 @@
                     </bit_and>
                 </or>
             </if>
-            <then>
+            <then>      <log>image which has been created with CL_MEM_HOST_READ_ONLY or CL_MEM_HOST_NO_ACCESS</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_OPERATION</value>
             </then>
         </command>
