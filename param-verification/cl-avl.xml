@@ -8090,9 +8090,9 @@
             </then>
         </command>
 
-    <!-- 5.3.4 -->
+    <!-- 5.3.4 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueFillImage</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>image</name></param>
@@ -8118,6 +8118,12 @@
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
+                <object_is_invalid name="image"/>
+            </if>
+            <then>      <log>image is not a valid mem object</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
                 <and>
                     <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE3D"/>
                     <object_is_invalid name="image" type="CL_MEM_OBJECT_IMAGE2D"/>
@@ -8137,10 +8143,21 @@
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
             <if>
+                <eq>
+                    <name>fill_color</name>                             <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>fill_color is NULL</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not covered by standard-->
+                <struct_violation name="image" param="fill_color"/>
+            </if>
+            <then>      <log>fill_color is too short</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
                 <or>
-                    <eq>
-                        <name>fill_color</name>                         <literal>NULL</literal>
-                    </eq>
                     <eq>
                         <name>origin</name>                             <literal>NULL</literal>
                     </eq>
@@ -8149,11 +8166,10 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is NULL</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- limits on fill_color - see spec-->
-            <if>
+            <if> <!-- not covered by standard-->
                 <or>
                     <array_len_ls>
                         <name>origin</name>                             <literal>3</literal>
@@ -8163,7 +8179,7 @@
                     </array_len_ls>
                 </or>
             </if>
-            <then>
+            <then>      <log>origin or region is too short</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -8179,7 +8195,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>some region array element is 0</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
@@ -8203,7 +8219,7 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
@@ -8231,10 +8247,265 @@
                     </neq>
                 </or>
             </if>
-            <then>
+            <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the region being filled as specified by origin and region is out of bounds.-->
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 3D image</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 2D image array</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 2D image</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 1D image array</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_IMAGE_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 1D image</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being filled specified by origin and region is out of bounds for 1D image buffer</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_DEPTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, depth) for 3D image are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, array size) for 2D image array are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height) for 2D image are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, array size) for 1D image array are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image buffer are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
             <if>
                 <and>
                     <eq>
@@ -8286,13 +8557,17 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for image are not supported by device associated with queue. -->
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for image are not supported by device associated with queue. -->
+            <if>
+                <struct_violation name="image" param="command_queue"/>
+            </if>
+            <then>      <log>image format (image channel order and data type) for image are not supported by device associated with queue</log>
+                <name>clEnqueueFillImage</name>                         <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
+            </then>
         </command>
 
     <!-- 5.3.5 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueCopyImageToBuffer</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_mem</type>                                  <name>src_image</name></param>
@@ -8319,6 +8594,12 @@
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_COMMAND_QUEUE</value>
             </then>
             <if>
+                <object_is_invalid name="src_image"/>
+            </if>
+            <then>      <log>src_image is not a valid mem object</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
                 <and>
                     <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE3D"/>
                     <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE2D"/>
@@ -8332,12 +8613,31 @@
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
             <if>
+                <object_is_invalid name="dst_buffer"/>
+            </if>
+            <then>      <log>dst_buffer is not a valid mem object</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
                 <object_is_invalid name="dst_buffer" type="CL_MEM_OBJECT_BUFFER"/>
             </if>
             <then>      <log>dst_buffer is not a valid buffer object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
             </then>
-            <!-- CL_INVALID_MEM_OBJECT if src_image is a 1D image buffer object created from dst_buffer. -->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <not>
+                        <object_is_invalid name="src_image" type="CL_MEM_OBJECT_IMAGE1D_BUFFER"/>
+                    </not>
+                    <eq>
+                        <name>dst_buffer</name>                         <query object="src_image" property="CL_MEM_ASSOCIATED_MEMOBJECT"/>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>src_image is a 1D image buffer object created from dst_buffer</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
             <if>
                 <object_not_in object="command_queue" in="src_image"/>
             </if>
@@ -8441,7 +8741,278 @@
             <then>      <log>values in src_origin and region do not follow rules for 1D image or 1D image buffer object</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if the 1D, 2D or 3D rectangular region specified by src_origin and src_origin + region refers to a region outside src_image, or if the region specified by dst_offset and dst_offset + dst_cb to a region outside dst_buffer.-->
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>src_origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 3D image src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>src_origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[2]</name>
+                                <name>region[2]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 2D image array src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>src_origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 2D image src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <add>
+                                <name>src_origin[0]</name>
+                                <name>region[0]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <add>
+                                <name>src_origin[1]</name>
+                                <name>region[1]</name>
+                            </add>                                      <query object="src_image" property="CL_IMAGE_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image array src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>src_origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <add>
+                            <name>src_origin[0]</name>
+                            <name>region[0]</name>
+                        </add>                                          <query object="src_image" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>the region being read specified by origin and region is out of bounds for 1D image buffer src_image</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <gt>
+                    <add>
+                        <mult>
+                            <query object="src_image" property="CL_IMAGE_ELEMENT_SIZE"/>
+                            <name>region[0]</name>
+                            <name>region[1]</name>
+                            <name>region[2]</name>
+                        </mult>
+                        <name>dst_offset</name>
+                    </add>                                              <query object="dst_buffer" property="CL_MEM_SIZE"/>
+                </gt>
+            </if>
+            <then>      <log>the region specified by dst_offset and dst_offset + dst_cb is out of bounds for dst_buffer</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE3D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_DEPTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE3D_MAX_DEPTH"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, depth) for 3D image src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height, array size) for 2D image array src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE2D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_HEIGHT"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_HEIGHT"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, height) for 2D image src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <or>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                        </gt>
+                        <gt>
+                            <query object="src_image" property="CL_IMAGE_ARRAY_SIZE"/>
+                            <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_ARRAY_SIZE"/>
+                        </gt>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width, array size) for 1D image array src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D</literal>        <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE2D_MAX_WIDTH"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                    </eq>
+                    <gt>
+                        <query object="src_image" property="CL_IMAGE_WIDTH"/>
+                        <query object="command_queue" property="CL_DEVICE_IMAGE_MAX_BUFFER_SIZE"/>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>image dimensions (image width) for 1D image buffer src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_IMAGE_SIZE</value>
+            </then>
             <if>
                 <and>
                     <eq>
@@ -8493,9 +9064,20 @@
             <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_MISALIGNED_SUB_BUFFER_OFFSET if dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1-->
-            <!-- CL_INVALID_IMAGE_SIZE if image dimensions (image width, height, specified or compute row and/or slice pitch) for src_image or dst_image are not supported by device associated with queue. -->
-            <!-- CL_IMAGE_FORMAT_NOT_SUPPORTED if image format (image channel order and data type) for src_image or dst_image are not supported by device associated with queue. -->
+            <if>
+                <and>
+                    <from version="1.1"/>
+                    <neq>
+                        <mod>
+                            <query object="dst_buffer" property="CL_MEM_OFFSET"/>
+                            <query object="command_queue" property="CL_DEVICE_MEM_BASE_ADDR_ALIGN"/>
+                        </mod>                                          <literal>0</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>dst_buffer is a sub-buffer object and offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_MISALIGNED_SUB_BUFFER_OFFSET</value>
+            </then>
             <if>
                 <eq>
                     <literal>CL_FALSE</literal>                         <query object="command_queue" property="CL_DEVICE_IMAGE_SUPPORT"/>
@@ -8503,6 +9085,12 @@
             </if>
             <then>      <log>the device associated with command_queue does not support images</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="src_image" param="command_queue"/>
+            </if>
+            <then>      <log>image format (image channel order and data type) for src_image are not supported by device associated with queue</log>
+                <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_IMAGE_FORMAT_NOT_SUPPORTED</value>
             </then>
         </command>
 

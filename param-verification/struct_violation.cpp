@@ -1120,3 +1120,55 @@ bool struct_violation(
     
     return true;
 }
+
+// 5.3.4
+
+// check the correct size of fill_color for clEnqueueFillImage
+bool struct_violation(
+  cl_version,
+  cl_mem image,
+  const void* fill_color
+)
+{
+  cl_image_format imf;
+  tdispatch->clGetImageInfo(image, CL_IMAGE_FORMAT, sizeof(imf), &imf, NULL);
+
+  size_t size = 0;
+  if (imf.image_channel_order == CL_DEPTH)
+  {
+    //  fill color is a single floating point value
+    size = sizeof(float);
+  }
+  else
+  {
+    switch (imf.image_channel_data_type) {
+      // fill color is a four component signed integer value 
+      case CL_SIGNED_INT8:
+        size = 4;
+        break;
+      case CL_SIGNED_INT16:
+        size = 8;
+        break;
+      case CL_SIGNED_INT32:
+        size = 16;
+        break;
+
+      // fill color is a four component unsigned integer value
+      case CL_UNSIGNED_INT8:
+        size = 4;
+        break;
+      case CL_UNSIGNED_INT16:
+        size = 8;
+        break;
+      case CL_UNSIGNED_INT32:
+        size = 16;
+        break;
+
+      default:
+        // fill color is a four component RGBA floating-point color value
+        size = sizeof(float) * 4;
+    }
+  }
+
+  return array_len_ls(fill_color, size);
+}
