@@ -829,7 +829,7 @@ bool struct_violation(
   const cl_image_format * image_format, 
   void * host_ptr)
 {
-  // check image types and sizes (upper limits are checked in next function)
+  // check image sizes (upper limits are checked in next function)
   if (image_desc->image_type == CL_MEM_OBJECT_IMAGE3D)
     if (image_desc->image_depth == 0)
       return true;
@@ -846,8 +846,12 @@ bool struct_violation(
       image_desc->image_type == CL_MEM_OBJECT_IMAGE1D ||
       image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_BUFFER ||
       image_desc->image_type == CL_MEM_OBJECT_IMAGE1D_ARRAY)
+  {
     if (image_desc->image_width == 0)
       return true;
+  }
+  else // wrong image type
+    return true;
 
   // check array size
   if (image_desc->image_type == CL_MEM_OBJECT_IMAGE2D_ARRAY ||
@@ -1105,8 +1109,7 @@ bool struct_violation(
 bool struct_violation(
   cl_version,
   cl_mem image,
-  cl_command_queue queue
-)
+  cl_command_queue queue)
 {
   cl_int errcode_ret;
   bool res = true;
@@ -1178,8 +1181,7 @@ bool struct_violation(
 bool struct_violation(
   cl_version,
   cl_mem image,
-  const void* fill_color
-)
+  const void* fill_color)
 {
   cl_image_format imf;
   tdispatch->clGetImageInfo(image, CL_IMAGE_FORMAT, sizeof(imf), &imf, NULL);

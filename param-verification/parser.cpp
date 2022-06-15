@@ -328,29 +328,30 @@ std::string parse_violation(xml_node<> const * const violation)
                 + std::string(violation->first_attribute("in")->value())
                 + "))";
         }
-        else if (strcmp(name, "for_all") == 0)
+        else if ((strcmp(name, "for_all") == 0) || (strcmp(name, "for_any") == 0))
         {
-            test = "(for_all<"
-                + std::string(violation->first_attribute("query")->value())
-                + ">("
-                + std::string(violation->first_attribute("in")->value())
-                + ",\n    [=](return_type<"
-                + std::string(violation->first_attribute("query")->value())
-                + "> query){\n      return static_cast<bool>("
-                + parse_violation(violation->first_node())
-                + "); }))";
-        }
-        else if (strcmp(name, "for_any") == 0)
-        {
-            test = "(for_any<"
-                + std::string(violation->first_attribute("query")->value())
-                + ">("
-                + std::string(violation->first_attribute("in")->value())
-                + ", [=](return_type<"
-                + std::string(violation->first_attribute("query")->value())
-                + "> query){ return static_cast<bool>("
-                + parse_violation(violation->first_node())
-                + "); }))";
+            if (violation->first_attribute("in") != nullptr)
+                test = std::string("(") + name + "<"
+                    + violation->first_attribute("query")->value()
+                    + ">("
+                    + violation->first_attribute("in")->value()
+                    + ",\n    [=](return_type<"
+                    + violation->first_attribute("query")->value()
+                    + "> query){\n      return static_cast<bool>("
+                    + parse_violation(violation->first_node())
+                    + "); }))";
+            else
+                test = std::string("(") + name + "<"
+                    + violation->first_attribute("query")->value()
+                    + ">("
+                    + violation->first_attribute("array")->value()
+                    + ", "
+                    + violation->first_attribute("elements")->value()
+                    + ",\n    [=](return_type<"
+                    + violation->first_attribute("query")->value()
+                    + "> query){\n      return static_cast<bool>("
+                    + parse_violation(violation->first_node())
+                    + "); }))";
         }
         else if (strcmp(name, "check_copy_overlap") == 0)
         {
@@ -771,14 +772,28 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_program_info\", property)) {\n"
          << "    tdispatch->clGetProgramInfo(program, property, sizeof(a), &a, NULL);\n"
-         //<< "  } else if (!enum_violation(version, \"cl_image_info\", property)) {\n"
-         //<< "    tdispatch->clGetImageInfo(object, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid program query in query(cl_program). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "    exit(-1);\n"
          << "  }\n"
          << "  return a;\n"
          << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "return_type<property> query(cl_kernel kernel)\n"
+         << "{\n"
+         << "  cl_version version = get_object_version(kernel);\n"
+         << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
+         << "  if (!enum_violation(version, \"cl_kernel_info\", property)) {\n"
+         << "    tdispatch->clGetKernelInfo(kernel, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid kernel query in query(cl_kernel). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
+         << "  return a;\n"
+         << "}\n\n";
+
 }
 
 void render_fetch_version(std::stringstream& code, const std::string& handle, const std::string& name)

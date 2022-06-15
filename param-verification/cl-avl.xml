@@ -12130,7 +12130,8 @@
                 <name>clCreateProgramWithBuiltInKernels</name>          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if kernel_names contains a kernel name that is not supported by any of the devices in device_list. -->
+            <!-- intricated but possible
+            CL_INVALID_VALUE if kernel_names contains a kernel name that is not supported by any of the devices in device_list. -->
         </command>
 
     <!-- 5.8.2 --> <!--DONE-->
@@ -12236,9 +12237,9 @@
             </then>
         </command>
 
-    <!-- 5.8.4 -->
+    <!-- 5.8.4 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clBuildProgram</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -12305,9 +12306,9 @@
             CL_INVALID_OPERATION if program was not created with clCreateProgramWithSource, clCreateProgramWithIL or clCreateProgramWithBinary.-->
         </command>
 
-    <!-- 5.8.5 -->
+    <!-- 5.8.5 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clCompileProgram</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -12320,68 +12321,45 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </eq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>num_input_headers</name>              <literal>0</literal>
-                        </eq>
-                        <or>
-                            <neq>
-                                <name>header_include_names</name>       <literal>NULL</literal>
-                            </neq>
-                            <neq>
-                                <name>input_headers</name>              <literal>NULL</literal>
-                            </neq>
-                        </or>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>num_input_headers</name>              <literal>0</literal>
-                        </neq>
-                        <or>
-                            <eq>
-                                <name>header_include_names</name>       <literal>NULL</literal>
-                            </eq>
-                            <eq>
-                                <name>input_headers</name>              <literal>NULL</literal>
-                            </eq>
-                        </or>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>pfn_notify</name>                     <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>user_data</name>                      <literal>NULL</literal>
-                        </neq>
-                    </and>
-                </or>
+                <object_is_invalid name="program"/>
             </if>
-            <then>
+            <then>      <log>program is not a valid program object</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>num_input_headers</name>                  <literal>0</literal>
+                    </eq>
+                    <or>
+                        <neq>
+                            <name>header_include_names</name>           <literal>NULL</literal>
+                        </neq>
+                        <neq>
+                            <name>input_headers</name>                  <literal>NULL</literal>
+                        </neq>
+                    </or>
+                </and>
+            </if>
+            <then>      <log>num_input_headers is zero and header_include_names or input_headers are not NULL</log>
                 <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
             </then>
-            <if> <!-- not specified in standard-->
-                <array_len_ls>
-                    <name>device_list</name>                            <name>num_devices</name>
-                </array_len_ls>
+            <if>
+                <and>
+                    <neq>
+                        <name>num_input_headers</name>                  <literal>0</literal>
+                    </neq>
+                    <or>
+                        <eq>
+                            <name>header_include_names</name>           <literal>NULL</literal>
+                        </eq>
+                        <eq>
+                            <name>input_headers</name>                  <literal>NULL</literal>
+                        </eq>
+                    </or>
+                </and>
             </if>
-            <then>
+            <then>      <log>num_input_headers is not zero and header_include_names or input_headers are NULL</log>
                 <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not specified in standard-->
@@ -12399,12 +12377,104 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>header_include_names or input_headers is too short</log>
                 <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>device_list</name>                            <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_devices</name>                            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>device_list is NULL and num_devices is greater than zero</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_devices</name>                        <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>device_list is not NULL and num_devices is zero</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- not specified in standard-->
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>device_list</name>                        <name>num_devices</name>
+                    </array_len_ls>
+                </and>
+            </if>
+            <then>      <log>device_list is too short</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_object_not_in array="device_list" elements="num_devices" in="program"/>
+            </if>
+            <then>      <log>some device in device_list is not in the list of devices associated with program</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if> <!-- standard does not say for_all or for_any -->
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <for_any array="device_list" elements="num_devices" query="CL_DEVICE_COMPILER_AVAILABLE">
+                        <eq>
+                            <literal>CL_FALSE</literal>                 <name>query</name>
+                        </eq>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>a compiler is not available for some device in device_list</log>
+                <name>clCompileProgram</name>                           <value>CL_COMPILER_NOT_AVAILABLE</value>
+            </then>
+            <if> <!-- standard does not say for_all or for_any -->
+                <and>
+                    <eq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </eq>
+                    <for_any in="program" query="CL_DEVICE_COMPILER_AVAILABLE">
+                        <eq>
+                            <literal>CL_FALSE</literal>                 <name>query</name>
+                        </eq>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>a compiler is not available for some device in program</log>
+                <name>clCompileProgram</name>                           <value>CL_COMPILER_NOT_AVAILABLE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>pfn_notify</name>                         <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>user_data</name>                          <literal>NULL</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>pfn_notify is NULL but user_data is not NULL</log>
+                <name>clCompileProgram</name>                           <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- need state
+            CL_INVALID_OPERATION if the compilation or build of a program executable for any of the devices listed in device_list by a previous call to clCompileProgram or clBuildProgram for program has not completed
+            CL_INVALID_OPERATION if there are kernel objects attached to program.
+            CL_INVALID_OPERATION if program has no source or IL available, i.e. it has not been created with clCreateProgramWithSource or clCreateProgramWithIL. -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clLinkProgram</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_uint</type>                                 <name>num_devices</name></param>
@@ -12417,59 +12487,108 @@
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </eq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>num_input_programs</name>             <literal>0</literal>
-                        </eq>
-                        <neq>
-                            <name>input_programs</name>                 <literal>NULL</literal>
-                        </neq>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>num_input_programs</name>             <literal>0</literal>
-                        </neq>
-                        <eq>
-                            <name>input_programs</name>                 <literal>NULL</literal>
-                        </eq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>pfn_notify</name>                     <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>user_data</name>                      <literal>NULL</literal>
-                        </neq>
-                    </and>
-                </or>
+                <object_is_invalid name="context"/>
             </if>
-            <then>
+            <then>      <log>context is not a valid context</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_devices</name>                        <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>device_list is NULL and num_devices is greater than zero</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_devices</name>                        <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>device_list is not NULL and num_devices is zero</log>
                 <name>clLinkProgram</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not specified in standard-->
-                <array_len_ls>
-                    <name>device_list</name>                            <name>num_devices</name>
-                </array_len_ls>
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <array_len_ls>
+                        <name>device_list</name>                        <name>num_devices</name>
+                    </array_len_ls>
+                </and>
             </if>
-            <then>
+            <then>      <log>device_list is too short</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if> <!-- standard does not say for_all or for_any -->
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <for_any array="device_list" elements="num_devices" query="CL_DEVICE_LINKER_AVAILABLE">
+                        <eq>
+                            <literal>CL_FALSE</literal>                 <name>query</name>
+                        </eq>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>a linker is not available for some device in device_list</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_COMPILER_NOT_AVAILABLE</value>
+            </then>
+            <if> <!-- standard does not say for_all or for_any -->
+                <and>
+                    <eq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </eq>
+                    <for_any in="context" query="CL_DEVICE_LINKER_AVAILABLE">
+                        <eq>
+                            <literal>CL_FALSE</literal>                 <name>query</name>
+                        </eq>
+                    </for_any>
+                </and>
+            </if>
+            <then>      <log>a linker is not available for some device in context</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_COMPILER_NOT_AVAILABLE</value>
+            </then>
+            <if>
+                <any_object_not_in array="device_list" elements="num_devices" in="context"/>
+            </if>
+            <then>      <log>some device in device_list is not in the list of devices associated with context</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>num_input_programs</name>                     <literal>0</literal>
+                </eq>
+            </if>
+            <then>      <log>num_input_programs is zero</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>input_programs</name>                         <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>input_programs is NULL</log>
                 <name>clLinkProgram</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
@@ -12478,26 +12597,56 @@
                     <name>input_programs</name>                         <name>num_input_programs</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>input_programs is too short</log>
                 <name>clLinkProgram</name>                              <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <any_invalid array="input_programs" elements="num_input_programs"/>
+            </if>
+            <then>      <log>programs specified in input_programs are not valid program objects</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>pfn_notify</name>                         <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>user_data</name>                          <literal>NULL</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>pfn_notify is NULL but user_data is not NULL</log>
+                <name>clLinkProgram</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
+            </then>
+            <!-- intricated but possible
+            CL_INVALID_OPERATION if the rules for devices containing compiled binaries or libraries as described in input_programs argument above are not followed -->
         </command>
 
-    <!-- 5.8.8 -->
+    <!-- 5.8.8 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clUnloadPlatformCompiler</name></proto>
             <param><type>cl_platform_id</type>                          <name>platform</name></param>
+
+            <if>
+                <object_is_invalid name="platform"/>
+            </if>
+            <then>      <log>platform is not a valid platform</log>
+                <name>clUnloadPlatformCompiler</name>                   <value>CL_INVALID_PLATFORM</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clUnloadCompiler</name></proto>
         </command>
 
-    <!-- 5.8.9 -->
+    <!-- 5.8.9 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetProgramInfo</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_program_info</type>                         <name>param_name</name></param>
@@ -12506,9 +12655,15 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="program"/>
             </if>
-            <then>
+            <then>      <log>program is a not a valid program object</log>
+                <name>clGetProgramInfo</name>                           <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
+            </if>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetProgramInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -12540,9 +12695,11 @@
             <then>      <log>param_value is too short</log>
                 <name>clGetProgramInfo</name>                           <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- need state
+            CL_INVALID_PROGRAM_EXECUTABLE if param_name is CL_PROGRAM_NUM_KERNELS, CL_PROGRAM_KERNEL_NAMES, CL_PROGRAM_SCOPE_GLOBAL_CTORS_PRESENT, or CL_PROGRAM_SCOPE_GLOBAL_DTORS_PRESENT and a successful program executable has not been built for at least one device in the list of devices associated with program. -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetProgramBuildInfo</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -12552,9 +12709,27 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
-                <enum_violation name="param_name"/> <!-- see the spec-->
+                <object_is_invalid name="program"/>
             </if>
-            <then>
+            <then>      <log>program is a not a valid program object</log>
+                <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <object_is_invalid name="device"/>
+            </if>
+            <then>      <log>device is not a valid device</log>
+                <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <object_not_in object="device" in="program"/>
+            </if>
+            <then>      <log>device is not in the list of devices associated with program</log>
+                <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_DEVICE</value>
+            </then>
+            <if>
+                <enum_violation name="param_name"/>
+            </if>
+            <then>      <log>param_name is not valid</log>
                 <name>clGetProgramBuildInfo</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -12588,14 +12763,21 @@
             </then>
         </command>
 
-    <!-- 5.9.1 -->
+    <!-- 5.9.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_kernel</type>                               <name>clCreateKernel</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param>const <type>char</type>*                             <name>kernel_name</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
 
+            <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is a not a valid program object</log>
+                <name>clCreateKernel</name>                             <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_PROGRAM</value>
+            </then>
             <if>
                 <eq>
                     <name>kernel_name</name>                            <literal>NULL</literal>
@@ -12605,53 +12787,120 @@
                 <name>clCreateKernel</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- intricate but possible
+            CL_INVALID_PROGRAM_EXECUTABLE if there is no successfully built executable for program.
+            CL_INVALID_KERNEL_NAME if kernel_name is not found in program. -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clCreateKernelsInProgram</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_uint</type>                                 <name>num_kernels</name></param>
             <param><type>cl_kernel</type>*                              <name>kernels</name></param>
             <param><type>cl_uint</type>*                                <name>num_kernels_ret</name></param>
+
+            <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is a not a valid program object</log>
+                <name>clCreateKernelsInProgram</name>                   <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <!-- intricate but possible
+            CL_INVALID_PROGRAM_EXECUTABLE if there is no successfully built executable for program.
+            CL_INVALID_VALUE if kernels is not NULL and num_kernels is less than the number of kernels in program-->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainKernel</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
+
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clRetainKernel</name>                             <value>CL_INVALID_KERNEL</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseKernel</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
+
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clReleaseKernel</name>                            <value>CL_INVALID_KERNEL</value>
+            </then>
         </command>
 
     <!-- 5.9.2 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetKernelArg</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_uint</type>                                 <name>arg_index</name></param>
             <param><type>size_t</type>                                  <name>arg_size</name></param>
             <param>const <type>void</type>*                             <name>arg_value</name></param>
 
-            <!-- CL_INVALID_ARG_INDEX if arg_index is not a valid argument index-->
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clSetKernelArg</name>                             <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <not>
+                    <ls>
+                        <name>arg_index</name>                          <query object="kernel" property="CL_KERNEL_NUM_ARGS"/>
+                    </ls>
+                </not>
+            </if>
+            <then>      <log>arg_index is not a valid argument index</log>
+                <name>clSetKernelArg</name>                             <value>CL_INVALID_ARG_INDEX</value>
+            </then>
             <if> <!-- not specified in standard-->
                 <array_len_ls>
                     <name>arg_value</name>                              <name>arg_size</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>arg_value is too short</log>
                 <name>clSetKernelArg</name>                             <value>CL_INVALID_ARG_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetKernelArgSVMPointer</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_uint</type>                                 <name>arg_index</name></param>
             <param>const <type>void</type>*                             <name>arg_value</name></param>
 
-            <!-- CL_INVALID_ARG_INDEX if arg_index is not a valid argument index-->
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clSetKernelArgSVMPointer</name>                   <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <not>
+                    <ls>
+                        <name>arg_index</name>                          <query object="kernel" property="CL_KERNEL_NUM_ARGS"/>
+                    </ls>
+                </not>
+            </if>
+            <then>      <log>arg_index is not a valid argument index</log>
+                <name>clSetKernelArgSVMPointer</name>                   <value>CL_INVALID_ARG_INDEX</value>
+            </then>
+            <if>
+                <for_all in="kernel" query="CL_DEVICE_SVM_CAPABILITIES">
+                    <eq>
+                        <name>query</name>                              <literal>0</literal>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices associated with kernel support SVM</log>
+                <name>clSetKernelArgSVMPointer</name>                   <value>CL_INVALID_OPERATION</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0">
@@ -12662,53 +12911,109 @@
             <param>const <type>void</type>*                             <name>param_value</name></param>
 
             <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <for_all in="kernel" query="CL_DEVICE_SVM_CAPABILITIES">
+                    <eq>
+                        <name>query</name>                              <literal>0</literal>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices associated with kernel support SVM</log>
+                <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
                 <enum_violation name="param_name"/>
             </if>
             <then>      <log>param_name is not valid</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if>
+                <eq>
+                    <name>param_value</name>                            <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>param_value is NULL</log>
+                <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <ls>
+                    <name>param_value_size</name>                       <literal_list>param_name</literal_list>
+                </ls>
+            </if>
+            <then>      <log>the size specified by param_value_size is not valid</log>
+                <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
                 <and>
+                    <eq>
+                        <name>param_name</name>                         <literal>CL_KERNEL_EXEC_INFO_SVM_PTRS</literal>
+                    </eq>
                     <neq>
-                        <name>param_value</name>                        <literal>NULL</literal>
+                        <mod>
+                            <name>param_value_size</name>
+                            <sizeof>void*</sizeof>
+                        </mod>                                          <literal>0</literal>
                     </neq>
-                    <ls> <!-- special case, should extend here-->
-                        <name>param_value_size</name>                   <literal_list>param_name</literal_list>
-                    </ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>the size specified by param_value_size is not valid for CL_KERNEL_EXEC_INFO_SVM_PTRS</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
-                <and>
-                    <neq>
-                        <name>param_value</name>                        <literal>NULL</literal>
-                    </neq>
-                    <array_len_ls>
-                        <name>param_value</name>                        <max>
+                <array_len_ls>
+                    <name>param_value</name>                            <max>
                                                                             <literal_list>param_name</literal_list>
                                                                             <name>param_value_size</name>
                                                                         </max>
-                    </array_len_ls>
-                </and>
+                </array_len_ls>
             </if>
             <then>      <log>param_value is too short</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
+            <!--<if>
+                <and>
+                    <eq>
+                        <name>param_name</name>                         <literal>CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM</literal>
+                    </eq>
+                    <eq> need to get value from void* pointer
+                        <name></name>
+                    </eq>
+                    <for_all in="kernel" query="CL_DEVICE_SVM_CAPABILITIES">
+                        <eq>
+                            <name>query</name>                          <literal>0</literal>
+                        </eq>
+                    </for_all>
+                </and>
+            </if>
+            <then>      <log>param_name is CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM and param_value is CL_TRUE but no devices in context associated with kernel support fine-grain system SVM allocations</log>
+                <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_OPERATION</value>
+            </then>-->
         </command>
 
-    <!-- 5.9.3 -->
+    <!-- 5.9.3 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_kernel</type>                               <name>clCloneKernel</name></proto>
             <param><type>cl_kernel</type>                               <name>source_kernel</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
+
+            <if>
+                <object_is_invalid name="source_kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clCloneKernel</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_KERNEL</value>
+            </then>
         </command>
 
     <!-- 5.9.4 -->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetKernelInfo</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_kernel_info</type>                          <name>param_name</name></param>
@@ -12716,6 +13021,12 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clGetKernelInfo</name>                            <value>CL_INVALID_KERNEL</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -12753,7 +13064,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetKernelWorkGroupInfo</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -12763,6 +13074,25 @@
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
             <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>device</name>                             <literal>NULL</literal>
+                    </neq>
+                    <object_not_in object="device" in="kernel"/>
+                </and>
+            </if>
+            <then>      <log>device is not in the list of devices associated with kernel</log>
+                <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_DEVICE</value>
+            </then>
+            <!-- need special func
+            CL_INVALID_DEVICE if device is NULL but there is more than one device associated with kernel-->
+            <if>
                 <enum_violation name="param_name"/>
             </if>
             <then>      <log>param_name is not valid</log>
@@ -12797,10 +13127,11 @@
             <then>      <log>param_value is too short</log>
                 <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_VALUE if param_name is CL_KERNEL_GLOBAL_WORK_SIZE and device is not a custom device and kernel is not a built-in kernel-->
+            <!-- need state
+            CL_INVALID_VALUE if param_name is CL_KERNEL_GLOBAL_WORK_SIZE and device is not a custom device and kernel is not a built-in kernel-->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetKernelSubGroupInfo</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_device_id</type>                            <name>device</name></param>
@@ -12811,6 +13142,39 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>device</name>                             <literal>NULL</literal>
+                    </neq>
+                    <object_not_in object="device" in="kernel"/>
+                </and>
+            </if>
+            <then>      <log>device is not in the list of devices associated with kernel</log>
+                <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_DEVICE</value>
+            </then>
+            <!-- need special func
+            CL_INVALID_DEVICE if device is NULL but there is more than one device associated with kernel
+            CL_INVALID_OPERATION if device is NULL and device associated with kernel does not support subgroups -->
+            <if>
+                <and>
+                    <neq>
+                        <name>device</name>                             <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <literal>0</literal>                            <query object="device" property="CL_DEVICE_MAX_NUM_SUB_GROUPS"/>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>device does not support subgroups</log>
+                <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_OPERATION</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -12873,7 +13237,7 @@
                         </or>
                     </and>
                     <and>
-                        <eq> <!-- special case - size of return type depends on value of param_value_size, so that it is checked here and not in the first if by literal_list-->
+                        <eq> <!-- special case - size of return type depends on value of param_value_size, so that it is checked here and not in the first if by literal_list -->
                             <name>param_name</name>                     <literal>CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT</literal>
                         </eq>
                         <or>
@@ -12896,25 +13260,20 @@
                     </and>
                 </or>
             </if>
-            <then>
+            <then>      <log>param_name is CL_KERNEL_MAX_SUB_GROUP_SIZE_FOR_NDRANGE, CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE or CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT and the size in bytes specified by input_value_size is not valid or if input_value is NULL</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not specified in standard-->
-                <or>
-                    <array_len_ls>
-                        <name>input_value</name>                        <name>input_value_size</name>
-                    </array_len_ls>
-                    <array_len_ls>
-                        <name>param_value</name>                        <name>param_value_size</name>
-                    </array_len_ls>
-                </or>
+                <array_len_ls>
+                    <name>input_value</name>                            <name>input_value_size</name>
+                </array_len_ls>
             </if>
-            <then>
+            <then>      <log>input_value is too short</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetKernelArgInfo</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_uint</type>                                 <name>arg_index</name></param>
@@ -12923,6 +13282,22 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clGetKernelArgInfo</name>                         <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <not>
+                    <ls>
+                        <name>arg_index</name>                          <query object="kernel" property="CL_KERNEL_NUM_ARGS"/>
+                    </ls>
+                </not>
+            </if>
+            <then>      <log>arg_index is not a valid argument index</log>
+                <name>clGetKernelArgInfo</name>                         <value>CL_INVALID_ARG_INDEX</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -12974,13 +13349,46 @@
             <param>const <type>cl_event</type>*                         <name>event_wait_list</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
-            <!-- CL_INVALID_WORK_DIMENSION if work_dim is not a valid value (i.e. a value between 1 and CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS)-->
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="kernel"/>
+            </if>
+            <then>      <log>context associated with command_queue and kernel are not the same</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_CONTEXT</value>
+            </then>
             <if>
                 <eq>
                     <name>work_dim</name>                               <literal>0</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>work_dim is 0</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_DIMENSION</value>
+            </then>
+            <if>
+                <gt>
+                    <name>work_dim</name>                               <query object="command_queue" property="CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS"/>
+                </gt>
+            </if>
+            <then>      <log>work_dim is larger than CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_DIMENSION</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -12993,7 +13401,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>     <log>global_work_size is too short</log> 
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -13009,7 +13417,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>OpenCL version is less than 2.1 and global_work_size is NULL or some of the values specified in global_work_size are 0</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_GLOBAL_WORK_SIZE</value>
             </then>
             <if>
@@ -13022,7 +13430,7 @@
                     </neq>
                 </and>
             </if>
-            <then>
+            <then>      <log>OpenCL version is less than 1.1 and global_work_offset is not NULL</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_GLOBAL_OFFSET</value>
             </then>
             <if> <!-- not covered by standard-->

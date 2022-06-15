@@ -468,10 +468,10 @@ bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 {
   cl_device_id q_device;
   tdispatch->clGetCommandQueueInfo(
-    command_queue, 
-    CL_QUEUE_DEVICE, 
-    sizeof(cl_device_id), 
-    &q_device, 
+    command_queue,
+    CL_QUEUE_DEVICE,
+    sizeof(cl_device_id),
+    &q_device,
     NULL);
 
   if (device == q_device)
@@ -549,7 +549,7 @@ bool object_not_in(cl_mem object, cl_command_queue command_queue)
 }
 
 // device should belong to the program
-bool object_not_in(cl_device_id object, cl_program program)
+bool object_not_in(cl_device_id device, cl_program program)
 {
   cl_uint nd;
   cl_device_id * devices = NULL;
@@ -557,7 +557,7 @@ bool object_not_in(cl_device_id object, cl_program program)
 
   for (cl_uint i = 0; i < nd; ++i)
   {
-    if (object == devices[i])
+    if (device == devices[i])
     {
       free(devices);
       return false;
@@ -568,6 +568,81 @@ bool object_not_in(cl_device_id object, cl_program program)
   return true;
 }
 
+// device should belong to the kernel
+bool object_not_in(cl_device_id device, cl_kernel kernel)
+{
+  cl_program pr;
+  tdispatch->clGetKernelInfo(
+    kernel,
+    CL_KERNEL_PROGRAM,
+    sizeof(pr),
+    &pr,
+    NULL);
+  cl_uint nd;
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_NUM_DEVICES,
+    sizeof(nd),
+    &nd,
+    NULL);
+  std::vector<cl_device_id> devices(nd);
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_DEVICES,
+    nd * sizeof(cl_device_id),
+    devices.data(),
+    NULL);
+  // remove all devices for which the program is not built
+  devices.erase(
+    std::remove_if(
+      devices.begin(),
+      devices.end(),
+      [pr](cl_device_id d) {
+        cl_build_status bs;
+        tdispatch->clGetProgramBuildInfo(
+          pr,
+          d,
+          CL_PROGRAM_BUILD_STATUS,
+          sizeof(bs),
+          &bs,
+          NULL);
+        return (bs != CL_BUILD_SUCCESS); }
+      ),
+    devices.end());
+  nd = devices.size();
+
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    if (device == devices[i])
+      return false;
+  }
+
+  return true;
+}
+
+// command queue and kernel should belong to the same context
+bool object_not_in(cl_command_queue command_queue, cl_kernel kernel)
+{
+  cl_context c_context;
+  tdispatch->clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_CONTEXT,
+    sizeof(cl_context),
+    &c_context,
+    NULL);
+  cl_context k_context;
+  tdispatch->clGetKernelInfo(
+    kernel,
+    CL_MEM_CONTEXT,
+    sizeof(cl_context),
+    &k_context,
+    NULL);
+
+  if (k_context == c_context)
+      return false;
+  return true;
+}
+
 template<typename T1, typename T2>
 bool any_object_not_in(T1 * objects, size_t n, T2 in)
 {
@@ -575,6 +650,25 @@ bool any_object_not_in(T1 * objects, size_t n, T2 in)
     if (object_not_in(objects[i], in))
       return true;
   return false;
+}
+
+template<cl_uint property>
+bool for_all(const cl_device_id * devices, const cl_uint nd, std::function<bool(return_type<property>)> check)
+{
+  return_type<property> a;
+  bool res = true;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+   tdispatch->clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res && check(a);
+  }
+
+  return res;
 }
 
 template<cl_uint property>
@@ -622,6 +716,84 @@ bool for_all(cl_program program, std::function<bool(return_type<property>)> chec
   }
 
   free(devices);
+  return res;
+}
+
+template<cl_uint property>
+bool for_all(cl_kernel kernel, std::function<bool(return_type<property>)> check)
+{
+  cl_program pr;
+  tdispatch->clGetKernelInfo(
+    kernel,
+    CL_KERNEL_PROGRAM,
+    sizeof(pr),
+    &pr,
+    NULL);
+  cl_uint nd;
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_NUM_DEVICES,
+    sizeof(nd),
+    &nd,
+    NULL);
+  std::vector<cl_device_id> devices(nd);
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_DEVICES,
+    nd * sizeof(cl_device_id),
+    devices.data(),
+    NULL);
+  // remove all devices for which the program is not built
+  devices.erase(
+    std::remove_if(
+      devices.begin(),
+      devices.end(),
+      [pr](cl_device_id d) {
+        cl_build_status bs;
+        tdispatch->clGetProgramBuildInfo(
+          pr,
+          d,
+          CL_PROGRAM_BUILD_STATUS,
+          sizeof(bs),
+          &bs,
+          NULL);
+        return (bs != CL_BUILD_SUCCESS); }
+      ),
+    devices.end());
+  nd = devices.size();
+
+  return_type<property> a;
+  bool res = true;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+   tdispatch->clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res && check(a);
+  }
+
+  return res;
+}
+
+template<cl_uint property>
+bool for_any(const cl_device_id * devices, const cl_uint nd, std::function<bool(return_type<property>)> check)
+{
+  return_type<property> a;
+  bool res = false;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    tdispatch->clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res || check(a);
+  }
+
   return res;
 }
 
@@ -747,6 +919,6 @@ bool not_aligned(
 {
   if (std::align(align, align, ptr, align) == nullptr)
     return true;
-  
+
   return false;
 }
