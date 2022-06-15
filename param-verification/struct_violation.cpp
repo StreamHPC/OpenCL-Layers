@@ -5,10 +5,10 @@ bool is_3D_image_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width, height, depth;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -42,10 +42,10 @@ bool is_2D_image_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width, height;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -72,10 +72,10 @@ bool is_1D_image_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -95,10 +95,10 @@ bool is_2D_array_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width, height, size;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -132,10 +132,10 @@ bool is_1D_array_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width, size;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -162,10 +162,10 @@ bool is_1D_buffer_fits(
   cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   size_t width;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -183,14 +183,14 @@ bool is_1D_buffer_fits(
 cl_uint max_pitch_al(cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   cl_uint res = 0;
 
   // find maximum row pitch alignment size in pixels for 2D images
   // created from a buffer for all devices in the context
   cl_uint size;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo( // give 0 for devices not supporting such image creation
       devices[i],
@@ -208,14 +208,14 @@ cl_uint max_pitch_al(cl_context context)
 cl_uint max_base_al(cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   cl_uint res = 0;
 
   // find maximum base address alignment size in pixels for 2D images
   // created from a buffer for all devices in the context
   cl_uint size;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo( // give 0 for devices not supporting such image creation
       devices[i],
