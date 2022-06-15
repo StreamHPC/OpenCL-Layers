@@ -59,16 +59,25 @@ std::string parse_expression(xml_node<> const * const node)
         res = "(" + list[0] + " % " + list[1] + ")";
     }
     else if (strcmp(name, "mult") == 0) {
-        std::vector<std::string> list(parse_list_expressions(node));
-
-        int n = 0;
-        for (auto a : list)
+        if (node->first_attribute("array") != nullptr)
         {
-            res += (n == 0) ? "(" : " * ";
-            res += a;
-            ++n;
+            res = std::string("mult(")
+                + node->first_attribute("array")->value() + ", "
+                + node->first_attribute("elements")->value() + ")";
         }
-        res += ")";
+        else
+        {
+            std::vector<std::string> list(parse_list_expressions(node));
+
+            int n = 0;
+            for (auto a : list)
+            {
+                res += (n == 0) ? "(" : " * ";
+                res += a;
+                ++n;
+            }
+            res += ")";
+        }
     }
     else if (strcmp(name, "add") == 0) {
         std::vector<std::string> list(parse_list_expressions(node));
@@ -302,6 +311,14 @@ std::string parse_violation(xml_node<> const * const violation)
                 + std::string(violation->first_attribute("elements")->value())
                 + "))";
         }
+        else if (strcmp(name, "any_non_null_invalid") == 0)
+        {
+            test = "(any_non_null_invalid("
+                + std::string(violation->first_attribute("array")->value())
+                + ", "
+                + std::string(violation->first_attribute("elements")->value())
+                + "))";
+        }
         else if (strcmp(name, "any_not_available") == 0)
         {
             test = "(any_not_available("
@@ -472,6 +489,7 @@ void parse_bitfields(std::stringstream& code, xml_node<> *& root_node)
 
         std::vector<std::string> bitfields_list =
             {"cl_device_type",
+            "cl_command_queue_properties",
             "cl_mem_flags",
             "cl_map_flags",
             "cl_mem_migration_flags",
@@ -676,124 +694,6 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
         //    version_node->value());
     }
     code << "  void" << end << "\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_platform_id platform)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(platform);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
-         << "    tdispatch->clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_device_id device)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(device);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_device_info\", property)) {\n"
-         << "    tdispatch->clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
-         << "    cl_platform_id p;\n"
-         << "    tdispatch->clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(cl_platform_id), &p, NULL);\n"
-         << "    tdispatch->clGetPlatformInfo(p, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid device query in query(cl_device_id). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_context context)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(context);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_context_info\", property)) {\n"
-         << "    tdispatch->clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid context query in query(cl_context). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_command_queue queue)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(queue);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_command_queue_info\", property)) {\n"
-         << "    tdispatch->clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(version, \"cl_device_info\", property)) {\n"
-         << "    cl_device_id d;\n"
-         << "    tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);\n"
-         << "    tdispatch->clGetDeviceInfo(d, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid command queue query in query(cl_command_queue). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_mem object)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(object);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_mem_info\", property)) {\n"
-         << "    tdispatch->clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(version, \"cl_image_info\", property)) {\n"
-         << "    tdispatch->clGetImageInfo(object, property, sizeof(a), &a, NULL);\n"
-         << "  } else if (!enum_violation(version, \"cl_pipe_info\", property)) {\n"
-         << "    tdispatch->clGetPipeInfo(object, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_program program)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(program);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_program_info\", property)) {\n"
-         << "    tdispatch->clGetProgramInfo(program, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid program query in query(cl_program). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
-    code << "template<cl_uint property>\n"
-         << "return_type<property> query(cl_kernel kernel)\n"
-         << "{\n"
-         << "  cl_version version = get_object_version(kernel);\n"
-         << "  return_type<property> a;\n"
-         << "  memset(&a, 0, sizeof(return_type<property>));\n"
-         << "  if (!enum_violation(version, \"cl_kernel_info\", property)) {\n"
-         << "    tdispatch->clGetKernelInfo(kernel, property, sizeof(a), &a, NULL);\n"
-         << "  } else {\n"
-         << "    *log_stream << \"Invalid kernel query in query(cl_kernel). This is a bug in the param_verification layer.\" << std::endl;\n"
-         << "    exit(-1);\n"
-         << "  }\n"
-         << "  return a;\n"
-         << "}\n\n";
-
 }
 
 void render_fetch_version(std::stringstream& code, const std::string& handle, const std::string& name)
@@ -1021,6 +921,14 @@ int main(int argc, char* argv[])
          << "{\n"
          << "  for (size_t i = 0; i < size; ++i)\n"
          << "    if (!object_is_valid(ptr[i])) return true;\n"
+         << "  return false;\n"
+         << "}\n\n";
+
+    code << "template<typename T>\n"
+         << "bool any_non_null_invalid(T * ptr, size_t size)\n"
+         << "{\n"
+         << "  for (size_t i = 0; i < size; ++i)\n"
+         << "    if ((ptr[i] != NULL) && !object_is_valid(ptr[i])) return true;\n"
          << "  return false;\n"
          << "}\n\n";
 

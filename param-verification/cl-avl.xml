@@ -13011,7 +13011,7 @@
             </then>
         </command>
 
-    <!-- 5.9.4 -->
+    <!-- 5.9.4 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetKernelInfo</name></proto>
@@ -13090,8 +13090,12 @@
             <then>      <log>device is not in the list of devices associated with kernel</log>
                 <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_DEVICE</value>
             </then>
-            <!-- need special func
-            CL_INVALID_DEVICE if device is NULL but there is more than one device associated with kernel-->
+            <if>
+                <struct_violation name="kernel" in="device"/>
+            </if>
+            <then>      <log>device is NULL but there is more than one device associated with kernel</log>
+                <name>clGetKernelWorkGroupInfo</name>                   <value>CL_INVALID_DEVICE</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -13159,9 +13163,12 @@
             <then>      <log>device is not in the list of devices associated with kernel</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_DEVICE</value>
             </then>
-            <!-- need special func
-            CL_INVALID_DEVICE if device is NULL but there is more than one device associated with kernel
-            CL_INVALID_OPERATION if device is NULL and device associated with kernel does not support subgroups -->
+            <if>
+                <struct_violation name="kernel" in="device"/>
+            </if>
+            <then>      <log>device is NULL but there is more than one device associated with kernel</log>
+                <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_DEVICE</value>
+            </then>
             <if>
                 <and>
                     <neq>
@@ -13174,6 +13181,12 @@
             </if>
             <then>      <log>device does not support subgroups</log>
                 <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
+                <struct_violation name="device" in="kernel"/>
+            </if>
+            <then>      <log>device is NULL and device associated with kernel does not support subgroups</log>
+                <name>clGetKernelSubGroupInfo</name>                    <value>CL_INVALID_DEVICE</value>
             </then>
             <if>
                 <enum_violation name="param_name"/>
@@ -13335,9 +13348,9 @@
             </then>
         </command>
 
-    <!-- 5.10 -->
+    <!-- 5.10 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueNDRangeKernel</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
@@ -13374,6 +13387,12 @@
             </if>
             <then>      <log>context associated with command_queue and kernel are not the same</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="kernel" in="command_queue"/>
+            </if>
+            <then>      <log>there is no successfully built program executable available for device associated with command_queue</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_PROGRAM_EXECUTABLE</value>
             </then>
             <if>
                 <eq>
@@ -13443,7 +13462,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>global_work_offset is too short</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -13456,33 +13475,70 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>local_work_size is too short</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </eq>
-                    </and>
-                </or>
+                <and>
+                    <neq>
+                        <name>local_work_size</name>                    <literal>NULL</literal>
+                    </neq>
+                    <gt>
+                        <mult array="local_work_size" elements="work_dim"/>
+                        <query object="command_queue" property="CL_KERNEL_WORK_GROUP_SIZE"/>
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>local_work_size is specified and the total number of work-items in the work-group is greater than the value specified by CL_KERNEL_WORK_GROUP_SIZE</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_GROUP_SIZE</value>
+            </then>
+            <if>
+                <struct_violation name="command_queue" param="kernel, work_dim, global_work_size, local_work_size"/>
+            </if>
+            <then>      <log>the work-group size must be uniform and the local_work_size is not NULL, is not equal to the required work-group size specified in the kernel source, or the global_work_size is not evenly divisible by the local_work_size</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_GROUP_SIZE</value>
+            </then>
+            <if>
+                <struct_violation name="command_queue" param="kernel, work_dim, local_work_size"/>
+            </if>
+            <then>      <log>local_work_size is specified and is not consistent with the required number of sub-groups for kernel in the program source</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_GROUP_SIZE</value>
+            </then>
+            <if>
+                <struct_violation name="command_queue" param="work_dim, local_work_size"/>
+            </if>
+            <then>      <log>the number of work-items specified in some of local_work_size is greater than the corresponding values specified by CL_DEVICE_MAX_WORK_ITEM_SIZES</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_ITEM_SIZE</value>
+            </then>
+            <!-- CL_INVALID_GLOBAL_WORK_SIZE if any of the values specified in global_work_size[0], ... global_work_size[work_dim - 1] exceed the maximum value representable by size_t on the device on which the kernel-instance will be enqueued. -->
+            <!-- CL_INVALID_GLOBAL_OFFSET if the value specified in global_work_size + the corresponding values in global_work_offset for any dimensions is greater than the maximum value representable by size t on the device on which the kernel-instance will be enqueued. -->
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -13492,13 +13548,31 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <!-- many errors need device queries to check-->
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- need state
+            CL_INVALID_KERNEL_ARGS if the kernel argument values have not been specified.
+            CL_MISALIGNED_SUB_BUFFER_OFFSET if a sub-buffer object is specified as the value for an argument that is a buffer object and the offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1.
+            CL_INVALID_IMAGE_SIZE if an image object is specified as an argument value and the image dimensions (image width, height, specified or compute row and/or slice pitch) are not supported by device associated with queue.
+            CL_IMAGE_FORMAT_NOT_SUPPORTED if an image object is specified as an argument value and the image format (image channel order and data type) is not supported by device associated with queue
+            CL_INVALID_OPERATION if SVM pointers are passed as arguments to a kernel and the device does not support SVM or if system pointers are passed as arguments to a kernel and/or stored inside SVM allocations passed as kernel arguments and the device does not support fine grain system SVM allocations.-->
+            <!-- CL_OUT_OF_RESOURCES if there is a failure to queue the execution instance of kernel on the command-queue because of insufficient resources needed to execute the kernel. For example, the explicitly specified local_work_size causes a failure to execute the kernel because of insufficient resources such as registers or local memory. Another example would be the number of read-only image args used in kernel exceed the CL_DEVICE_MAX_READ_IMAGE_ARGS value for device or the number of write-only and read-write image args used in kernel exceed the CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS value for device or the number of samplers used in kernel exceed CL_DEVICE_MAX_SAMPLERS for device -->
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_2_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueTask</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
@@ -13507,29 +13581,70 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <object_is_invalid name="kernel"/>
+            </if>
+            <then>      <log>kernel is a not a valid kernel object</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_KERNEL</value>
+            </then>
+            <if>
+                <object_not_in object="command_queue" in="kernel"/>
+            </if>
+            <then>      <log>context associated with command_queue and kernel are not the same</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <object_not_in object="kernel" in="command_queue"/>
+            </if>
+            <then>      <log>there is no successfully built program executable available for device associated with command_queue</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_PROGRAM_EXECUTABLE</value>
+            </then>
+            <if>
+                <struct_violation name="command_queue" param="kernel"/>
+            </if>
+            <then>      <log>a work-group size is specified for kernel in the program source and it is not (1, 1, 1) or the required number of sub-groups is specified for kernel in the program source and is not consistent with a work-group size of (1, 1, 1)</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_WORK_GROUP_SIZE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueTask</name>                              <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -13539,12 +13654,31 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueTask</name>                              <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueTask</name>                              <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <!-- need state
+            CL_INVALID_KERNEL_ARGS if the kernel argument values have not been specified.
+            CL_MISALIGNED_SUB_BUFFER_OFFSET if a sub-buffer object is specified as the value for an argument that is a buffer object and the offset specified when the sub-buffer object is created is not aligned to CL_DEVICE_MEM_BASE_ADDR_ALIGN value for device associated with queue. This error code is missing before version 1.1.
+            CL_INVALID_IMAGE_SIZE if an image object is specified as an argument value and the image dimensions (image width, height, specified or compute row and/or slice pitch) are not supported by device associated with queue.
+            CL_IMAGE_FORMAT_NOT_SUPPORTED if an image object is specified as an argument value and the image format (image channel order and data type) is not supported by device associated with queue
+            CL_INVALID_OPERATION if SVM pointers are passed as arguments to a kernel and the device does not support SVM or if system pointers are passed as arguments to a kernel and/or stored inside SVM allocations passed as kernel arguments and the device does not support fine grain system SVM allocations.-->
+            <!-- CL_OUT_OF_RESOURCES if there is a failure to queue the execution instance of kernel on the command-queue because of insufficient resources needed to execute the kernel. For example, the explicitly specified local_work_size causes a failure to execute the kernel because of insufficient resources such as registers or local memory. Another example would be the number of read-only image args used in kernel exceed the CL_DEVICE_MAX_READ_IMAGE_ARGS value for device or the number of write-only and read-write image args used in kernel exceed the CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS value for device or the number of samplers used in kernel exceed CL_DEVICE_MAX_SAMPLERS for device -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueNativeKernel</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param>void (CL_CALLBACK*                                   <name>user_func</name>)(void*)</param>
@@ -13558,34 +13692,51 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
                 <eq>
                     <name>user_func</name>                              <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>user_func is NULL</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>args</name>                           <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>cb_args</name>                        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>args</name>                           <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_mem_objects</name>                <literal>0</literal>
-                        </gt>
-                    </and>
-                </or>
+                <and>
+                    <eq>
+                        <name>args</name>                               <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>cb_args</name>                            <literal>0</literal>
+                    </gt>
+                </and>
             </if>
-            <then>
+            <then>      <log>args is a NULL value and cb_args &gt; 0</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>args</name>                               <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_mem_objects</name>                    <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then><log>args is a NULL value and num_mem_objects &gt; 0</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -13598,7 +13749,7 @@
                     </eq>
                 </and>
             </if>
-            <then>
+            <then>      <log>args is not NULL and cb_args is 0</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -13616,7 +13767,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>num_mem_objects &gt; 0 and mem_list or args_mem_loc are NULL</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -13634,7 +13785,7 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>num_mem_objects = 0 and mem_list or args_mem_loc are not NULL</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -13647,7 +13798,7 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>args is too short</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -13665,33 +13816,42 @@
                     </or>
                 </and>
             </if>
-            <then>
+            <then>      <log>mem_list or args_mem_loc is too short</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </eq>
-                    </and>
-                </or>
+                <struct_violation name="mem_list" param="num_mem_objects"/>
             </if>
-            <then>
+            <then>      <log>one or more non-NULL memory objects specified in mem_list are not valid buffers</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_MEM_OBJECT</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -13701,24 +13861,68 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_CONTEXT</value>
+            </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_EXEC_NATIVE_KERNEL</literal>        <query object="command_queue" property="CL_DEVICE_EXECUTION_CAPABILITIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the device associated with command_queue cannot execute the native kernel</log>
+                <name>clEnqueueNativeKernel</name>                      <value>CL_INVALID_OPERATION</value>
+            </then>
+            <!-- need state
+            CL_INVALID_OPERATION if SVM pointers are passed as arguments to a kernel and the device does not support SVM or if system pointers are passed as arguments to a kernel and/or stored inside SVM allocations passed as kernel arguments and the device does not support fine grain system SVM allocations.-->
         </command>
 
-    <!-- 5.11 -->
+    <!-- 5.11 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_event</type>                                <name>clCreateUserEvent</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_int</type>*                                 <name>errcode_ret</name></param>
+
+            <if>
+                <object_is_invalid name="context"/>
+            </if>
+            <then>      <log>context is not a valid context</log>
+                <name>clCreateUserEvent</name>                          <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetUserEventStatus</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
             <param><type>cl_int</type>                                  <name>execution_status</name></param>
 
+            <if>
+                <object_is_invalid name="event"/>
+            </if>
+            <then>      <log>event is not a valid event object</log>
+                <name>clSetUserEventStatus</name>                       <value>CL_INVALID_EVENT</value>
+            </then>
+            <if>
+                <object_is_invalid name="event" type="CL_COMMAND_USER"/>
+            </if>
+            <then>      <log>event is not a valid user event object</log>
+                <name>clSetUserEventStatus</name>                       <value>CL_INVALID_EVENT</value>
+            </then>
             <if>
                 <and>
                     <neq>
@@ -13729,13 +13933,14 @@
                     </gt>
                 </and>
             </if>
-            <then>
+            <then>      <log>the execution_status is not CL_COMPLETE or a negative integer value</log>
                 <name>clSetUserEventStatus</name>                       <value>CL_INVALID_VALUE</value>
             </then>
-            <!-- CL_INVALID_OPERATION if the execution_status for event has already been changed by a previous call to clSetUserEventStatus-->
+            <!-- need state
+            CL_INVALID_OPERATION if the execution_status for event has already been changed by a previous call to clSetUserEventStatus-->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clWaitForEvents</name></proto>
             <param><type>cl_uint</type>                                 <name>num_events</name></param>
             <param>const <type>cl_event</type>*                         <name>event_list</name></param>
@@ -13750,20 +13955,32 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>num_events is zero or event_list is NULL</log>
                 <name>clWaitForEvents</name>                            <value>CL_INVALID_VALUE</value>
             </then>
-            <if>
+            <if> <!-- not covered by standard-->
                 <array_len_ls>
                     <name>event_list</name>                             <name>num_events</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>      <log>event_list is too short</log>
                 <name>clWaitForEvents</name>                            <value>CL_INVALID_EVENT</value>
+            </then>
+            <if>
+                <any_invalid array="event_list" elements="num_events"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clWaitForEvents</name>                            <value>CL_INVALID_EVENT</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_list" elements="num_events" in="event_list[0]"/>
+            </if>
+            <then>      <log>events specified in event_list do not belong to the same context</log>
+                <name>clWaitForEvents</name>                            <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetEventInfo</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
             <param><type>cl_event_info</type>                           <name>param_name</name></param>
@@ -13771,6 +13988,12 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="event"/>
+            </if>
+            <then>      <log>event is not a valid event object</log>
+                <name>clGetEventInfo</name>                             <value>CL_INVALID_EVENT</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -13806,9 +14029,11 @@
             <then>      <log>param_value is too short</log>
                 <name>clGetEventInfo</name>                             <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- need state
+            CL_INVALID_VALUE if information to query given in param_name cannot be queried for event -->
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_1">
+        <command suffix="CL_API_SUFFIX__VERSION_1_1"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetEventCallback</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
             <param><type>cl_int</type>                                  <name>command_exec_callback_type</name></param>
@@ -13816,41 +14041,64 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
 
             <if>
-                <or>
-                    <eq>
-                        <name>pfn_event_notify</name>                   <literal>NULL</literal>
-                    </eq>
-                    <and>
-                        <neq>
-                            <name>command_exec_callback_type</name>     <literal>CL_SUBMITTED</literal>
-                        </neq>
-                        <neq>
-                            <name>command_exec_callback_type</name>     <literal>CL_RUNNING</literal>
-                        </neq>
-                        <neq>
-                            <name>command_exec_callback_type</name>     <literal>CL_COMPLETE</literal>
-                        </neq>
-                    </and>
-                </or>
+                <object_is_invalid name="event"/>
             </if>
-            <then>
+            <then>      <log>event is not a valid event object</log>
+                <name>clSetEventCallback</name>                         <value>CL_INVALID_EVENT</value>
+            </then>
+            <if>
+                <eq>
+                    <name>pfn_event_notify</name>                       <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>pfn_event_notify is NULL</log>
+                <name>clSetEventCallback</name>                         <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>command_exec_callback_type</name>         <literal>CL_SUBMITTED</literal>
+                    </neq>
+                    <neq>
+                        <name>command_exec_callback_type</name>         <literal>CL_RUNNING</literal>
+                    </neq>
+                    <neq>
+                        <name>command_exec_callback_type</name>         <literal>CL_COMPLETE</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>command_exec_callback_type is not CL_SUBMITTED, CL_RUNNING, or CL_COMPLETE</log>
                 <name>clSetEventCallback</name>                         <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainEvent</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
+
+            <if>
+                <object_is_invalid name="event"/>
+            </if>
+            <then>      <log>event is not a valid event object</log>
+                <name>clRetainEvent</name>                              <value>CL_INVALID_EVENT</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseEvent</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
+
+            <if>
+                <object_is_invalid name="event"/>
+            </if>
+            <then>      <log>event is not a valid event object</log>
+                <name>clReleaseEvent</name>                             <value>CL_INVALID_EVENT</value>
+            </then>
         </command>
 
-    <!-- 5.12 -->
+    <!-- 5.12 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueMarkerWithWaitList</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_events_in_wait_list</name></param>
@@ -13858,29 +14106,46 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -13890,32 +14155,72 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueMarkerWithWaitList</name>                <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueMarker</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueMarker</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueMarker</name>                            <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
                 <eq>
                     <name>event</name>                                  <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>event is NULL</log>
                 <name>clEnqueueMarker</name>                            <value>CL_INVALID_VALUE</value>
             </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueWaitForEvents</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_events</name></param>
             <param>const <type>cl_event</type>*                         <name>event_list</name></param>
 
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueWaitForEvents</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueWaitForEvents</name>                     <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -13926,7 +14231,7 @@
                     </eq>
                 </or>
             </if>
-            <then>
+            <then>      <log>num_events is 0 or event_list is NULL</log>
                 <name>clEnqueueWaitForEvents</name>                     <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- not covered by standard-->
@@ -13934,12 +14239,18 @@
                     <name>event_list</name>                             <name>num_events</name>
                 </array_len_ls>
             </if>
-            <then>
+            <then>       <log>event_list is too short</log>
                 <name>clEnqueueWaitForEvents</name>                     <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_list" elements="num_events" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueWaitForEvents</name>                     <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_2">
+        <command suffix="CL_API_SUFFIX__VERSION_1_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueBarrierWithWaitList</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
             <param><type>cl_uint</type>                                 <name>num_events_in_wait_list</name></param>
@@ -13947,29 +14258,46 @@
             <param><type>cl_event</type>*                               <name>event</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>event_wait_list</name>                <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_events_in_wait_list</name>        <literal>0</literal>
-                        </eq>
-                    </and>
-                </or>
+                <object_is_invalid name="command_queue"/>
             </if>
-            <then>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is NULL and num_events_in_wait_list > 0</log>
                 <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_EVENT_WAIT_LIST</value>
             </then>
-            <if> <!-- event objects in event_wait_list are not valid events-->
+            <if>
+                <and>
+                    <neq>
+                        <name>event_wait_list</name>                    <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_events_in_wait_list</name>            <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>event_wait_list is not NULL and num_events_in_wait_list is 0</log>
+                <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
                 <and>
                     <neq>
                         <name>event_wait_list</name>                    <literal>NULL</literal>
@@ -13979,19 +14307,46 @@
                     </array_len_ls>
                 </and>
             </if>
-            <then>
+            <then>      <log>event_wait_list is too short</log>
                 <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_invalid array="event_wait_list" elements="num_events_in_wait_list"/>
+            </if>
+            <then>      <log>event objects in event_wait_list are not valid events</log>
+                <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_EVENT_WAIT_LIST</value>
+            </then>
+            <if>
+                <any_object_not_in array="event_wait_list" elements="num_events_in_wait_list" in="command_queue"/>
+            </if>
+            <then>      <log>the context associated with command_queue and events in event_wait_list are not the same</log>
+                <name>clEnqueueBarrierWithWaitList</name>               <value>CL_INVALID_CONTEXT</value>
             </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_1_1_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_1_1_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clEnqueueBarrier</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clEnqueueBarrier</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clEnqueueBarrier</name>                           <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
-    <!-- 5.14 -->
+    <!-- 5.14 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clGetEventProfilingInfo</name></proto>
             <param><type>cl_event</type>                                <name>event</name></param>
             <param><type>cl_profiling_info</type>                       <name>param_name</name></param>
@@ -13999,6 +14354,12 @@
             <param><type>void</type>*                                   <name>param_value</name></param>
             <param><type>size_t</type>*                                 <name>param_value_size_ret</name></param>
 
+            <if>
+                <object_is_invalid name="event"/>
+            </if>
+            <then>      <log>event is not a valid event object</log>
+                <name>clGetEventProfilingInfo</name>                    <value>CL_INVALID_EVENT</value>
+            </then>
             <if>
                 <enum_violation name="param_name"/>
             </if>
@@ -14034,18 +14395,66 @@
             <then>      <log>param_value is too short</log>
                 <name>clGetEventProfilingInfo</name>                    <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <not>
+                    <bit_and>
+                        <literal>CL_QUEUE_PROFILING_ENABLE</literal>    <query object="event" property="CL_QUEUE_PROPERTIES"/>
+                    </bit_and>
+                </not>
+            </if>
+            <then>      <log>the CL_QUEUE_PROFILING_ENABLE flag is not set for the command-queue</log>
+                <name>clGetEventProfilingInfo</name>                    <value>CL_PROFILING_INFO_NOT_AVAILABLE</value>
+            </then>
+            <if>
+                <not>
+                    <object_is_invalid name="event" type="CL_COMMAND_USER"/>
+                </not>
+            </if>
+            <then>      <log>event is a user event object</log>
+                <name>clGetEventProfilingInfo</name>                    <value>CL_PROFILING_INFO_NOT_AVAILABLE</value>
+            </then>
         </command>
 
-    <!-- 5.15 -->
+    <!-- 5.15 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clFlush</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clFlush</name>                                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clFlush</name>                                    <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clFinish</name></proto>
             <param><type>cl_command_queue</type>                        <name>command_queue</name></param>
+
+            <if>
+                <object_is_invalid name="command_queue"/>
+            </if>
+            <then>      <log>command_queue is not a valid command-queue</log>
+                <name>clFinish</name>                                   <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
+            <if>
+                <bit_and>
+                    <literal>CL_QUEUE_ON_DEVICE</literal>               <query object="command_queue" property="CL_QUEUE_PROPERTIES"/>
+                </bit_and>
+            </if>
+            <then>      <log>command_queue is not a host command-queue</log>
+                <name>clFinish</name>                                   <value>CL_INVALID_COMMAND_QUEUE</value>
+            </then>
         </command>
     </commands>
 

@@ -4,9 +4,8 @@ bool is_3D_image_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width, height, depth;
   for (cl_uint i = 0; i < nd; ++i)
@@ -29,16 +28,12 @@ bool is_3D_image_fits(
       sizeof(size_t),
       &depth,
       NULL);
-    if ((image_desc->image_width <= width ) &&
-      (image_desc->image_height <= height) &&
-      (image_desc->image_depth <= depth ))
-    {
-      free(devices);
+    if ((image_desc->image_width  <= width ) &&
+        (image_desc->image_height <= height) &&
+        (image_desc->image_depth  <= depth ))
       return true;
-    }
   }
 
-  free(devices);
   return false;
 }
 
@@ -46,9 +41,8 @@ bool is_2D_image_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width, height;
   for (cl_uint i = 0; i < nd; ++i)
@@ -65,15 +59,11 @@ bool is_2D_image_fits(
       sizeof(size_t),
       &height,
       NULL);
-    if ((image_desc->image_width <= width ) &&
-      (image_desc->image_height <= height))
-    {
-      free(devices);
+    if ((image_desc->image_width  <= width ) &&
+        (image_desc->image_height <= height))
       return true;
-    }
   }
 
-  free(devices);
   return false;
 }
 
@@ -81,9 +71,8 @@ bool is_1D_image_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width;
   for (cl_uint i = 0; i < nd; ++i)
@@ -95,13 +84,9 @@ bool is_1D_image_fits(
       &width,
       NULL);
     if (image_desc->image_width <= width)
-    {
-      free(devices);
       return true;
-    }
   }
 
-  free(devices);
   return false;
 }
 
@@ -109,9 +94,8 @@ bool is_2D_array_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width, height, size;
   for (cl_uint i = 0; i < nd; ++i)
@@ -134,16 +118,12 @@ bool is_2D_array_fits(
       sizeof(size_t),
       &size,
       NULL);
-    if ((image_desc->image_width   <= width ) &&
-      (image_desc->image_height   <= height) &&
-      (image_desc->image_array_size <= size ))
-    {
-      free(devices);
+    if ((image_desc->image_width      <= width ) &&
+        (image_desc->image_height     <= height) &&
+        (image_desc->image_array_size <= size  ))
       return true;
-    }
   }
 
-  free(devices);
   return false;
 }
 
@@ -151,9 +131,8 @@ bool is_1D_array_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width, size;
   for (cl_uint i = 0; i < nd; ++i)
@@ -170,15 +149,11 @@ bool is_1D_array_fits(
       sizeof(size_t),
       &size,
       NULL);
-    if ((image_desc->image_width   <= width ) &&
-      (image_desc->image_array_size <= size ))
-    {
-      free(devices);
+    if ((image_desc->image_width      <= width) &&
+        (image_desc->image_array_size <= size ))
       return true;
-    }
   }
 
-  free(devices);
   return false;
 }
 
@@ -186,9 +161,8 @@ bool is_1D_buffer_fits(
   const cl_image_desc * const image_desc,
   cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   size_t width;
   for (cl_uint i = 0; i < nd; ++i)
@@ -200,69 +174,16 @@ bool is_1D_buffer_fits(
       &width,
       NULL);
     if (image_desc->image_width <= width)
-    {
-      free(devices);
       return true;
-    }
   }
 
-  free(devices);
   return false;
-}
-
-cl_device_id * get_devices(cl_context context, cl_uint * number)
-{
-  size_t size;
-  cl_device_id * devices = NULL;
-
-  tdispatch->clGetContextInfo(
-    context,
-    CL_CONTEXT_NUM_DEVICES,
-    0,
-    nullptr,
-    &size);
-
-  devices = static_cast<cl_device_id *>(malloc(size));
-  *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
-  tdispatch->clGetContextInfo(
-    context,
-    CL_CONTEXT_DEVICES,
-    size,
-    devices,
-    nullptr);
-
-  return devices;
-}
-
-cl_device_id * get_devices(cl_program program, cl_uint * number)
-{
-  size_t size;
-  cl_device_id * devices = NULL;
-
-  tdispatch->clGetProgramInfo(
-    program,
-    CL_PROGRAM_NUM_DEVICES,
-    0,
-    nullptr,
-    &size);
-
-  devices = static_cast<cl_device_id *>(malloc(size));
-  *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
-  tdispatch->clGetProgramInfo(
-    program,
-    CL_PROGRAM_DEVICES,
-    size,
-    devices,
-    nullptr);
-
-  return devices;
 }
 
 cl_uint max_pitch_al(cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   cl_uint res = 0;
 
@@ -281,15 +202,13 @@ cl_uint max_pitch_al(cl_context context)
       res = size;
   }
 
-  free(devices);
   return res;
 }
 
 cl_uint max_base_al(cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   cl_uint res = 0;
 
@@ -308,7 +227,6 @@ cl_uint max_base_al(cl_context context)
       res = size;
   }
 
-  free(devices);
   return res;
 }
 
@@ -1225,3 +1143,219 @@ bool struct_violation(
 
   return array_len_ls(fill_color, size);
 }
+
+// check non-uniform workgroups for clEnqueueNDRangeKernel
+bool struct_violation(
+  cl_version version,
+  cl_command_queue command_queue,
+  cl_kernel kernel,
+  cl_uint work_dim,
+  const size_t * global_work_size,
+  const size_t * local_work_size)
+{
+  if (((CL_VERSION_MAJOR(version) < 2) ||
+       ((CL_VERSION_MAJOR(version) >= 3) && 
+        (query<CL_DEVICE_NON_UNIFORM_WORK_GROUP_SUPPORT>(command_queue) == CL_FALSE)))
+      && (local_work_size != nullptr))
+  {
+    size_t cwgs[3] = {0,0,0};
+    tdispatch->clGetKernelInfo(
+      kernel,
+      CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+      sizeof(cwgs),
+      &cwgs,
+      NULL);
+    for (cl_uint i = 0; i < work_dim; ++i)
+      if ((cwgs[i] > 0) && (cwgs[i] != local_work_size[i]))
+        return true;
+
+    for (cl_uint i = 0; i < work_dim; ++i)
+      if (global_work_size[i] % local_work_size[i] != 0)
+        return true;
+  }
+
+  return false;
+}
+
+// check subgroups for clEnqueueNDRangeKernel
+bool struct_violation(
+  cl_version version,
+  cl_command_queue command_queue,
+  cl_kernel kernel,
+  cl_uint work_dim,
+  const size_t * local_work_size)
+{
+  if ((CL_VERSION_MAJOR(version)*100 +
+       CL_VERSION_MINOR(version) >= 201) &&
+      (local_work_size != nullptr))
+  {
+    size_t cnsg = 0;
+    tdispatch->clGetKernelSubGroupInfo(
+      kernel,
+      query<CL_QUEUE_DEVICE>(command_queue),
+      CL_KERNEL_COMPILE_NUM_SUB_GROUPS,
+      0,
+      NULL,
+      sizeof(size_t),
+      &cnsg,
+      NULL);
+
+    if (cnsg != 0)
+    {
+      size_t sg = 0;
+      tdispatch->clGetKernelSubGroupInfo(
+        kernel,
+        query<CL_QUEUE_DEVICE>(command_queue),
+        CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
+        work_dim * sizeof(size_t),
+        local_work_size,
+        sizeof(size_t),
+        &sg,
+        NULL);
+
+      if (sg != cnsg)
+        return true;
+    }
+  }
+
+  return false;
+}
+
+// check max local_work_size
+bool struct_violation(
+  cl_version version,
+  cl_command_queue command_queue,
+  cl_uint work_dim,
+  const size_t * local_work_size)
+{
+  if (local_work_size != nullptr)
+  {
+    size_t n = 0;
+    tdispatch->clGetDeviceInfo(
+      query<CL_QUEUE_DEVICE>(command_queue),
+      CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+      sizeof(size_t),
+      &n,
+      NULL);
+
+    std::vector<size_t> mwis(n);
+    tdispatch->clGetDeviceInfo(
+      query<CL_QUEUE_DEVICE>(command_queue),
+      CL_DEVICE_MAX_WORK_ITEM_SIZES,
+      n * sizeof(size_t),
+      mwis.data(),
+      NULL);
+
+    for (cl_uint i = 0; i < work_dim; ++i)
+      if (mwis[i] < local_work_size[i])
+        return true;
+  }
+
+  return false;
+}
+
+// check workgroups for clEnqueueTask
+bool struct_violation(
+  cl_version version,
+  cl_command_queue command_queue,
+  cl_kernel kernel)
+{
+  {
+    size_t cwgs[3] = {0,0,0};
+    tdispatch->clGetKernelInfo(
+      kernel,
+      CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+      sizeof(cwgs),
+      &cwgs,
+      NULL);
+
+    for (cl_uint i = 0; i < 3; ++i)
+      if ((cwgs[i] > 0) && (cwgs[i] != 1))
+        return true;
+  }
+
+  if (version >= CL_MAKE_VERSION(2, 1, 0))
+  {
+    size_t cnsg = 0;
+    tdispatch->clGetKernelSubGroupInfo(
+      kernel,
+      query<CL_QUEUE_DEVICE>(command_queue),
+      CL_KERNEL_COMPILE_NUM_SUB_GROUPS,
+      0,
+      NULL,
+      sizeof(size_t),
+      &cnsg,
+      NULL);
+
+    if (cnsg != 0)
+    {
+      size_t local_work_size[3] = {1, 1, 1};
+      size_t sg = 0;
+      tdispatch->clGetKernelSubGroupInfo(
+        kernel,
+        query<CL_QUEUE_DEVICE>(command_queue),
+        CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
+        3 * sizeof(size_t),
+        local_work_size,
+        sizeof(size_t),
+        &sg,
+        NULL);
+
+      if (sg != cnsg)
+        return true;
+    }
+  }
+
+  return false;
+}
+
+// check many devices in kernel
+// for clGetKernelWorkGroupInfo and clGetKernelSubGroupInfo
+bool struct_violation(
+  cl_version,
+  cl_kernel kernel,
+  cl_device_id device)
+{
+  if (device == NULL)
+  {
+    std::vector<cl_device_id> devices = get_devices(kernel);
+    if (devices.size() > 1)
+      return true;
+  }
+
+  return false;
+}
+
+// check subgroups non-supported for clGetKernelSubGroupInfo
+bool struct_violation(
+  cl_version,
+  cl_device_id device,
+  cl_kernel kernel)
+{
+  if (device == NULL)
+  {
+    std::vector<cl_device_id> devices = get_devices(kernel);
+    if (query<CL_DEVICE_MAX_NUM_SUB_GROUPS>(devices[0]) == 0)
+      return true;
+  }
+
+  return false;
+}
+
+// check memory objects for clEnqueueNativeKernel
+bool struct_violation(
+  cl_version,
+  const cl_mem * mem_list,
+  cl_uint num_mem_objects)
+{
+  if (num_mem_objects > 0)
+  {
+    for (cl_uint i = 0; i < num_mem_objects; ++i)
+      if ((mem_list[i] != NULL) && 
+          !object_is_valid(mem_list[i], CL_MEM_OBJECT_BUFFER))
+        return true;
+  }
+
+  return false;
+}
+

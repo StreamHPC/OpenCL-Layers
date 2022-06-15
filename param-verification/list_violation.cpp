@@ -445,37 +445,106 @@ bool list_violation(cl_version version, const char * name, T param)
   return true;
 }
 
+std::vector<cl_device_id> get_devices(cl_context context)
+{
+  // suppose minimum OpenCL 1.1
+  cl_uint nd = 0;
+  tdispatch->clGetContextInfo(
+    context,
+    CL_CONTEXT_NUM_DEVICES,
+    sizeof(nd),
+    &nd,
+    NULL);
+
+  std::vector<cl_device_id> devices(nd);
+  tdispatch->clGetContextInfo(
+    context,
+    CL_CONTEXT_DEVICES,
+    nd * sizeof(cl_device_id),
+    devices.data(),
+    NULL);
+
+  return devices;
+}
+
+std::vector<cl_device_id> get_devices(cl_program program)
+{
+  cl_uint nd = 0;
+  tdispatch->clGetProgramInfo(
+    program,
+    CL_PROGRAM_NUM_DEVICES,
+    sizeof(nd),
+    &nd,
+    NULL);
+
+  std::vector<cl_device_id> devices(nd);
+  tdispatch->clGetProgramInfo(
+    program,
+    CL_PROGRAM_DEVICES,
+    nd * sizeof(cl_device_id),
+    devices.data(),
+    nullptr);
+
+  return devices;
+}
+
+std::vector<cl_device_id> get_devices(cl_kernel kernel)
+{
+  cl_program pr;
+  tdispatch->clGetKernelInfo(
+    kernel,
+    CL_KERNEL_PROGRAM,
+    sizeof(pr),
+    &pr,
+    NULL);
+  cl_uint nd;
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_NUM_DEVICES,
+    sizeof(nd),
+    &nd,
+    NULL);
+  std::vector<cl_device_id> devices(nd);
+  tdispatch->clGetProgramInfo(
+    pr,
+    CL_PROGRAM_DEVICES,
+    nd * sizeof(cl_device_id),
+    devices.data(),
+    NULL);
+  // remove all devices for which the program is not built
+  devices.erase(
+    std::remove_if(
+      devices.begin(),
+      devices.end(),
+      [pr](cl_device_id d) {
+        cl_build_status bs;
+        tdispatch->clGetProgramBuildInfo(
+          pr,
+          d,
+          CL_PROGRAM_BUILD_STATUS,
+          sizeof(bs),
+          &bs,
+          NULL);
+        return (bs != CL_BUILD_SUCCESS); }
+      ),
+    devices.end());
+
+  return devices;
+}
 
 //template<typename T1, typename T2>
 //bool object_not_in(T1 object, T2 in);
 
+// device should belong to context
 bool object_not_in(cl_device_id device, cl_context context)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   for (cl_uint i = 0; i < nd; ++i)
-    if (device == devices[i]) {
-      free(devices);
+    if (device == devices[i])
       return false;
-    }
-  free(devices);
-  return true;
-}
 
-bool object_not_in(cl_command_queue command_queue, cl_device_id device)
-{
-  cl_device_id q_device;
-  tdispatch->clGetCommandQueueInfo(
-    command_queue,
-    CL_QUEUE_DEVICE,
-    sizeof(cl_device_id),
-    &q_device,
-    NULL);
-
-  if (device == q_device)
-    return false;
   return true;
 }
 
@@ -548,78 +617,6 @@ bool object_not_in(cl_mem object, cl_command_queue command_queue)
   return true;
 }
 
-// device should belong to the program
-bool object_not_in(cl_device_id device, cl_program program)
-{
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(program, &nd);
-
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    if (device == devices[i])
-    {
-      free(devices);
-      return false;
-    }
-  }
-
-  free(devices);
-  return true;
-}
-
-// device should belong to the kernel
-bool object_not_in(cl_device_id device, cl_kernel kernel)
-{
-  cl_program pr;
-  tdispatch->clGetKernelInfo(
-    kernel,
-    CL_KERNEL_PROGRAM,
-    sizeof(pr),
-    &pr,
-    NULL);
-  cl_uint nd;
-  tdispatch->clGetProgramInfo(
-    pr,
-    CL_PROGRAM_NUM_DEVICES,
-    sizeof(nd),
-    &nd,
-    NULL);
-  std::vector<cl_device_id> devices(nd);
-  tdispatch->clGetProgramInfo(
-    pr,
-    CL_PROGRAM_DEVICES,
-    nd * sizeof(cl_device_id),
-    devices.data(),
-    NULL);
-  // remove all devices for which the program is not built
-  devices.erase(
-    std::remove_if(
-      devices.begin(),
-      devices.end(),
-      [pr](cl_device_id d) {
-        cl_build_status bs;
-        tdispatch->clGetProgramBuildInfo(
-          pr,
-          d,
-          CL_PROGRAM_BUILD_STATUS,
-          sizeof(bs),
-          &bs,
-          NULL);
-        return (bs != CL_BUILD_SUCCESS); }
-      ),
-    devices.end());
-  nd = devices.size();
-
-  for (cl_uint i = 0; i < nd; ++i)
-  {
-    if (device == devices[i])
-      return false;
-  }
-
-  return true;
-}
-
 // command queue and kernel should belong to the same context
 bool object_not_in(cl_command_queue command_queue, cl_kernel kernel)
 {
@@ -633,13 +630,105 @@ bool object_not_in(cl_command_queue command_queue, cl_kernel kernel)
   cl_context k_context;
   tdispatch->clGetKernelInfo(
     kernel,
-    CL_MEM_CONTEXT,
+    CL_KERNEL_CONTEXT,
     sizeof(cl_context),
     &k_context,
     NULL);
 
   if (k_context == c_context)
       return false;
+  return true;
+}
+
+// events should belong to the same context
+bool object_not_in(cl_event event1, cl_event event2)
+{
+  cl_context e_context;
+  tdispatch->clGetEventInfo(
+    event1,
+    CL_EVENT_CONTEXT,
+    sizeof(cl_context),
+    &e_context,
+    NULL);
+  cl_context c_context;
+  tdispatch->clGetEventInfo(
+    event2,
+    CL_EVENT_CONTEXT,
+    sizeof(cl_context),
+    &c_context,
+    NULL);
+
+  if (e_context == c_context)
+      return false;
+  return true;
+}
+
+// command_queue should be on device
+bool object_not_in(cl_command_queue command_queue, cl_device_id device)
+{
+  cl_device_id q_device;
+  tdispatch->clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_DEVICE,
+    sizeof(cl_device_id),
+    &q_device,
+    NULL);
+
+  if (device == q_device)
+    return false;
+  return true;
+}
+
+// device should belong to the program
+bool object_not_in(cl_device_id device, cl_program program)
+{
+  std::vector<cl_device_id> devices = get_devices(program);
+  cl_uint nd = devices.size();
+
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    if (device == devices[i])
+      return false;
+  }
+
+  return true;
+}
+
+// device should belong to the kernel
+bool object_not_in(cl_device_id device, cl_kernel kernel)
+{
+  std::vector<cl_device_id> devices = get_devices(kernel);
+  cl_uint nd = devices.size();
+
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    if (device == devices[i])
+      return false;
+  }
+
+  return true;
+}
+
+// kernel must be built for the device of command_queue
+bool object_not_in(cl_kernel kernel, cl_command_queue command_queue)
+{
+  std::vector<cl_device_id> devices = get_devices(kernel);
+  cl_uint nd = devices.size();
+
+  cl_device_id d;
+  tdispatch->clGetCommandQueueInfo(
+    command_queue,
+    CL_QUEUE_DEVICE,
+    sizeof(d),
+    &d,
+    NULL);
+
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    if (d == devices[i])
+      return false;
+  }
+
   return true;
 }
 
@@ -674,9 +763,8 @@ bool for_all(const cl_device_id * devices, const cl_uint nd, std::function<bool(
 template<cl_uint property>
 bool for_all(cl_context context, std::function<bool(return_type<property>)> check)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   return_type<property> a;
   bool res = true;
@@ -691,16 +779,14 @@ bool for_all(cl_context context, std::function<bool(return_type<property>)> chec
     res = res && check(a);
   }
 
-  free(devices);
   return res;
 }
 
 template<cl_uint property>
 bool for_all(cl_program program, std::function<bool(return_type<property>)> check)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(program, &nd);
+  std::vector<cl_device_id> devices = get_devices(program);
+  cl_uint nd = devices.size();
 
   return_type<property> a;
   bool res = true;
@@ -715,52 +801,14 @@ bool for_all(cl_program program, std::function<bool(return_type<property>)> chec
     res = res && check(a);
   }
 
-  free(devices);
   return res;
 }
 
 template<cl_uint property>
 bool for_all(cl_kernel kernel, std::function<bool(return_type<property>)> check)
 {
-  cl_program pr;
-  tdispatch->clGetKernelInfo(
-    kernel,
-    CL_KERNEL_PROGRAM,
-    sizeof(pr),
-    &pr,
-    NULL);
-  cl_uint nd;
-  tdispatch->clGetProgramInfo(
-    pr,
-    CL_PROGRAM_NUM_DEVICES,
-    sizeof(nd),
-    &nd,
-    NULL);
-  std::vector<cl_device_id> devices(nd);
-  tdispatch->clGetProgramInfo(
-    pr,
-    CL_PROGRAM_DEVICES,
-    nd * sizeof(cl_device_id),
-    devices.data(),
-    NULL);
-  // remove all devices for which the program is not built
-  devices.erase(
-    std::remove_if(
-      devices.begin(),
-      devices.end(),
-      [pr](cl_device_id d) {
-        cl_build_status bs;
-        tdispatch->clGetProgramBuildInfo(
-          pr,
-          d,
-          CL_PROGRAM_BUILD_STATUS,
-          sizeof(bs),
-          &bs,
-          NULL);
-        return (bs != CL_BUILD_SUCCESS); }
-      ),
-    devices.end());
-  nd = devices.size();
+  std::vector<cl_device_id> devices = get_devices(kernel);
+  cl_uint nd = devices.size();
 
   return_type<property> a;
   bool res = true;
@@ -800,9 +848,8 @@ bool for_any(const cl_device_id * devices, const cl_uint nd, std::function<bool(
 template<cl_uint property>
 bool for_any(cl_context context, std::function<bool(return_type<property>)> check)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(context, &nd);
+  std::vector<cl_device_id> devices = get_devices(context);
+  cl_uint nd = devices.size();
 
   return_type<property> a;
   bool res = false;
@@ -817,16 +864,14 @@ bool for_any(cl_context context, std::function<bool(return_type<property>)> chec
     res = res || check(a);
   }
 
-  free(devices);
   return res;
 }
 
 template<cl_uint property>
 bool for_any(cl_program program, std::function<bool(return_type<property>)> check)
 {
-  cl_uint nd;
-  cl_device_id * devices = NULL;
-  devices = get_devices(program, &nd);
+  std::vector<cl_device_id> devices = get_devices(program);
+  cl_uint nd = devices.size();
 
   return_type<property> a;
   bool res = false;
@@ -841,7 +886,6 @@ bool for_any(cl_program program, std::function<bool(return_type<property>)> chec
     res = res || check(a);
   }
 
-  free(devices);
   return res;
 }
 
@@ -921,4 +965,14 @@ bool not_aligned(
     return true;
 
   return false;
+}
+
+template<typename T>
+T mult(T * array, size_t elements)
+{
+  std::remove_cv_t<T> res = array[0];
+  for (size_t i = 1; i < elements; ++i)
+    res *= array[i];
+
+  return res;
 }
