@@ -564,6 +564,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
                                 // remove [] from the type - we demand at least 1 element for any returned array
                                 std::string type = enum_val->first_attribute("return_type")->value();
                                 type = std::regex_replace(type, std::regex("\\[\\]$"), "[1]");
+                                //type = std::regex_replace(type, std::regex("\\[\\]$"), "");
 
                                 code << "        case " << enum_val->first_attribute("name")->value() << ":\n"
                                      << "          return sizeof(" << type << ");\n";
@@ -639,25 +640,34 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
         version_node != nullptr;
         version_node = version_node->next_sibling("feature"))
     {
-        for (auto i : enums_list) {
+        for (auto i : enums_list)
+        {
             for (xml_node<> * enum_node = version_node->first_node("require");
                 enum_node != nullptr;
-                enum_node = enum_node->next_sibling("require")) {
-                    if (enum_node->first_attribute("comment") != nullptr) {
-                        //printf("I have visited %s.\n",
-                        //    enum_node->first_attribute("comment")->value());
-                        if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr) {
+                enum_node = enum_node->next_sibling("require"))
+            {
+                if (enum_node->first_attribute("comment") != nullptr)
+                {
+                    //printf("I have visited %s.\n",
+                    //    enum_node->first_attribute("comment")->value());
+                    if (strstr(enum_node->first_attribute("comment")->value(), i.c_str()) != nullptr)
+                    {
+                        for (xml_node<> * enum_val = enum_node->first_node("enum");
+                            enum_val != nullptr;
+                            enum_val = enum_val->next_sibling("enum"))
+                        {
+                            // remove [] from the type - we want only 1 element for any returned array
+                            std::string type = enum_val->first_attribute("return_type")->value();
+                            type = std::regex_replace(type, std::regex("\\[\\]$"), "");
 
-                            for (xml_node<> * enum_val = enum_node->first_node("enum");
-                                enum_val != nullptr;
-                                enum_val = enum_val->next_sibling("enum")) {
-                                code << "  std::conditional_t<property == " << enum_val->first_attribute("name")->value() << ", "
-                                     << enum_val->first_attribute("return_type")->value() << ",\n";
-                                end = "> " + end;
-                            }
+                            code << "  std::conditional_t<property == " 
+                                 << enum_val->first_attribute("name")->value() << ", "
+                                 << type << ",\n";
+                            end = "> " + end;
                         }
                     }
                 }
+            }
         }
 
         //printf("I have visited %s.\n",
@@ -671,6 +681,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  cl_version version = get_object_version(platform);\n"
          << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
          << "    tdispatch->clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
@@ -685,6 +696,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  cl_version version = get_object_version(device);\n"
          << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_device_info\", property)) {\n"
          << "    tdispatch->clGetDeviceInfo(device, property, sizeof(a), &a, NULL);\n"
          << "  } else if (!enum_violation(version, \"cl_platform_info\", property)) {\n"
@@ -703,6 +715,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  cl_version version = get_object_version(context);\n"
          << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_context_info\", property)) {\n"
          << "    tdispatch->clGetContextInfo(context, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
@@ -717,6 +730,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  cl_version version = get_object_version(queue);\n"
          << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_command_queue_info\", property)) {\n"
          << "    tdispatch->clGetCommandQueueInfo(queue, property, sizeof(a), &a, NULL);\n"
          << "  } else if (!enum_violation(version, \"cl_device_info\", property)) {\n"
@@ -735,6 +749,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "{\n"
          << "  cl_version version = get_object_version(object);\n"
          << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
          << "  if (!enum_violation(version, \"cl_mem_info\", property)) {\n"
          << "    tdispatch->clGetMemObjectInfo(object, property, sizeof(a), &a, NULL);\n"
          << "  } else if (!enum_violation(version, \"cl_image_info\", property)) {\n"
@@ -743,6 +758,23 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
          << "    tdispatch->clGetPipeInfo(object, property, sizeof(a), &a, NULL);\n"
          << "  } else {\n"
          << "    *log_stream << \"Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer.\" << std::endl;\n"
+         << "    exit(-1);\n"
+         << "  }\n"
+         << "  return a;\n"
+         << "}\n\n";
+
+    code << "template<cl_uint property>\n"
+         << "return_type<property> query(cl_program program)\n"
+         << "{\n"
+         << "  cl_version version = get_object_version(program);\n"
+         << "  return_type<property> a;\n"
+         << "  memset(&a, 0, sizeof(return_type<property>));\n"
+         << "  if (!enum_violation(version, \"cl_program_info\", property)) {\n"
+         << "    tdispatch->clGetProgramInfo(program, property, sizeof(a), &a, NULL);\n"
+         //<< "  } else if (!enum_violation(version, \"cl_image_info\", property)) {\n"
+         //<< "    tdispatch->clGetImageInfo(object, property, sizeof(a), &a, NULL);\n"
+         << "  } else {\n"
+         << "    *log_stream << \"Invalid program query in query(cl_program). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "    exit(-1);\n"
          << "  }\n"
          << "  return a;\n"

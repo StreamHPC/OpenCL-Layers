@@ -548,6 +548,26 @@ bool object_not_in(cl_mem object, cl_command_queue command_queue)
   return true;
 }
 
+// device should belong to the program
+bool object_not_in(cl_device_id object, cl_program program)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(program, &nd);
+
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    if (object == devices[i])
+    {
+      free(devices);
+      return false;
+    }
+  }
+
+  free(devices);
+  return true;
+}
+
 template<typename T1, typename T2>
 bool any_object_not_in(T1 * objects, size_t n, T2 in)
 {
@@ -582,11 +602,59 @@ bool for_all(cl_context context, std::function<bool(return_type<property>)> chec
 }
 
 template<cl_uint property>
+bool for_all(cl_program program, std::function<bool(return_type<property>)> check)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(program, &nd);
+
+  return_type<property> a;
+  bool res = true;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+   tdispatch->clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res && check(a);
+  }
+
+  free(devices);
+  return res;
+}
+
+template<cl_uint property>
 bool for_any(cl_context context, std::function<bool(return_type<property>)> check)
 {
   cl_uint nd;
   cl_device_id * devices = NULL;
   devices = get_devices(context, &nd);
+
+  return_type<property> a;
+  bool res = false;
+  for (cl_uint i = 0; i < nd; ++i)
+  {
+    tdispatch->clGetDeviceInfo(
+      devices[i],
+      property,
+      sizeof(a),
+      &a,
+      NULL);
+    res = res || check(a);
+  }
+
+  free(devices);
+  return res;
+}
+
+template<cl_uint property>
+bool for_any(cl_program program, std::function<bool(return_type<property>)> check)
+{
+  cl_uint nd;
+  cl_device_id * devices = NULL;
+  devices = get_devices(program, &nd);
 
   return_type<property> a;
   bool res = false;

@@ -2142,7 +2142,7 @@
                     </not>
                 </and>
             </if>
-            <then>      <log> host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateBuffer</name>                             <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
@@ -2299,7 +2299,7 @@
                     </not>
                 </and>
             </if>
-            <then>      <log> host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
+            <then>      <log>host_ptr is not NULL but CL_MEM_COPY_HOST_PTR or CL_MEM_USE_HOST_PTR are not set in flags</log>
                 <name>clCreateBufferWithProperties</name>               <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_HOST_PTR</value>
             </then>
@@ -5076,6 +5076,13 @@
                 <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
             </then>
             <if>
+                <struct_violation name="image_format" param="image_desc, context"/>
+            </if>
+            <then>      <log>a 2D image is created from a buffer but there are no devices in context that support it</log>
+                <name>clCreateImage</name>                              <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if>
                 <struct_violation name="image_format" param="context, flags, image_desc"/>
             </if>
             <then>      <log>there are no devices in context that support image_format</log>
@@ -6096,50 +6103,54 @@
                 If image is a 1D image array object, origin[2] must be 0.
                 If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
                 If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[1]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[1]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueReadImage</name>                         <value>CL_INVALID_VALUE</value>
@@ -6682,50 +6693,54 @@
                 If image is a 1D image array object, origin[2] must be 0.
                 If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
                 If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[1]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[1]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D buffer</log>
                 <name>clEnqueueWriteImage</name>                        <value>CL_INVALID_VALUE</value>
@@ -7307,98 +7322,106 @@
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>src_origin[2]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>src_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array src_image</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>src_origin[1]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                            <name>src_origin[2]</name>                  <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>src_origin[1]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>src_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D image buffer src_image</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>dst_origin[2]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>dst_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array dst_image</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>dst_origin[1]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="dst_image" property="CL_MEM_TYPE"/>
+                            <name>dst_origin[2]</name>                  <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>dst_origin[1]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>dst_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D image buffer dst_image</log>
                 <name>clEnqueueCopyImage</name>                         <value>CL_INVALID_VALUE</value>
@@ -8194,50 +8217,54 @@
                 If image is a 1D image array object, origin[2] must be 0.
                 If image is a 2D image object, region[2] must be 1.
                 If image is a 1D image array object, region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0.
                 If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[1]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[1]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>origin[2]</name>                          <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueFillImage</name>                         <value>CL_INVALID_VALUE</value>
@@ -8694,51 +8721,55 @@
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>src_origin[2]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>src_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
-            <then>      <log>wrong src_origin or region values for 2D image or 1D image array</log>
+            <then>      <log>wrong src_origin or region values for 2D image or 1D image array src_image</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="src_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>src_origin[1]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="src_image" property="CL_MEM_TYPE"/>
+                            <name>src_origin[2]</name>                  <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>src_origin[1]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>src_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
-            <then>      <log>wrong src_origin or region values for 1D image or 1D image buffer</log>
+            <then>      <log>wrong src_origin or region values for 1D image or 1D image buffer src_image</log>
                 <name>clEnqueueCopyImageToBuffer</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -9221,51 +9252,55 @@
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>dst_origin[2]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>dst_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
-            <then>      <log>wrong dst_origin or region values for 2D image or 1D image array</log>
+            <then>      <log>wrong dst_origin or region values for 2D image or 1D image array dst_image</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="dst_image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>dst_origin[1]</name>                  <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="dst_image" property="CL_MEM_TYPE"/>
+                            <name>dst_origin[2]</name>                  <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>dst_origin[1]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>dst_origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
-            <then>      <log>wrong dst_origin or region values for 1D image or 1D image buffer</log>
+            <then>      <log>wrong dst_origin or region values for 1D image or 1D image buffer dst_image</log>
                 <name>clEnqueueCopyBufferToImage</name>                 <value>CL_INVALID_VALUE</value>
             </then>
             <if>
@@ -9760,50 +9795,54 @@
             </then>
             <if> <!-- If image is a 2D image object, origin[2] must be 0.
                 If image is a 1D image array object, origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE2D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_ARRAY</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                            <name>region[2]</name>                      <literal>1</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                    </or>
+                </and>
             </if>
             <then>      <log>wrong origin or region values for 2D image or 1D image array</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_VALUE</value>
             </then>
             <if> <!-- If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. -->
-                <or>
-                    <and>
-                        <neq>
+                <and>
+                    <or>
+                        <eq>
                             <literal>CL_MEM_OBJECT_IMAGE1D</literal>    <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                        <eq>
+                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal>  <query object="image" property="CL_MEM_TYPE"/>
+                        </eq>
+                    </or>
+                    <or>
+                        <neq>
+                            <name>origin[1]</name>                      <literal>0</literal>
                         </neq>
                         <neq>
-                            <literal>CL_MEM_OBJECT_IMAGE1D_BUFFER</literal> <query object="image" property="CL_MEM_TYPE"/>
+                            <name>origin[2]</name>                      <literal>0</literal>
                         </neq>
-                    </and>
-                    <neq>
-                        <name>origin[1]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>origin[2]</name>                      <literal>0</literal>
-                    </neq>
-                    <neq>
-                        <name>region[1]</name>                          <literal>1</literal>
-                    </neq>
-                    <neq>
-                        <name>region[2]</name>                          <literal>1</literal>
-                    </neq>
-                </or>
+                        <neq>
+                            <name>region[1]</name>                      <literal>1</literal>
+                        </neq>
+                        <neq>
+                            <name>region[2]</name>                      <literal>1</literal>
+                        </neq>
+                    </or>
+               </and> 
             </if>
             <then>      <log>wrong origin or region values for 1D image or 1D image buffer</log>
                 <name>clEnqueueMapImage</name>                          <value>NULL</value>
@@ -11793,7 +11832,7 @@
             </then>
         </command>
 
-    <!-- 5.8.1 -->
+    <!-- 5.8.1 --> <!--DONE-->
 
         <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clCreateProgramWithSource</name></proto>
@@ -11860,7 +11899,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_1">
+        <command suffix="CL_API_SUFFIX__VERSION_2_1"> <!--DONE-->
             <proto><type>cl_program</type>                              <name>clCreateProgramWithIL</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param>const <type>void</type>*                             <name>il</name></param>
@@ -11874,7 +11913,17 @@
                 <name>clCreateProgramWithIL</name>                      <value>NULL</value>
                 <name>errcode_ret</name>                                <value>CL_INVALID_CONTEXT</value>
             </then>
-            <!-- CL_INVALID_OPERATION if no devices in context support intermediate language programs -->
+            <if>
+                <for_all in="context" query="CL_DEVICE_IL_VERSION">
+                    <eq>
+                        <literal>0</literal>                            <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices in context support intermediate language programs</log>
+                <name>clCreateProgramWithIL</name>                      <value>NULL</value>
+                <name>errcode_ret</name>                                <value>CL_INVALID_OPERATION</value>
+            </then>
             <if>
                 <or>
                     <eq>
@@ -12084,42 +12133,107 @@
             <!-- CL_INVALID_VALUE if kernel_names contains a kernel name that is not supported by any of the devices in device_list. -->
         </command>
 
-    <!-- 5.8.2 -->
+    <!-- 5.8.2 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clRetainProgram</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
+
+            <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is not a valid program object</log>
+                <name>clRetainProgram</name>                            <value>CL_INVALID_PROGRAM</value>
+            </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_1_0">
+        <command suffix="CL_API_SUFFIX__VERSION_1_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clReleaseProgram</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
+
+            <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is not a valid program object</log>
+                <name>clReleaseProgram</name>                           <value>CL_INVALID_PROGRAM</value>
+            </then>
         </command>
 
-        <command prefix="CL_API_PREFIX__VERSION_2_2_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_2_2_DEPRECATED">
+        <command prefix="CL_API_PREFIX__VERSION_2_2_DEPRECATED" suffix="CL_API_SUFFIX__VERSION_2_2_DEPRECATED"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetProgramReleaseCallback</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param>void (CL_CALLBACK*                                   <name>pfn_notify</name>)(cl_program program, void* user_data)</param>
             <param><type>void</type>*                                   <name>user_data</name></param>
 
             <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is not a valid program object</log>
+                <name>clSetProgramReleaseCallback</name>                <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
                 <eq>
                     <name>pfn_notify</name>                             <literal>NULL</literal>
                 </eq>
             </if>
-            <then>
+            <then>      <log>pfn_notify is NULL</log>
                 <name>clSetProgramReleaseCallback</name>                <value>CL_INVALID_VALUE</value>
             </then>
+            <!-- not queryable
+            CL_INVALID_OPERATION if no devices in the context associated with program support destructors for program scope global variables. -->
         </command>
 
-    <!-- 5.8.3 -->
+    <!-- 5.8.3 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_2">
+        <command suffix="CL_API_SUFFIX__VERSION_2_2"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetProgramSpecializationConstant</name></proto>
             <param><type>cl_program</type>                              <name>program</name></param>
             <param><type>cl_uint</type>                                 <name>spec_id</name></param>
             <param><type>size_t</type>                                  <name>spec_size</name></param>
             <param>const <type>void</type>*                             <name>spec_value</name></param>
+
+            <if>
+                <object_is_invalid name="program"/>
+            </if>
+            <then>      <log>program is not a valid program object</log>
+                <name>clSetProgramSpecializationConstant</name>         <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <eq>
+                    <literal>0</literal>                                <query object="program" property="CL_PROGRAM_IL"/>
+                </eq>
+            </if>
+            <then>      <log>program is not a valid program object created from an intermediate language</log>
+                <name>clSetProgramSpecializationConstant</name>         <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <for_all in="program" query="CL_DEVICE_IL_VERSION">
+                    <eq>
+                        <literal>0</literal>                            <name>query</name>
+                    </eq>
+                </for_all>
+            </if>
+            <then>      <log>no devices associated with program support intermediate language programs</log>
+                <name>clSetProgramSpecializationConstant</name>         <value>CL_INVALID_OPERATION</value>
+            </then>
+            <if> <!-- standard does not say for_all or for_any -->
+                <for_any in="program" query="CL_DEVICE_COMPILER_AVAILABLE">
+                    <eq>
+                        <literal>CL_FALSE</literal>                     <name>query</name>
+                    </eq>
+                </for_any>
+            </if>
+            <then>      <log>program is created with clCreateProgramWithIL and a compiler is not available</log>
+                <name>clSetProgramSpecializationConstant</name>         <value>CL_COMPILER_NOT_AVAILABLE</value>
+            </then>
+            <if>
+                <eq>
+                    <name>spec_value</name>                             <literal>NULL</literal>
+                </eq>
+            </if>
+            <then>      <log>spec_value is NULL</log>
+                <name>clSetProgramSpecializationConstant</name>         <value>CL_INVALID_VALUE</value>
+            </then>
         </command>
 
     <!-- 5.8.4 -->
@@ -12134,36 +12248,61 @@
             <param><type>void</type>*                                   <name>user_data</name></param>
 
             <if>
-                <or>
-                    <and>
-                        <eq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </eq>
-                        <gt>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </gt>
-                    </and>
-                    <and>
-                        <neq>
-                            <name>device_list</name>                    <literal>NULL</literal>
-                        </neq>
-                        <eq>
-                            <name>num_devices</name>                    <literal>0</literal>
-                        </eq>
-                    </and>
-                    <and>
-                        <eq>
-                            <name>pfn_notify</name>                     <literal>NULL</literal>
-                        </eq>
-                        <neq>
-                            <name>user_data</name>                      <literal>NULL</literal>
-                        </neq>
-                    </and>
-                </or>
+                <object_is_invalid name="program"/>
             </if>
-            <then>
+            <then>      <log>program is not a valid program object</log>
+                <name>clBuildProgram</name>                             <value>CL_INVALID_PROGRAM</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </eq>
+                    <gt>
+                        <name>num_devices</name>                        <literal>0</literal>
+                    </gt>
+                </and>
+            </if>
+            <then>      <log>device_list is NULL and num_devices is greater than zero</log>
                 <name>clBuildProgram</name>                             <value>CL_INVALID_VALUE</value>
             </then>
+            <if>
+                <and>
+                    <neq>
+                        <name>device_list</name>                        <literal>NULL</literal>
+                    </neq>
+                    <eq>
+                        <name>num_devices</name>                        <literal>0</literal>
+                    </eq>
+                </and>
+            </if>
+            <then>      <log>device_list is not NULL and num_devices is zero</log>
+                <name>clBuildProgram</name>                             <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <and>
+                    <eq>
+                        <name>pfn_notify</name>                         <literal>NULL</literal>
+                    </eq>
+                    <neq>
+                        <name>user_data</name>                          <literal>NULL</literal>
+                    </neq>
+                </and>
+            </if>
+            <then>      <log>pfn_notify is NULL but user_data is not NULL</log>
+                <name>clBuildProgram</name>                             <value>CL_INVALID_VALUE</value>
+            </then>
+            <if>
+                <any_object_not_in array="device_list" elements="num_devices" in="program"/>
+            </if>
+            <then>      <log>some device in device_list is not in the list of devices associated with program</log>
+                <name>clBuildProgram</name>                             <value>CL_INVALID_DEVICE</value>
+            </then>
+            <!-- not queryable, need state
+            CL_INVALID_BINARY if program is created with clCreateProgramWithBinary and devices listed in device_list do not have a valid program binary loaded.
+            CL_COMPILER_NOT_AVAILABLE if program is created with clCreateProgramWithSource or clCreateProgramWithIL and a compiler is not available
+            CL_INVALID_OPERATION if the build of a program executable for any of the devices listed in device_list by a previous call to clBuildProgram for program has not completed.
+            CL_INVALID_OPERATION if program was not created with clCreateProgramWithSource, clCreateProgramWithIL or clCreateProgramWithBinary.-->
         </command>
 
     <!-- 5.8.5 -->

@@ -224,8 +224,33 @@ cl_device_id * get_devices(cl_context context, cl_uint * number)
 
   devices = static_cast<cl_device_id *>(malloc(size));
   *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
-  tdispatch->clGetContextInfo(context,
+  tdispatch->clGetContextInfo(
+    context,
     CL_CONTEXT_DEVICES,
+    size,
+    devices,
+    nullptr);
+
+  return devices;
+}
+
+cl_device_id * get_devices(cl_program program, cl_uint * number)
+{
+  size_t size;
+  cl_device_id * devices = NULL;
+
+  tdispatch->clGetProgramInfo(
+    program,
+    CL_PROGRAM_NUM_DEVICES,
+    0,
+    nullptr,
+    &size);
+
+  devices = static_cast<cl_device_id *>(malloc(size));
+  *number = static_cast<cl_uint>(size / sizeof(cl_device_id));
+  tdispatch->clGetProgramInfo(
+    program,
+    CL_PROGRAM_DEVICES,
     size,
     devices,
     nullptr);
@@ -1047,6 +1072,30 @@ bool struct_violation(
         return true;
     }
   }
+  return false;
+}
+
+// check impossibility of 2D image creation from a buffer
+bool struct_violation(
+  cl_version version,
+  const cl_image_format * const,
+  const cl_image_desc * const image_desc,
+  cl_context context)
+{
+  // if 2D image is created from the buffer
+  if ((image_desc->image_type == CL_MEM_OBJECT_IMAGE2D) &&
+    (image_desc->mem_object != NULL) &&
+    object_is_valid(image_desc->mem_object, CL_MEM_OBJECT_BUFFER))
+  {
+    // before 2.0 there is no possibility to do it
+    if (CL_VERSION_MAJOR(version) < 2)
+      return true;
+    // check if all devices in the context does not support creation
+    return for_all<CL_DEVICE_IMAGE_PITCH_ALIGNMENT>(context, 
+      [=](return_type<CL_DEVICE_IMAGE_PITCH_ALIGNMENT> query)
+      { return query == 0; });
+  }
+
   return false;
 }
 
