@@ -1144,6 +1144,35 @@ bool struct_violation(
   return array_len_ls(fill_color, size);
 }
 
+// check total number of workitems in group for clEnqueueNDRangeKernel
+bool struct_violation(
+  cl_version,
+  cl_kernel kernel,
+  cl_command_queue command_queue,
+  cl_uint work_dim,
+  const size_t * local_work_size)
+{
+  if (local_work_size != NULL)
+  {
+    size_t kwgs = 0;
+    tdispatch->clGetKernelWorkGroupInfo(
+      kernel,
+      query<CL_QUEUE_DEVICE>(command_queue),
+      CL_KERNEL_WORK_GROUP_SIZE,
+      sizeof(size_t),
+      &kwgs,
+      NULL);
+
+    size_t wgs = 1;
+    for (cl_uint i = 0; i < work_dim; ++i)
+      wgs *= local_work_size[i];
+
+    return (wgs > kwgs);
+  }
+
+  return false;
+}
+
 // check non-uniform workgroups for clEnqueueNDRangeKernel
 bool struct_violation(
   cl_version version,

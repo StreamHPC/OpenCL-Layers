@@ -13479,15 +13479,7 @@
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_VALUE</value>
             </then>
             <if>
-                <and>
-                    <neq>
-                        <name>local_work_size</name>                    <literal>NULL</literal>
-                    </neq>
-                    <gt>
-                        <mult array="local_work_size" elements="work_dim"/>
-                        <query object="command_queue" property="CL_KERNEL_WORK_GROUP_SIZE"/>
-                    </gt>
-                </and>
+                <struct_violation name="kernel" param="command_queue, work_dim, local_work_size"/>
             </if>
             <then>      <log>local_work_size is specified and the total number of work-items in the work-group is greater than the value specified by CL_KERNEL_WORK_GROUP_SIZE</log>
                 <name>clEnqueueNDRangeKernel</name>                     <value>CL_INVALID_WORK_GROUP_SIZE</value>
