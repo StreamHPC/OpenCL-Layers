@@ -1223,7 +1223,7 @@ bool struct_violation(
 
 // check max local_work_size
 bool struct_violation(
-  cl_version version,
+  cl_version,
   cl_command_queue command_queue,
   cl_uint work_dim,
   const size_t * local_work_size)
