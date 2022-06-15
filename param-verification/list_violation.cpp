@@ -983,7 +983,7 @@ bool not_aligned(
 }
 
 template<typename T>
-T mult(T * array, size_t elements)
+std::remove_cv_t<T> mult(T * array, size_t elements)
 {
   std::remove_cv_t<T> res = array[0];
   for (size_t i = 1; i < elements; ++i)
