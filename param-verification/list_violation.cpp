@@ -62,7 +62,8 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || 
+            (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -135,7 +136,8 @@ bool list_violation(
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || 
+            (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -181,7 +183,8 @@ bool list_violation(
             return true;
           if ((qp & CL_QUEUE_ON_DEVICE_DEFAULT) && !(qp & CL_QUEUE_ON_DEVICE))
             return true;
-          if ((version >= CL_MAKE_VERSION(3, 0, 0)) && (qp & CL_QUEUE_ON_DEVICE) && !(ddec & CL_DEVICE_QUEUE_SUPPORTED))
+          if ((version >= CL_MAKE_VERSION(3, 0, 0)) && 
+              (qp & CL_QUEUE_ON_DEVICE) && !(ddec & CL_DEVICE_QUEUE_SUPPORTED))
             return true;
           break;
 
@@ -203,8 +206,9 @@ bool list_violation(
     return false;
   }
 
-  printf("Wrong list: %s, expected cl_device_partition_property or cl_queue_properties\n", name);
-  return true;
+  *log_stream << "Wrong list:" << name << ", expected cl_device_partition_property or cl_queue_properties."
+    << std::endl << "This is a bug in the param_verification layer." << std::endl;
+   return true;
 }
 
 // version that checks platform for clCreateContext and clCreateContextFromType
@@ -290,7 +294,8 @@ bool list_violation(cl_version version, const char * name, T param)
         return false;
 
       case CL_DEVICE_PARTITION_BY_AFFINITY_DOMAIN:
-        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || (param[1] == 0) || (param[2] != 0))
+        if (bitfield_violation(version, "cl_device_affinity_domain", param[1]) || 
+            (param[1] == 0) || (param[2] != 0))
           return true;
         return false;
 
@@ -448,7 +453,7 @@ bool list_violation(cl_version version, const char * name, T param)
 std::vector<cl_device_id> get_devices(cl_context context)
 {
   // suppose minimum OpenCL 1.1
-  cl_uint nd = 0;
+  size_t nd = 0;
   tdispatch->clGetContextInfo(
     context,
     CL_CONTEXT_NUM_DEVICES,
@@ -469,7 +474,7 @@ std::vector<cl_device_id> get_devices(cl_context context)
 
 std::vector<cl_device_id> get_devices(cl_program program)
 {
-  cl_uint nd = 0;
+  size_t nd = 0;
   tdispatch->clGetProgramInfo(
     program,
     CL_PROGRAM_NUM_DEVICES,
@@ -497,7 +502,7 @@ std::vector<cl_device_id> get_devices(cl_kernel kernel)
     sizeof(pr),
     &pr,
     NULL);
-  cl_uint nd;
+  size_t nd;
   tdispatch->clGetProgramInfo(
     pr,
     CL_PROGRAM_NUM_DEVICES,
@@ -539,9 +544,9 @@ std::vector<cl_device_id> get_devices(cl_kernel kernel)
 bool object_not_in(cl_device_id device, cl_context context)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
     if (device == devices[i])
       return false;
 
@@ -683,9 +688,9 @@ bool object_not_in(cl_command_queue command_queue, cl_device_id device)
 bool object_not_in(cl_device_id device, cl_program program)
 {
   std::vector<cl_device_id> devices = get_devices(program);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     if (device == devices[i])
       return false;
@@ -698,9 +703,9 @@ bool object_not_in(cl_device_id device, cl_program program)
 bool object_not_in(cl_device_id device, cl_kernel kernel)
 {
   std::vector<cl_device_id> devices = get_devices(kernel);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     if (device == devices[i])
       return false;
@@ -713,7 +718,7 @@ bool object_not_in(cl_device_id device, cl_kernel kernel)
 bool object_not_in(cl_kernel kernel, cl_command_queue command_queue)
 {
   std::vector<cl_device_id> devices = get_devices(kernel);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   cl_device_id d;
   tdispatch->clGetCommandQueueInfo(
@@ -723,7 +728,7 @@ bool object_not_in(cl_kernel kernel, cl_command_queue command_queue)
     &d,
     NULL);
 
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     if (d == devices[i])
       return false;
@@ -742,11 +747,12 @@ bool any_object_not_in(T1 * objects, size_t n, T2 in)
 }
 
 template<cl_uint property>
-bool for_all(const cl_device_id * devices, const cl_uint nd, std::function<bool(return_type<property>)> check)
+bool for_all(const cl_device_id * devices, const size_t nd,
+  std::function<bool(return_type<property>)> check)
 {
   return_type<property> a;
   bool res = true;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
    tdispatch->clGetDeviceInfo(
       devices[i],
@@ -764,11 +770,11 @@ template<cl_uint property>
 bool for_all(cl_context context, std::function<bool(return_type<property>)> check)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   return_type<property> a;
   bool res = true;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
    tdispatch->clGetDeviceInfo(
       devices[i],
@@ -786,11 +792,11 @@ template<cl_uint property>
 bool for_all(cl_program program, std::function<bool(return_type<property>)> check)
 {
   std::vector<cl_device_id> devices = get_devices(program);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   return_type<property> a;
   bool res = true;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
    tdispatch->clGetDeviceInfo(
       devices[i],
@@ -808,11 +814,11 @@ template<cl_uint property>
 bool for_all(cl_kernel kernel, std::function<bool(return_type<property>)> check)
 {
   std::vector<cl_device_id> devices = get_devices(kernel);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   return_type<property> a;
   bool res = true;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
    tdispatch->clGetDeviceInfo(
       devices[i],
@@ -827,11 +833,12 @@ bool for_all(cl_kernel kernel, std::function<bool(return_type<property>)> check)
 }
 
 template<cl_uint property>
-bool for_any(const cl_device_id * devices, const cl_uint nd, std::function<bool(return_type<property>)> check)
+bool for_any(const cl_device_id * devices, const size_t nd,
+  std::function<bool(return_type<property>)> check)
 {
   return_type<property> a;
   bool res = false;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -849,11 +856,11 @@ template<cl_uint property>
 bool for_any(cl_context context, std::function<bool(return_type<property>)> check)
 {
   std::vector<cl_device_id> devices = get_devices(context);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   return_type<property> a;
   bool res = false;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -871,11 +878,11 @@ template<cl_uint property>
 bool for_any(cl_program program, std::function<bool(return_type<property>)> check)
 {
   std::vector<cl_device_id> devices = get_devices(program);
-  cl_uint nd = devices.size();
+  size_t nd = devices.size();
 
   return_type<property> a;
   bool res = false;
-  for (cl_uint i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
   {
     tdispatch->clGetDeviceInfo(
       devices[i],
@@ -902,9 +909,11 @@ bool check_copy_overlap(
 
   const size_t slice_size = (region[1] - 1) * real_row_pitch + region[0];
   const size_t block_size = (region[2] - 1) * real_slice_pitch + slice_size;
-  const size_t src_start = src_origin[2] * real_slice_pitch + src_origin[1] * real_row_pitch + src_origin[0];
+  const size_t src_start = 
+    src_origin[2] * real_slice_pitch + src_origin[1] * real_row_pitch + src_origin[0];
   const size_t src_end = src_start + block_size;
-  const size_t dst_start = dst_origin[2] * real_slice_pitch + dst_origin[1] * real_row_pitch + dst_origin[0];
+  const size_t dst_start = 
+    dst_origin[2] * real_slice_pitch + dst_origin[1] * real_row_pitch + dst_origin[0];
   const size_t dst_end = dst_start + block_size;
 
   // No overlap if dst ends before src starts or if src ends before dst starts.
@@ -916,8 +925,10 @@ bool check_copy_overlap(
   {
     const size_t src_dx = src_origin[0] % real_row_pitch;
     const size_t dst_dx = dst_origin[0] % real_row_pitch;
-    if ( ((dst_dx >= src_dx + region[0]) && (dst_dx + region[0] <= src_dx + real_row_pitch)) ||
-      ((src_dx >= dst_dx + region[0]) && (src_dx + region[0] <= dst_dx + real_row_pitch)) )
+    if ( ((dst_dx >= src_dx + region[0]) && 
+          (dst_dx + region[0] <= src_dx + real_row_pitch)) ||
+         ((src_dx >= dst_dx + region[0]) && 
+          (src_dx + region[0] <= dst_dx + real_row_pitch)) )
     {
       return false;
     }
@@ -925,10 +936,14 @@ bool check_copy_overlap(
 
   // No overlap if region[1] for dst or src fits in the gap between region[1] and slice_pitch.
   {
-    const size_t src_dy = (src_origin[1] * real_row_pitch + src_origin[0]) % real_slice_pitch;
-    const size_t dst_dy = (dst_origin[1] * real_row_pitch + dst_origin[0]) % real_slice_pitch;
-    if ( ((dst_dy >= src_dy + slice_size) && (dst_dy + slice_size <= src_dy + real_slice_pitch)) ||
-      ((src_dy >= dst_dy + slice_size) && (src_dy + slice_size <= dst_dy + real_slice_pitch)) )
+    const size_t src_dy = 
+      (src_origin[1] * real_row_pitch + src_origin[0]) % real_slice_pitch;
+    const size_t dst_dy = 
+      (dst_origin[1] * real_row_pitch + dst_origin[0]) % real_slice_pitch;
+    if ( ((dst_dy >= src_dy + slice_size) && 
+          (dst_dy + slice_size <= src_dy + real_slice_pitch)) ||
+         ((src_dy >= dst_dy + slice_size) && 
+          (src_dy + slice_size <= dst_dy + real_slice_pitch)) )
     {
       return false;
     }

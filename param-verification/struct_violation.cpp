@@ -1358,4 +1358,3 @@ bool struct_violation(
 
   return false;
 }
-
