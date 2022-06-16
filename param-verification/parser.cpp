@@ -827,7 +827,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                      << ret << ";\n  }\n\n";
             }
 
-            body << name << "_label:\n" 
+            body << "  goto " << name << "_label;\n" // to silence warnings
+                 << name << "_label:\n" 
                  << "  return " << invoke << "}\n\n";
 
             if (generate_get_version) {
