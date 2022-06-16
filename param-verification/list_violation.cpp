@@ -72,7 +72,8 @@ bool list_violation(
     }
   }
 
-  printf("Wrong list: %s, expected cl_device_partition_property\n", name);
+  *log_stream << "Wrong list:" << name << ", expected cl_device_partition_property."
+    << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }
 
@@ -261,7 +262,8 @@ bool list_violation(
     return false;
   }
 
-  printf("Wrong list: %s, expected cl_context_properties\n", name);
+  *log_stream << "Wrong list:" << name << ", expected cl_context_properties."
+    << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }
 
@@ -446,7 +448,8 @@ bool list_violation(cl_version version, const char * name, T param)
     return false;
   }
 
-  printf("Bad list: %s\n", name);
+  *log_stream << "Bad list:" << name << "."
+    << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }
 

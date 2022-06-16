@@ -10796,9 +10796,9 @@
             </then>
         </command>
 
-    <!-- 5.6.1 -->
+    <!-- 5.6.1 --> <!--DONE-->
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>void</type>*                                   <name>clSVMAlloc</name></proto>
             <param><type>cl_context</type>                              <name>context</name></param>
             <param><type>cl_svm_mem_flags</type>                        <name>flags</name></param>
@@ -10941,7 +10941,7 @@
                     <neq>
                         <name>alignment</name>                          <literal>64</literal>
                     </neq>
-                    <neq> <!-- this can still provide fail for embedded devices-->
+                    <neq> <!-- this can still provide fail for embedded devices, but tested further -->
                         <name>alignment</name>                          <literal>128</literal>
                     </neq>
                 </and>
@@ -10949,7 +10949,16 @@
             <then>      <log>alignment is invalid</log>
                 <name>clSVMAlloc</name>                                 <value>NULL</value>
             </then>
-            <!-- the OpenCL implementation cannot support the specified alignment for at least one device in context -->
+            <if>
+                <for_any in="context" query="CL_DEVICE_MEM_BASE_ADDR_ALIGN">
+                    <ls>
+                        <name>query</name>                              <name>alignment</name>
+                    </ls>
+                </for_any>
+            </if>
+            <then>      <log>the OpenCL implementation cannot support the specified alignment for at least one device in context</log>
+                <name>clSVMAlloc</name>                                 <value>NULL</value>
+            </then>
         </command>
 
         <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
@@ -12903,7 +12912,7 @@
             </then>
         </command>
 
-        <command suffix="CL_API_SUFFIX__VERSION_2_0">
+        <command suffix="CL_API_SUFFIX__VERSION_2_0"> <!--DONE-->
             <proto><type>cl_int</type>                                  <name>clSetKernelExecInfo</name></proto>
             <param><type>cl_kernel</type>                               <name>kernel</name></param>
             <param><type>cl_kernel_exec_info</type>                     <name>param_name</name></param>
@@ -12975,22 +12984,10 @@
             <then>      <log>param_value is too short</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_VALUE</value>
             </then>
-            <!--<if>
-                <and>
-                    <eq>
-                        <name>param_name</name>                         <literal>CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM</literal>
-                    </eq>
-                    <eq> need to get value from void* pointer
-                        <name></name>
-                    </eq>
-                    <for_all in="kernel" query="CL_DEVICE_SVM_CAPABILITIES">
-                        <eq>
-                            <name>query</name>                          <literal>0</literal>
-                        </eq>
-                    </for_all>
-                </and>
+            <if>
+                 <struct_violation name="kernel" param="param_name, param_value"/>
             </if>
-            <then>      <log>param_name is CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM and param_value is CL_TRUE but no devices in context associated with kernel support fine-grain system SVM allocations</log>
+            <then>      <log>param_name is CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM and param_value is CL_TRUE but no devices associated with kernel support fine-grain system SVM allocations</log>
                 <name>clSetKernelExecInfo</name>                        <value>CL_INVALID_OPERATION</value>
             </then>-->
         </command>

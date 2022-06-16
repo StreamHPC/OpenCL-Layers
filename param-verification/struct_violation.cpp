@@ -1144,6 +1144,29 @@ bool struct_violation(
   return array_len_ls(fill_color, size);
 }
 
+// check fine-grained SVM for clSetKernelExecInfo
+bool struct_violation(
+  cl_version,
+  cl_kernel kernel,
+  cl_kernel_exec_info param_name,
+  const void * param_value)
+{
+  if ((param_name == CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM) &&
+      (*static_cast<const cl_bool *>(param_value) == CL_TRUE))
+  {
+      std::vector<cl_device_id> devices = get_devices(kernel);
+
+      for (auto a : devices)
+        if (query<CL_DEVICE_SVM_CAPABILITIES>(a) & 
+            CL_DEVICE_SVM_FINE_GRAIN_BUFFER)
+          return false;
+
+    return true;
+  }
+
+  return false;
+}
+
 // check total number of workitems in group for clEnqueueNDRangeKernel
 bool struct_violation(
   cl_version,
