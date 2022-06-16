@@ -836,7 +836,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     if (log_ret != "")
                         body << ", ";
                 }
-                body << log_param << ".\";\n";
+                body << log_param << ".\" << std::endl;\n";
 
                 body << "    if (!settings.transparent) {\n";
 
