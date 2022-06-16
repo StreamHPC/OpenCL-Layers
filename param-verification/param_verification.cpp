@@ -14,16 +14,16 @@ namespace layer {
     const auto parser =
       ocl_layer_utils::settings_parser("param_verification", settings_from_file);
 
-    auto settings = layer_settings{};
+    auto read_settings = layer_settings{};
     const auto debug_log_values =
       std::map<std::string, DebugLogType>{{"stdout", DebugLogType::StdOut},
                                           {"stderr", DebugLogType::StdErr},
                                           {"file", DebugLogType::File}};
-    parser.get_enumeration("log_sink", debug_log_values, settings.log_type);
-    parser.get_filename("log_filename", settings.log_filename);
-    parser.get_bool("transparent", settings.transparent);
+    parser.get_enumeration("log_sink", debug_log_values, read_settings.log_type);
+    parser.get_filename("log_filename", read_settings.log_filename);
+    parser.get_bool("transparent", read_settings.transparent);
 
-    return settings;
+    return read_settings;
   }
 
   layer_settings settings;
