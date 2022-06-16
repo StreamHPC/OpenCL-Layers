@@ -8,18 +8,7 @@ const struct _cl_icd_dispatch *tdispatch;
 
 ocl_layer_utils::stream_ptr log_stream;
 
-namespace {
-  constexpr const static cl_version FALLBACK_VERSION = CL_MAKE_VERSION(3, 0, 0);
-
-  struct layer_settings {
-    enum class DebugLogType { StdOut, StdErr, File };
-
-    static layer_settings load();
-
-    DebugLogType log_type = DebugLogType::StdErr;
-    std::string log_filename;
-  };
-
+namespace layer {
   layer_settings layer_settings::load() {
     const auto settings_from_file = ocl_layer_utils::load_settings();
     const auto parser =
@@ -32,6 +21,7 @@ namespace {
                                           {"file", DebugLogType::File}};
     parser.get_enumeration("log_sink", debug_log_values, settings.log_type);
     parser.get_filename("log_filename", settings.log_filename);
+    parser.get_bool("transparent", settings.transparent);
 
     return settings;
   }
@@ -90,8 +80,8 @@ clInitLayer(
   if (!target_dispatch || !layer_dispatch_ret || !num_entries_out || num_entries < sizeof(dispatch) / sizeof(dispatch.clGetPlatformIDs))
     return CL_INVALID_VALUE;
 
-  settings = layer_settings::load();
-  init_output_stream();
+  layer::settings = layer::layer_settings::load();
+  layer::init_output_stream();
 
   tdispatch = target_dispatch;
   init_dispatch();
@@ -103,28 +93,28 @@ clInitLayer(
 
 cl_version get_object_version(cl_platform_id platform) {
   if (!platform)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   size_t version_len;
   cl_int res;
   res = tdispatch->clGetPlatformInfo(platform, CL_PLATFORM_VERSION, 0, nullptr, &version_len);
   if (res != CL_SUCCESS)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
 
   auto version_str = std::make_unique<char[]>(version_len);
   res = tdispatch->clGetPlatformInfo(platform, CL_PLATFORM_VERSION, version_len, version_str.get(), nullptr);
   if (res != CL_SUCCESS)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
 
   cl_version version;
   if (!ocl_layer_utils::parse_cl_version_string(version_str.get(), &version)) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
   return version;
 }
 
 cl_version get_object_version(cl_device_id device) {
   if (!device)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_platform_id platform;
   cl_int res = tdispatch->clGetDeviceInfo(
     device,
@@ -133,7 +123,7 @@ cl_version get_object_version(cl_device_id device) {
     &platform,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(platform);
@@ -141,7 +131,7 @@ cl_version get_object_version(cl_device_id device) {
 
 cl_version get_object_version(cl_context context) {
   if (!context)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   // Note: need to query all devices, even if we only need one.
   size_t devices_size;
   cl_int res = tdispatch->clGetContextInfo(
@@ -151,7 +141,7 @@ cl_version get_object_version(cl_context context) {
     NULL,
     &devices_size);
   if (res != CL_SUCCESS || devices_size == 0) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   auto devices = std::make_unique<cl_device_id[]>(devices_size / sizeof(cl_device_id));
@@ -162,7 +152,7 @@ cl_version get_object_version(cl_context context) {
     (void*)devices.get(),
     NULL);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(devices[0]); // platform should be the same for all devices in the context
@@ -170,7 +160,7 @@ cl_version get_object_version(cl_context context) {
 
 cl_version get_object_version(cl_command_queue queue) {
   if (!queue)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetCommandQueueInfo(
     queue,
@@ -179,7 +169,7 @@ cl_version get_object_version(cl_command_queue queue) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);
@@ -187,7 +177,7 @@ cl_version get_object_version(cl_command_queue queue) {
 
 cl_version get_object_version(cl_mem mem) {
   if (!mem)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetMemObjectInfo(
     mem,
@@ -196,7 +186,7 @@ cl_version get_object_version(cl_mem mem) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);
@@ -204,7 +194,7 @@ cl_version get_object_version(cl_mem mem) {
 
 cl_version get_object_version(cl_sampler sampler) {
   if (!sampler)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetSamplerInfo(
     sampler,
@@ -213,7 +203,7 @@ cl_version get_object_version(cl_sampler sampler) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);
@@ -221,7 +211,7 @@ cl_version get_object_version(cl_sampler sampler) {
 
 cl_version get_object_version(cl_program program) {
   if (!program)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetProgramInfo(
     program,
@@ -230,7 +220,7 @@ cl_version get_object_version(cl_program program) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);
@@ -238,7 +228,7 @@ cl_version get_object_version(cl_program program) {
 
 cl_version get_object_version(cl_kernel kernel) {
   if (!kernel)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetKernelInfo(
     kernel,
@@ -247,7 +237,7 @@ cl_version get_object_version(cl_kernel kernel) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);
@@ -255,7 +245,7 @@ cl_version get_object_version(cl_kernel kernel) {
 
 cl_version get_object_version(cl_event event) {
   if (!event)
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   cl_context context;
   cl_int res = tdispatch->clGetEventInfo(
     event,
@@ -264,7 +254,7 @@ cl_version get_object_version(cl_event event) {
     &context,
     nullptr);
   if (res != CL_SUCCESS) {
-    return FALLBACK_VERSION;
+    return layer::FALLBACK_VERSION;
   }
 
   return get_object_version(context);

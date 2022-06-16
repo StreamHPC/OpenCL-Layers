@@ -59,25 +59,16 @@ std::string parse_expression(xml_node<> const * const node)
         res = "(" + list[0] + " % " + list[1] + ")";
     }
     else if (strcmp(name, "mult") == 0) {
-        if (node->first_attribute("array") != nullptr)
-        {
-            res = std::string("mult(")
-                + node->first_attribute("array")->value() + ", "
-                + node->first_attribute("elements")->value() + ")";
-        }
-        else
-        {
-            std::vector<std::string> list(parse_list_expressions(node));
+        std::vector<std::string> list(parse_list_expressions(node));
 
-            int n = 0;
-            for (auto a : list)
-            {
-                res += (n == 0) ? "(" : " * ";
-                res += a;
-                ++n;
-            }
-            res += ")";
+        int n = 0;
+        for (auto a : list)
+        {
+            res += (n == 0) ? "(" : " * ";
+            res += a;
+            ++n;
         }
+        res += ")";
     }
     else if (strcmp(name, "add") == 0) {
         std::vector<std::string> list(parse_list_expressions(node));
@@ -823,18 +814,21 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     }
                     else
                     {
-                        body << "    if (" << name_node->value() << " != NULL)\n"
-                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n"
-                             << "    *log_stream << \"*" << name_node->value() << "="
-                             << value_node->value() << "\" << std::endl;\n\n";
+                        body << "    *log_stream << \"*" << name_node->value() << "="
+                             << value_node->value() << "\" << std::endl;\n"
+                             << "    if (" << name_node->value() << " != NULL)\n"
+                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n\n";
                     }
                 }
                 //printf("%s %s", name, ret.c_str());
                 body << "    *log_stream << \"" << ret << "\" << std::endl;\n";
-                body << ret << ";\n  }\n\n";
+                body << "    if (layer::settings.transparent)\n"
+                     << "      goto " << name << "_label;\n"
+                     << ret << ";\n  }\n\n";
             }
 
-            body << "  return " << invoke << "}\n\n";
+            body << name << "_label:\n" 
+                 << "  return " << invoke << "}\n\n";
 
             if (generate_get_version) {
               render_fetch_version(code, handle, name);
@@ -872,7 +866,7 @@ int main(int argc, char* argv[])
          << "#include <vector>\n"
          << "#include <algorithm>\n"
          << "#include <functional>\n"
-         << "#include \"param_verification.hpp\"\n\n\n";
+         << "#include \"param_verification.hpp\"\n\n";
 
     xml_document<> doc;
     xml_node<> * root_node;

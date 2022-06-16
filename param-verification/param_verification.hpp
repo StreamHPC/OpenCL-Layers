@@ -18,6 +18,22 @@ extern const struct _cl_icd_dispatch *tdispatch;
 
 extern ocl_layer_utils::stream_ptr log_stream;
 
+namespace layer {
+  constexpr const static cl_version FALLBACK_VERSION = CL_MAKE_VERSION(3, 0, 0);
+
+  struct layer_settings {
+    enum class DebugLogType { StdOut, StdErr, File };
+
+    static layer_settings load();
+
+    DebugLogType log_type = DebugLogType::StdErr;
+    std::string log_filename;
+    bool transparent = false;
+  };
+
+  extern layer_settings settings;
+}
+
 cl_version get_object_version(cl_platform_id platform);
 cl_version get_object_version(cl_device_id device);
 cl_version get_object_version(cl_context context);
