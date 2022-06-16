@@ -210,7 +210,7 @@ typedef struct rng { uintptr_t alpha, omega; } rng;
 
 bool mem_write_access(void const * mem, size_t len)
 {
-  if ((intptr_t)mem < 0 && (intptr_t)mem + len >= 0)
+  if ((uintptr_t)mem + len < (uintptr_t)mem)
     return false;
   if ((char const*)mem + len < (char const*)sbrk(0))
     return mem > (void*)&etext;
@@ -246,7 +246,7 @@ bool mem_write_access(void const * mem, size_t len)
 
 bool mem_read_access(void const * mem, size_t len)
 {
-  if ((intptr_t)mem < 0 && (intptr_t)mem + len >= 0)
+  if ((uintptr_t)mem + len < (uintptr_t)mem)
     return false;
   if ((char const*)mem + len < (char const*)sbrk(0))
     return mem > (void*)&etext;
@@ -285,10 +285,11 @@ bool mem_read_access(void const * mem, size_t len)
 #include <processthreadsapi.h>
 bool mem_read_access(const void * ptr, size_t size)
 {
+  std::vector<uint8_t> tmp(size);
   return ReadProcessMemory(
     GetCurrentProcess(),
     ptr,
-    ptr,
+    tmp.data(),
     size,
     nullptr);
 }
