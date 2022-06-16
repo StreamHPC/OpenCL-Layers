@@ -888,15 +888,6 @@ int main(int argc, char* argv[])
 
     parse_queries(code, root_node);
 
-    // dummy funcs
-    code << "template<typename T>\n"
-         << "bool array_len_ls(T * ptr, size_t size)\n"
-         << "{\n"
-         << "  (void)ptr;\n"
-         << "  (void)size;\n"
-         << "  return false;\n"
-         << "}\n\n";
-
     // real funcs
     code << "template<typename T>\n"
          << "bool any_zero(T * ptr, size_t size)\n"

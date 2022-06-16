@@ -199,3 +199,116 @@ return_type<property> query(cl_event event)
   }
   return a;
 }
+
+#if defined(__unix__) || defined(__APPLE__)
+// code adapted from https://mischasan.wordpress.com/2011/04/11/interjection-why-no-linux-isbadreadptr/
+#include <unistd.h>
+#include <mutex>
+extern int etext;
+
+typedef struct rng { uintptr_t alpha, omega; } rng;
+
+bool mem_write_access(void const * mem, size_t len)
+{
+  if ((intptr_t)mem < 0 && (intptr_t)mem + len >= 0)
+    return false;
+  if ((char const*)mem + len < (char const*)sbrk(0))
+    return mem > (void*)&etext;
+  
+  uintptr_t brk = (uintptr_t)sbrk(0);
+  char buf[99];
+  sprintf(buf, "/proc/%d/maps", getpid());
+
+  FILE * fp = fopen(buf, "re");
+  std::vector<rng> rngv(128);
+  rng * rend = rngv.data();
+  size_t size = rngv.size();
+
+  while (fscanf(fp, "%lx-%lx %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
+    if (buf[1] == '-' || rend->alpha < brk)
+      continue;
+    else if (rend > rngv.data() && rend->alpha == rend[-1].omega)
+      rend[-1].omega = rend->omega;
+    else if (++rend == rngv.data() + size) {
+      rngv.resize(2 * size);
+      rend = &rngv[size];
+      size *= 2;
+    }
+  }
+  fclose(fp);
+
+  for (rng * p = rngv.data(); p != rend; ++p)
+    if ((uintptr_t)mem + len <= p->omega)
+      return (uintptr_t)mem >= p->alpha;
+
+  return false;
+}
+
+bool mem_read_access(void const * mem, size_t len)
+{
+  if ((intptr_t)mem < 0 && (intptr_t)mem + len >= 0)
+    return false;
+  if ((char const*)mem + len < (char const*)sbrk(0))
+    return mem > (void*)&etext;
+  
+  uintptr_t brk = (uintptr_t)sbrk(0);
+  char buf[99];
+  sprintf(buf, "/proc/%d/maps", getpid());
+
+  FILE * fp = fopen(buf, "re");
+  std::vector<rng> rngv(128);
+  rng * rend = rngv.data();
+  size_t size = rngv.size();
+
+  while (fscanf(fp, "%lx-%lx %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
+    if (buf[0] == '-' || rend->alpha < brk)
+      continue;
+    else if (rend > rngv.data() && rend->alpha == rend[-1].omega)
+      rend[-1].omega = rend->omega;
+    else if (++rend == rngv.data() + size) {
+      rngv.resize(2 * size);
+      rend = &rngv[size];
+      size *= 2;
+    }
+  }
+  fclose(fp);
+
+  for (rng * p = rngv.data(); p != rend; ++p)
+    if ((uintptr_t)mem + len <= p->omega)
+      return (uintptr_t)mem >= p->alpha;
+
+  return false;
+}
+
+#elif defined(_WIN32)
+#include <memoryapi.h>
+#include <processthreadsapi.h>
+bool mem_read_access(const void * ptr, size_t size)
+{
+  return ReadProcessMemory(
+    GetCurrentProcess(),
+    ptr,
+    ptr,
+    size,
+    nullptr);
+}
+
+#endif
+
+template<typename T>
+bool array_len_ls(T * ptr, size_t size)
+{
+  return array_len_ls((void *)ptr, size * sizeof(T));
+}
+
+template<>
+bool array_len_ls(void * ptr, size_t size)
+{
+  return !mem_read_access(ptr, size);
+}
+
+template<>
+bool array_len_ls(const void * ptr, size_t size)
+{
+  return !mem_read_access(ptr, size);
+}
