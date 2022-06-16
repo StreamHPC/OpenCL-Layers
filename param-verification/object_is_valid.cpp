@@ -203,6 +203,7 @@ return_type<property> query(cl_event event)
 #if defined(__unix__) || defined(__APPLE__)
 // code adapted from https://mischasan.wordpress.com/2011/04/11/interjection-why-no-linux-isbadreadptr/
 #include <unistd.h>
+#include <inttypes.h>
 #include <mutex>
 extern int etext;
 
@@ -224,7 +225,7 @@ bool mem_write_access(void const * mem, size_t len)
   rng * rend = rngv.data();
   size_t size = rngv.size();
 
-  while (fscanf(fp, "%lx-%lx %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
+  while (fscanf(fp, "%" PRIxPTR "-%" PRIxPTR " %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
     if (buf[1] == '-' || rend->alpha < brk)
       continue;
     else if (rend > rngv.data() && rend->alpha == rend[-1].omega)
@@ -260,7 +261,7 @@ bool mem_read_access(void const * mem, size_t len)
   rng * rend = rngv.data();
   size_t size = rngv.size();
 
-  while (fscanf(fp, "%lx-%lx %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
+  while (fscanf(fp, "%" PRIxPTR "-%" PRIxPTR " %4s %*[^\n]", &rend->alpha, &rend->omega, buf) > 0) {
     if (buf[0] == '-' || rend->alpha < brk)
       continue;
     else if (rend > rngv.data() && rend->alpha == rend[-1].omega)
