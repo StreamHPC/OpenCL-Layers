@@ -819,16 +819,19 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 {
                     if (strcmp(name, name_node->value()) == 0)
                     {
-                        ret = std::string("    return ") + value_node->value() + ";\n";
+                        ret = std::string("    return ") + value_node->value();
                     }
                     else
                     {
                         body << "    if (" << name_node->value() << " != NULL)\n"
-                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n";
+                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n"
+                             << "    *log_stream << \"*" << name_node->value() << "="
+                             << value_node->value() << "\" << std::endl;\n\n";
                     }
                 }
                 //printf("%s %s", name, ret.c_str());
-                body << ret << "  }\n\n";
+                body << "    *log_stream << \"" << ret << "\" << std::endl;\n";
+                body << ret << ";\n  }\n\n";
             }
 
             body << "  return " << invoke << "}\n\n";
