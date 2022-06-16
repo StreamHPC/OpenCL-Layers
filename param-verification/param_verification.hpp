@@ -4,6 +4,19 @@
 #include "utils.hpp"
 #include <vector>
 
+struct layer_settings {
+  enum class DebugLogType { StdOut, StdErr, File };
+
+  static layer_settings load();
+
+  DebugLogType log_type = DebugLogType::StdErr;
+  std::string log_filename;
+  bool transparent = false;
+};
+
+extern layer_settings settings;
+extern ocl_layer_utils::stream_ptr log_stream;
+
 // auxilary functions
 std::vector<cl_device_id> get_devices(cl_kernel kernel);
 std::vector<cl_device_id> get_devices(cl_context context);
@@ -15,8 +28,6 @@ void init_dispatch();
 extern struct _cl_icd_dispatch dispatch;
 
 extern const struct _cl_icd_dispatch *tdispatch;
-
-extern ocl_layer_utils::stream_ptr log_stream;
 
 cl_version get_object_version(cl_platform_id platform);
 cl_version get_object_version(cl_device_id device);

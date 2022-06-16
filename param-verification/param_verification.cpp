@@ -7,36 +7,10 @@ struct _cl_icd_dispatch dispatch = {};
 const struct _cl_icd_dispatch *tdispatch;
 
 ocl_layer_utils::stream_ptr log_stream;
+layer_settings settings;
 
 namespace {
   constexpr const static cl_version FALLBACK_VERSION = CL_MAKE_VERSION(3, 0, 0);
-
-  struct layer_settings {
-    enum class DebugLogType { StdOut, StdErr, File };
-
-    static layer_settings load();
-
-    DebugLogType log_type = DebugLogType::StdErr;
-    std::string log_filename;
-  };
-
-  layer_settings layer_settings::load() {
-    const auto settings_from_file = ocl_layer_utils::load_settings();
-    const auto parser =
-      ocl_layer_utils::settings_parser("param_verification", settings_from_file);
-
-    auto settings = layer_settings{};
-    const auto debug_log_values =
-      std::map<std::string, DebugLogType>{{"stdout", DebugLogType::StdOut},
-                                          {"stderr", DebugLogType::StdErr},
-                                          {"file", DebugLogType::File}};
-    parser.get_enumeration("log_sink", debug_log_values, settings.log_type);
-    parser.get_filename("log_filename", settings.log_filename);
-
-    return settings;
-  }
-
-  layer_settings settings;
 
   void init_output_stream() {
     switch(settings.log_type) {
@@ -56,6 +30,23 @@ namespace {
       break;
     }
   }
+}
+
+layer_settings layer_settings::load() {
+  const auto settings_from_file = ocl_layer_utils::load_settings();
+  const auto parser =
+    ocl_layer_utils::settings_parser("param_verification", settings_from_file);
+
+  auto settings = layer_settings{};
+  const auto debug_log_values =
+    std::map<std::string, DebugLogType>{{"stdout", DebugLogType::StdOut},
+                                        {"stderr", DebugLogType::StdErr},
+                                        {"file", DebugLogType::File}};
+  parser.get_enumeration("log_sink", debug_log_values, settings.log_type);
+  parser.get_filename("log_filename", settings.log_filename);
+  parser.get_bool("transparent", settings.transparent);
+
+  return settings;
 }
 
   /* Layer API entry points */

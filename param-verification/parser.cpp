@@ -274,7 +274,7 @@ std::string parse_violation(xml_node<> const * const violation)
         }
         else if (strcmp(name, "not_aligned") == 0)
         {
-            test = "(not_aligned(" + std::string(violation->first_attribute("pointer")->value()) 
+            test = "(not_aligned(" + std::string(violation->first_attribute("pointer")->value())
                 + ", " + violation->first_attribute("align")->value() + "))";
         }
         else if (strcmp(name, "object_is_invalid") == 0)
@@ -679,7 +679,7 @@ void parse_queries(std::stringstream& code, xml_node<> *& root_node)
                             std::string type = enum_val->first_attribute("return_type")->value();
                             type = std::regex_replace(type, std::regex("\\[\\]$"), "");
 
-                            code << "  std::conditional_t<property == " 
+                            code << "  std::conditional_t<property == "
                                  << enum_val->first_attribute("name")->value() << ", "
                                  << type << ",\n";
                             end = "> " + end;
@@ -802,15 +802,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
             {
                 body << "  if " << parse_violation(violation_node->first_node()) << " {\n";
 
-                for (xml_node<> * log_node = result_node->first_node("log");
-                    log_node != nullptr;
-                    log_node = log_node->next_sibling("log"))
-                {
-                    body << "    *log_stream << \"" << name << ": \"\n"
-                         << "      \"" << log_node->value() << "\" << std::endl;\n\n";
-                }
-
-                std::string ret = "";
+                std::string log_ret;
+                std::string log_param;
                 for (xml_node<> * name_node = result_node->first_node("name"),
                                 * value_node = result_node->first_node("value");
                     (name_node != nullptr) && (value_node != nullptr);
@@ -819,19 +812,56 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 {
                     if (strcmp(name, name_node->value()) == 0)
                     {
-                        ret = std::string("    return ") + value_node->value();
+                        log_ret = value_node->value();
                     }
                     else
                     {
-                        body << "    if (" << name_node->value() << " != NULL)\n"
-                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n"
-                             << "    *log_stream << \"*" << name_node->value() << "="
-                             << value_node->value() << "\" << std::endl;\n\n";
+                        if (log_param != "")
+                            log_param += ", ";
+                        log_param += std::string("*") + name_node->value() + " = " + value_node->value();
                     }
                 }
-                //printf("%s %s", name, ret.c_str());
-                body << "    *log_stream << \"" << ret << "\" << std::endl;\n";
-                body << ret << ";\n  }\n\n";
+
+                body << "    *log_stream << \"In " << name << ": \"\n";
+
+                for (xml_node<> * log_node = result_node->first_node("log");
+                    log_node != nullptr;
+                    log_node = log_node->next_sibling("log"))
+                {
+                    body << "      \"" << log_node->value() << ". \"\n";
+                }
+
+                body << "      \"Returning " << log_ret;
+                if (log_param != "") {
+                    if (log_ret != "")
+                        body << ", ";
+                }
+                body << log_param << ".\";\n";
+
+                body << "    if (!settings.transparent) {\n";
+
+                std::string ret;
+                for (xml_node<> * name_node = result_node->first_node("name"),
+                                * value_node = result_node->first_node("value");
+                    (name_node != nullptr) && (value_node != nullptr);
+                    name_node = name_node->next_sibling("name"),
+                    value_node = value_node->next_sibling("value"))
+                {
+                    if (strcmp(name, name_node->value()) == 0)
+                    {
+                        ret = value_node->value();
+                    }
+                    else
+                    {
+                        body << "      if (" << name_node->value() << " != NULL)\n"
+                             << "        *" << name_node->value() << " = " << value_node->value() << ";\n";
+                    }
+                }
+
+                if (ret != "")
+                    body << "      return " << ret << ";\n";
+                body << "    }\n";
+                body << "  }\n\n";
             }
 
             body << "  return " << invoke << "}\n\n";
