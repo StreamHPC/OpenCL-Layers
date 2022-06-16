@@ -59,25 +59,15 @@ std::string parse_expression(xml_node<> const * const node)
         res = "(" + list[0] + " % " + list[1] + ")";
     }
     else if (strcmp(name, "mult") == 0) {
-        if (node->first_attribute("array") != nullptr)
+        std::vector<std::string> list(parse_list_expressions(node));
+        int n = 0;
+        for (auto a : list)
         {
-            res = std::string("mult(")
-                + node->first_attribute("array")->value() + ", "
-                + node->first_attribute("elements")->value() + ")";
+            res += (n == 0) ? "(" : " * ";
+            res += a;
+            ++n;
         }
-        else
-        {
-            std::vector<std::string> list(parse_list_expressions(node));
-
-            int n = 0;
-            for (auto a : list)
-            {
-                res += (n == 0) ? "(" : " * ";
-                res += a;
-                ++n;
-            }
-            res += ")";
-        }
+        res += ")";
     }
     else if (strcmp(name, "add") == 0) {
         std::vector<std::string> list(parse_list_expressions(node));
@@ -601,7 +591,7 @@ void parse_literal_lists(std::stringstream& code, xml_node<> *& root_node)
         //    version_node->value());
     }
 
-    code << "  *log_stream << \"Unknown return type passed to literal_list(). This is a bug in the param_verification layer.\" << std::endl;\n"
+    code << "  *layer::log_stream << \"Unknown return type passed to literal_list(). This is a bug in the param_verification layer.\" << std::endl;\n"
          << "  return 0;\n"
          << "}\n\n";
     //printf("\n");
@@ -822,7 +812,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     }
                 }
 
-                body << "    *log_stream << \"In " << name << ": \"\n";
+                body << "    *layer::log_stream << \"In " << name << ": \"\n";
 
                 for (xml_node<> * log_node = result_node->first_node("log");
                     log_node != nullptr;
@@ -838,7 +828,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 }
                 body << log_param << ".\" << std::endl;\n";
 
-                body << "    if (!settings.transparent) {\n";
+                body << "    if (layer::settings.transparent)\n";
+                body << "      goto " << name << "_dispatch;\n";
 
                 std::string ret;
                 for (xml_node<> * name_node = result_node->first_node("name"),
@@ -853,17 +844,17 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                     }
                     else
                     {
-                        body << "      if (" << name_node->value() << " != NULL)\n"
-                             << "        *" << name_node->value() << " = " << value_node->value() << ";\n";
+                        body << "    if (" << name_node->value() << " != NULL)\n"
+                             << "      *" << name_node->value() << " = " << value_node->value() << ";\n";
                     }
                 }
 
                 if (ret != "")
-                    body << "      return " << ret << ";\n";
-                body << "    }\n";
+                    body << "    return " << ret << ";\n";
                 body << "  }\n\n";
             }
 
+            body << name << "_dispatch:\n";
             body << "  return " << invoke << "}\n\n";
 
             if (generate_get_version) {

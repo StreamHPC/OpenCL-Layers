@@ -72,7 +72,7 @@ bool list_violation(
     }
   }
 
-  *log_stream << "Wrong list:" << name << ", expected cl_device_partition_property."
+  *layer::log_stream << "Wrong list:" << name << ", expected cl_device_partition_property."
     << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }
@@ -207,7 +207,7 @@ bool list_violation(
     return false;
   }
 
-  *log_stream << "Wrong list:" << name << ", expected cl_device_partition_property or cl_queue_properties."
+  *layer::log_stream << "Wrong list:" << name << ", expected cl_device_partition_property or cl_queue_properties."
     << std::endl << "This is a bug in the param_verification layer." << std::endl;
    return true;
 }
@@ -262,7 +262,7 @@ bool list_violation(
     return false;
   }
 
-  *log_stream << "Wrong list:" << name << ", expected cl_context_properties."
+  *layer::log_stream << "Wrong list:" << name << ", expected cl_context_properties."
     << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }
@@ -448,7 +448,7 @@ bool list_violation(cl_version version, const char * name, T param)
     return false;
   }
 
-  *log_stream << "Bad list:" << name << "."
+  *layer::log_stream << "Bad list:" << name << "."
     << std::endl << "This is a bug in the param_verification layer." << std::endl;
   return true;
 }

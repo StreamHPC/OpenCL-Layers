@@ -73,7 +73,7 @@ return_type<property> query(cl_platform_id platform)
   if (!enum_violation(version, "cl_platform_info", property)) {
     tdispatch->clGetPlatformInfo(platform, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid platform query in query(cl_platform_id). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -92,7 +92,7 @@ return_type<property> query(cl_device_id device)
     tdispatch->clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(cl_platform_id), &p, NULL);
     tdispatch->clGetPlatformInfo(p, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid device query in query(cl_device_id). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid device query in query(cl_device_id). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -107,7 +107,7 @@ return_type<property> query(cl_context context)
   if (!enum_violation(version, "cl_context_info", property)) {
     tdispatch->clGetContextInfo(context, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid context query in query(cl_context). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid context query in query(cl_context). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -126,7 +126,7 @@ return_type<property> query(cl_command_queue queue)
     tdispatch->clGetCommandQueueInfo(queue, CL_QUEUE_DEVICE, sizeof(d), &d, NULL);
     tdispatch->clGetDeviceInfo(d, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid command queue query in query(cl_command_queue). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid command queue query in query(cl_command_queue). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -145,7 +145,7 @@ return_type<property> query(cl_mem object)
   } else if (!enum_violation(version, "cl_pipe_info", property)) {
     tdispatch->clGetPipeInfo(object, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid mem object query in query(cl_mem). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -160,7 +160,7 @@ return_type<property> query(cl_program program)
   if (!enum_violation(version, "cl_program_info", property)) {
     tdispatch->clGetProgramInfo(program, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid program query in query(cl_program). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid program query in query(cl_program). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -175,7 +175,7 @@ return_type<property> query(cl_kernel kernel)
   if (!enum_violation(version, "cl_kernel_info", property)) {
     tdispatch->clGetKernelInfo(kernel, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid kernel query in query(cl_kernel). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid kernel query in query(cl_kernel). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;
@@ -194,7 +194,7 @@ return_type<property> query(cl_event event)
     tdispatch->clGetEventInfo(event, CL_EVENT_COMMAND_QUEUE, sizeof(q), &q, NULL);
     tdispatch->clGetCommandQueueInfo(q, property, sizeof(a), &a, NULL);
   } else {
-    *log_stream << "Invalid event query in query(cl_event). This is a bug in the param_verification layer." << std::endl;
+    *layer::log_stream << "Invalid event query in query(cl_event). This is a bug in the param_verification layer." << std::endl;
     exit(-1);
   }
   return a;

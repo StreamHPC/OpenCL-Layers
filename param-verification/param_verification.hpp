@@ -4,18 +4,22 @@
 #include "utils.hpp"
 #include <vector>
 
-struct layer_settings {
-  enum class DebugLogType { StdOut, StdErr, File };
+namespace layer {
+  constexpr const static cl_version FALLBACK_VERSION = CL_MAKE_VERSION(3, 0, 0);
 
-  static layer_settings load();
+  struct layer_settings {
+    enum class DebugLogType { StdOut, StdErr, File };
 
-  DebugLogType log_type = DebugLogType::StdErr;
-  std::string log_filename;
-  bool transparent = false;
-};
+    static layer_settings load();
 
-extern layer_settings settings;
-extern ocl_layer_utils::stream_ptr log_stream;
+    DebugLogType log_type = DebugLogType::StdErr;
+    std::string log_filename;
+    bool transparent = false;
+  };
+
+  extern layer_settings settings;
+  extern ocl_layer_utils::stream_ptr log_stream;
+}
 
 // auxilary functions
 std::vector<cl_device_id> get_devices(cl_kernel kernel);
