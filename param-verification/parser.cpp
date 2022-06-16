@@ -783,6 +783,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
 
             std::stringstream body;
             generate_get_version = false;
+            bool generate_label = false;
 
             for (xml_node<> * violation_node = command_node->first_node("if"),
                             * result_node = command_node->first_node("then");
@@ -830,6 +831,7 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
 
                 body << "    if (layer::settings.transparent)\n";
                 body << "      goto " << name << "_dispatch;\n";
+                generate_label = true;
 
                 std::string ret;
                 for (xml_node<> * name_node = result_node->first_node("name"),
@@ -854,7 +856,8 @@ void parse_commands(std::stringstream& code, xml_node<> *& root_node)
                 body << "  }\n\n";
             }
 
-            body << name << "_dispatch:\n";
+            if (generate_label)
+                body << name << "_dispatch:\n";
             body << "  return " << invoke << "}\n\n";
 
             if (generate_get_version) {
