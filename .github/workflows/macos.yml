@@ -28,7 +28,8 @@ jobs:
     - name: Checkout OpenCL-ICD-Loader
       uses: actions/checkout@v2
       with:
-        repository: KhronosGroup/OpenCL-ICD-Loader
+        repository: Kerilk/OpenCL-ICD-Loader
+        ref: system-layers
         path: external/OpenCL-ICD-Loader
 
     - name: Create Build Environment
