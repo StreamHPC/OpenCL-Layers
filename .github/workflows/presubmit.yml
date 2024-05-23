@@ -730,10 +730,10 @@ jobs:
         COMPILER:
         - CC: /usr/bin/clang
           CXX: /usr/bin/clang++
-        - CC: /usr/local/bin/gcc-11
-          CXX: /usr/local/bin/g++-11
-        - CC: /usr/local/bin/gcc-13
-          CXX: /usr/local/bin/g++-13
+        - CC: gcc-11
+          CXX: g++-11
+        - CC: gcc-13
+          CXX: g++-13
         GEN:
         - Xcode
         - Ninja Multi-Config
@@ -741,22 +741,22 @@ jobs:
         exclude:
         # These entries are excluded, since XCode selects its own compiler
         - COMPILER:
-            CC: /usr/local/bin/gcc-11
-            CXX: /usr/local/bin/g++-11
+            CC: gcc-11
+            CXX: g++-11
           GEN: Xcode
         - COMPILER:
-            CC: /usr/local/bin/gcc-13
-            CXX: /usr/local/bin/g++-13
+            CC: gcc-13
+            CXX: g++-13
           GEN: Xcode
         # These entries are excluded, since the GNU C++ binaries are not compatible
         # with the ones pulled from Homebrew
         - COMPILER:
-            CC: /usr/local/bin/gcc-11
-            CXX: /usr/local/bin/g++-11
+            CC: gcc-11
+            CXX: g++-11
           DEPS: system
         - COMPILER:
-            CC: /usr/local/bin/gcc-13
-            CXX: /usr/local/bin/g++-13
+            CC: gcc-13
+            CXX: g++-13
           DEPS: system
     env:
       CC: ${{matrix.COMPILER.CC}}
