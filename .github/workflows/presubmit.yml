@@ -10,7 +10,7 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         # repository: ${{ github.repository }} (default)
         fetch-depth: 0
@@ -135,7 +135,7 @@ jobs:
     - name: Cache dependencies (vcpkg)
       if: matrix.DEPS == 'vcpkg'
       id: vcpkg-install
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /opt/Microsoft/vcpkg
         key: vcpkg-linux-${{matrix.BIN}}
@@ -161,24 +161,24 @@ jobs:
         fi
 
     - name: Checkout OpenCL-Layers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Checkout OpenCL-Headers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-Headers
         path: external/OpenCL-Headers
 
     - name: Checkout OpenCL-CLHPP
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-CLHPP
         path: external/OpenCL-CLHPP
 
     - name: Checkout OpenCL-ICD-Loader
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-ICD-Loader
         path: external/OpenCL-ICD-Loader
@@ -368,7 +368,7 @@ jobs:
     - name: Cache dependencies (vcpkg)
       if: matrix.DEPS == 'vcpkg'
       id: vcpkg-install
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           C:\vcpkg
@@ -380,7 +380,7 @@ jobs:
 
     - name: Cache Ninja install
       id: ninja-install
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           C:\Tools\Ninja
@@ -394,24 +394,24 @@ jobs:
         Remove-Item ~\Downloads\*
 
     - name: Checkout OpenCL-Layers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Checkout OpenCL-Headers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-Headers
         path: external/OpenCL-Headers
 
     - name: Checkout OpenCL-CLHPP
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-CLHPP
         path: external/OpenCL-CLHPP
 
     - name: Checkout OpenCL-ICD-Loader
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-ICD-Loader
         path: external/OpenCL-ICD-Loader
@@ -785,7 +785,7 @@ jobs:
     - name: Cache dependencies (vcpkg)
       if: matrix.DEPS == 'vcpkg'
       id: vcpkg-install
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /usr/local/share/vcpkg
         key: vcpkg-macos-${{matrix.COMPILER.CXX}}
@@ -810,24 +810,24 @@ jobs:
         fi
 
     - name: Checkout OpenCL-Layers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Checkout OpenCL-Headers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-Headers
         path: external/OpenCL-Headers
 
     - name: Checkout OpenCL-CLHPP
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-CLHPP
         path: external/OpenCL-CLHPP
 
     - name: Checkout OpenCL-ICD-Loader
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-ICD-Loader
         path: external/OpenCL-ICD-Loader
@@ -977,24 +977,24 @@ jobs:
         fi
 
     - name: Checkout OpenCL-Layers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Checkout OpenCL-Headers
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-Headers
         path: external/OpenCL-Headers
 
     - name: Checkout OpenCL-CLHPP
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-CLHPP
         path: external/OpenCL-CLHPP
 
     - name: Checkout OpenCL-ICD-Loader
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: KhronosGroup/OpenCL-ICD-Loader
         path: external/OpenCL-ICD-Loader
