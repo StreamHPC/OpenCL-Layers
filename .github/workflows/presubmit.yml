@@ -307,7 +307,6 @@ jobs:
         shell: pwsh
     strategy:
       matrix:
-        # Toolset v141 has bugs with "if constexpr" thereby it's omitted.
         VER: [v142, v143, clangcl]
         GEN: [Visual Studio 17 2022, Ninja Multi-Config]
         BIN: [x64]
@@ -516,8 +515,6 @@ jobs:
       if: matrix.GEN == 'Ninja Multi-Config'
       run: |
         $VER = switch ('${{matrix.VER}}') { `
-          'v140' {'14.0'} `
-          'v141' {'14.1'} `
           'v142' {'14.2'} `
           'v143' {'14.3'} }
         Import-Module 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll'
@@ -554,7 +551,6 @@ jobs:
       if: matrix.GEN == 'Ninja Multi-Config'
       run: |
         $VER = switch ('${{matrix.VER}}') { `
-          'v141' {'14.1'} `
           'v142' {'14.2'} `
           'v143' {'14.3'} }
         Import-Module "${env:VS_ROOT}\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
@@ -609,8 +605,6 @@ jobs:
       if: matrix.GEN == 'Ninja Multi-Config'
       run: |
         $VER = switch ('${{matrix.VER}}') { `
-          'v140' {'14.0'} `
-          'v141' {'14.1'} `
           'v142' {'14.2'} `
           'v143' {'14.3'} }
         Import-Module 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll'
@@ -642,7 +636,6 @@ jobs:
       if: matrix.GEN == 'Ninja Multi-Config'
       run: |
         $VER = switch ('${{matrix.VER}}') { `
-          'v141' {'14.1'} `
           'v142' {'14.2'} `
           'v143' {'14.3'} }
         Import-Module "${env:VS_ROOT}\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
