@@ -773,6 +773,7 @@ jobs:
         if [[ "${{matrix.DEPS}}" == "vcpkg" && ! `which pkg-config` ]]; then brew install pkg-config; fi;
         # We need to provide an OpenCL driver for Intel CPU on mac
         brew install pocl
+        echo "OCL_ICD_VENDORS=/opt/homebrew/Cellar/pocl/5.0/etc/OpenCL/vendors" >> $GITHUB_ENV
         cmake --version
 
     - name: Install dependencies (Homebrew)
@@ -892,12 +893,6 @@ jobs:
 
     - name: Test
       run: |
-        # For an unknown reason, there are test failures when compiled with g++ in the GitHub shared runner, and pocl is used.
-        if [[ "${{matrix.COMPILER.CC}}" != "/usr/bin/clang" ]];
-        then
-          export LABEL_EXCLUDE=system-icd;
-        fi
-        export OCL_ICD_VENDORS=/usr/local/etc/OpenCL/vendors
         ctest --test-dir $GITHUB_WORKSPACE/build --output-on-failure --no-tests=error -C Debug   --parallel `sysctl -n hw.logicalcpu` --label-exclude $LABEL_EXCLUDE
         ctest --test-dir $GITHUB_WORKSPACE/build --output-on-failure --no-tests=error -C Release --parallel `sysctl -n hw.logicalcpu` --label-exclude $LABEL_EXCLUDE
 
@@ -921,7 +916,6 @@ jobs:
       # For an unknown reason, there are test failures when compiled with g++ in the GitHub shared runner, and pocl is used.
       if: matrix.COMPILER.CC == '/usr/bin/clang'
       run: |
-        export OCL_ICD_VENDORS=/usr/local/etc/OpenCL/vendors
         ctest --output-on-failure --no-tests=error --test-dir $GITHUB_WORKSPACE/program-cache/lib/test/package/build -C Debug --parallel `sysctl -n hw.logicalcpu`
         ctest --output-on-failure --no-tests=error --test-dir $GITHUB_WORKSPACE/program-cache/lib/test/package/build -C Release --parallel `sysctl -n hw.logicalcpu`
 
