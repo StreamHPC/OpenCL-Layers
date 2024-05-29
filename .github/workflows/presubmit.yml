@@ -764,6 +764,7 @@ jobs:
     env:
       CC: ${{matrix.COMPILER.CC}}
       CXX: ${{matrix.COMPILER.CXX}}
+      VCPKG_INSTALLATION_ROOT: ${{github.workspace}}/../vcpkg
     steps:
     - name: Create Build Environment
       run: |
@@ -783,7 +784,7 @@ jobs:
       id: vcpkg-install
       uses: actions/cache@v4
       with:
-        path: /usr/local/share/vcpkg
+        path: ${{env.VCPKG_INSTALLATION_ROOT}}
         key: vcpkg-macos-${{matrix.COMPILER.CXX}}
 
     - name: Install dependencies (vcpkg)
@@ -791,6 +792,8 @@ jobs:
       # Important: the same compiler must be used with vcpkg as with the project build
       # because apple-clang uses a different standard library implementation from GCC
       run: |
+        git clone https://github.com/Microsoft/vcpkg.git $VCPKG_INSTALLATION_ROOT
+        $VCPKG_INSTALLATION_ROOT/bootstrap-vcpkg.sh
         $VCPKG_INSTALLATION_ROOT/vcpkg install boost-wave gtest rapidxml
 
     - name: Set up compiler flags
@@ -878,7 +881,7 @@ jobs:
         -D CMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install
         -D CMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/external/OpenCL-Headers/install;$GITHUB_WORKSPACE/external/OpenCL-ICD-Loader/install;$GITHUB_WORKSPACE/external/OpenCL-CLHPP/install"
         -D CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
-        -D CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        `if [[ "${{matrix.DEPS}}" == "vcpkg" ]]; then echo "-D CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"; fi;`
         -S $GITHUB_WORKSPACE
         -B $GITHUB_WORKSPACE/build
 
@@ -905,7 +908,7 @@ jobs:
       run: cmake
         -G "${{matrix.GEN}}"
         -D CMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/external/OpenCL-Headers/install;$GITHUB_WORKSPACE/external/OpenCL-ICD-Loader/install;$GITHUB_WORKSPACE/external/OpenCL-CLHPP/install;$GITHUB_WORKSPACE/install"
-        -D CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        `if [[ "${{matrix.DEPS}}" == "vcpkg" ]]; then echo "-D CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"; fi;`
         -S $GITHUB_WORKSPACE/program-cache/lib/test/package
         -B $GITHUB_WORKSPACE/program-cache/lib/test/package/build
 
