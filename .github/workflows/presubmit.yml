@@ -956,7 +956,11 @@ jobs:
     # Caching the vcpkg directory doesn't work due to permission problems on the Github Ubuntu image
     - name: Install dependencies (vcpkg)
       if: matrix.DEPS == 'vcpkg'
-      run: $VCPKG_INSTALLATION_ROOT/vcpkg install boost-wave:$VCPKG_TRIPLET gtest:$VCPKG_TRIPLET rapidxml:$VCPKG_TRIPLET
+      run: |
+        cd $VCPKG_INSTALLATION_ROOT
+        git fetch
+        git reset --hard origin/master
+        vcpkg install boost-wave:$VCPKG_TRIPLET gtest:$VCPKG_TRIPLET rapidxml:$VCPKG_TRIPLET
 
     - name: Set up compiler flags
       # -Werror omitted when fetching the dependencies. The dependencies emit warnings
